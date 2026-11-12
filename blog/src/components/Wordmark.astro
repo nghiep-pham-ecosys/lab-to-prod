@@ -1,16 +1,42 @@
 ---
 import { BRAND } from '../lib';
+
+// The benzene mark of brand/build.py (mark_hexagon at lockup weight), for options with `lockup: true`.
+const pt = (r: number, i: number) => [r * Math.cos(((30 + 60 * i) * Math.PI) / 180), r * Math.sin(((30 + 60 * i) * Math.PI) / 180)].map((v) => +v.toFixed(2));
+const outer = [0, 1, 2, 3, 4, 5].map((i) => pt(36, i));
+const inner = [0, 1, 2, 3, 4, 5].map((i) => pt(21.6, i));
+const lockup = BRAND.style.lockup && BRAND.style.mark === 'hexagon';
 ---
-{BRAND.key === 'a' ? (
-  <span class="wm wm-a">Lab<svg viewBox="0 0 44 16" aria-hidden="true"><path d="M1 8h40M34 2l7 6-7 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Prod</span>
-) : (
-  <span class="wm wm-b">lab<i>-to-</i>prod<b aria-hidden="true"></b></span>
-)}
+<span class="wm">
+  {lockup && (
+    <svg class="wm-mark" viewBox="-50 -50 100 100" aria-hidden="true">
+      <defs>
+        <linearGradient id="wm-foil" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" style="stop-color: var(--foil-a)" />
+          <stop offset="0.55" style="stop-color: var(--foil-b)" />
+          <stop offset="1" style="stop-color: var(--foil-c)" />
+        </linearGradient>
+      </defs>
+      <polygon points={outer.map((q) => q.join(',')).join(' ')} fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" />
+      {[0, 2, 4].map((i) => <line x1={inner[i][0]} y1={inner[i][1]} x2={inner[(i + 1) % 6][0]} y2={inner[(i + 1) % 6][1]} stroke="currentColor" stroke-width="5" />)}
+      {outer.slice(0, 5).map((q) => <circle cx={q[0]} cy={q[1]} r="6.2" fill="currentColor" />)}
+      <circle class="lit" cx={outer[5][0]} cy={outer[5][1]} r="9.6" />
+    </svg>
+  )}
+  {BRAND.style.wordmark === 'arrow' ? (
+    <span class="wm-a">Lab<svg viewBox="0 0 44 16" aria-hidden="true"><path d="M1 8h40M34 2l7 6-7 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Prod</span>
+  ) : (
+    <span class="wm-b">lab<i>-to-</i>prod<b aria-hidden="true"></b></span>
+  )}
+</span>
 <style>
-  .wm { font-weight: 650; font-size: 1.45rem; color: var(--fg); white-space: nowrap; }
+  .wm { display: inline-flex; align-items: center; font-weight: 650; font-size: 1.45rem; color: var(--fg); white-space: nowrap; }
+  /* about 1.6x the cap height of the 1.25rem mono wordmark, as in the logo lockup */
+  .wm-mark { width: 1.8rem; height: 1.8rem; margin-right: 0.28rem; flex: none; color: var(--fg); }
+  .wm-mark .lit { fill: url(#wm-foil); }
   .wm-a { font-family: var(--display); }
   .wm-a svg { width: 1.5em; height: 0.55em; margin: 0 0.28em; color: var(--accent); }
-  .wm-b { font-family: var(--mono); font-size: 1.25rem; }
+  .wm-b { font-family: var(--mono); font-size: 1.25rem; font-weight: 700; }
   .wm-b i { font-style: normal; color: var(--accent); }
-  .wm-b b { display: inline-block; width: 0.5em; height: 1em; margin-left: 0.1em; background: var(--accent); vertical-align: -0.12em; }
+  .wm-b b { display: inline-block; width: 0.5em; height: 1em; margin-left: 0.1em; background: var(--foil, var(--accent)); vertical-align: -0.12em; }
 </style>

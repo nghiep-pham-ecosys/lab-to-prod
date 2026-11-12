@@ -6,7 +6,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 html { color-scheme: light dark; -webkit-text-size-adjust: 100%; }
 body {
-  margin: 0; background: var(--bg); color: var(--fg);
+  margin: 0; background: var(--bg) linear-gradient(180deg, var(--bg) 0%, var(--bg2, var(--bg)) 100%) fixed; color: var(--fg);
   font-family: var(--body), system-ui, sans-serif; font-size: 1.0625rem; line-height: 1.65;
 }
 .wrap { max-width: 44rem; margin: 0 auto; padding: 0 1.25rem; }
