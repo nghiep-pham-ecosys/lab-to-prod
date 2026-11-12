@@ -200,10 +200,12 @@ const Pill = ({ t }: { t: Theme }) => {
 };
 
 // The honeycomb texture of brand/build.py: a faint hexagonal lattice anchored on one foil benzene
-// ring at the top right (on the kicker line), fading with distance from it and from the bottom-left
-// corner, so it never sits behind the title, the code or the caption.
+// ring at the top right (on the kicker line). It fades out within CLEAR px of the ring and from the
+// bottom-left corner, and a clear band runs along the kicker line left of the ring, so it never
+// sits behind the kicker, the title, the code or the caption (build.py keeps a halo around text).
 // r = 46: the ring's top vertex sits on SAFE.top, clear of the Shorts top bar.
 const RING = { r: 46 };
+const CLEAR = 420;
 const ringAt = () => ({ cx: 1080 - SAFE.side - (Math.sqrt(3) / 2) * RING.r, cy: SAFE.top + RING.r });
 const Honeycomb = ({ t }: { t: Theme }) => {
   const { cx, cy } = ringAt();
@@ -223,13 +225,19 @@ const Honeycomb = ({ t }: { t: Theme }) => {
   }, [cx, cy, r]);
   const lum = parseInt(t.bg.slice(1, 3), 16) + parseInt(t.bg.slice(3, 5), 16) + parseInt(t.bg.slice(5, 7), 16);
   const color = lum < 384 ? t.panel_accent : t.accent;
-  const mask = `radial-gradient(circle at ${cx}px ${cy}px, #000 0, rgba(0,0,0,0.55) 260px, transparent 760px), radial-gradient(circle at 0 1920px, rgba(0,0,0,0.6) 0, transparent 620px)`;
+  const mask = `radial-gradient(circle at ${cx}px ${cy}px, #000 0, rgba(0,0,0,0.5) ${CLEAR * 0.45}px, transparent ${CLEAR}px), radial-gradient(circle at 0 1920px, rgba(0,0,0,0.6) 0, transparent 560px)`;
+  // The kicker band (its text and the rule under it) stays clear up to just left of the ring. Mask
+  // layers add up: everything outside the band, plus the column of the ring.
+  const left = cx - (Math.sqrt(3) / 2) * r - 40;
+  const band = `linear-gradient(180deg, #000 ${SAFE.top - 24}px, transparent ${SAFE.top - 12}px, transparent ${SAFE.top + 100}px, #000 ${SAFE.top + 112}px), linear-gradient(90deg, transparent ${left - 12}px, #000 ${left}px)`;
   const foil = t.foil ?? [t.accent, t.accent, t.accent];
   return (
     <>
-      <svg width={1080} height={1920} style={{ position: 'absolute', inset: 0, opacity: 0.09, maskImage: mask, WebkitMaskImage: mask }} aria-hidden="true">
-        <path d={path} fill="none" stroke={color} strokeWidth={1.4} />
-      </svg>
+      <div style={{ position: 'absolute', inset: 0, maskImage: band, WebkitMaskImage: band }}>
+        <svg width={1080} height={1920} style={{ position: 'absolute', inset: 0, opacity: 0.09, maskImage: mask, WebkitMaskImage: mask }} aria-hidden="true">
+          <path d={path} fill="none" stroke={color} strokeWidth={1.4} />
+        </svg>
+      </div>
       <svg width={1080} height={1920} style={{ position: 'absolute', inset: 0 }} aria-hidden="true">
         <defs>
           <linearGradient id="ring-foil" x1="1" y1="0" x2="0" y2="1">
