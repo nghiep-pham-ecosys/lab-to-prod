@@ -140,3 +140,28 @@ def test_gate_refuses_to_merge_without_judge_json_or_when_nothing_passes(repo):
 def test_gate_rejects_malformed_scores(repo):
     judge_file(repo, dict.fromkeys(NAMES, [5, 5, 5, 5, 9]))
     assert gate.gate(repo, "2026-W47")[0] == 1
+
+
+def test_judge_file_adds_hashes_and_the_gate_accepts_it(repo, tmp_path):
+    import judge_file
+    from metrics import report
+    scores = {n: {"scores": dict(zip(gate.RUBRIC, GOOD)), "notes": "ok"} for n in NAMES}
+    data = judge_file.build(repo, "2026-W47", scores)
+    (repo / "content/2026-W47/judge.json").write_text(json.dumps(data))
+    assert data["posts"][NAMES[0]]["mean"] == 4.6 and gate.gate(repo, "2026-W47")[0] == 0
+    with pytest.raises(ValueError):
+        judge_file.build(repo, "2026-W47", {NAMES[0]: {"scores": {"voice": 5}}})
+    with pytest.raises(ValueError):
+        judge_file.build(repo, "2026-W47", {"not-a-folder": scores[NAMES[0]]})
+    one = judge_file.build(repo, "2026-W47", {NAMES[1]: {"scores": dict(zip(gate.RUBRIC, [4, 4, 4, 4, 4]))}}, merge=True)
+    assert set(one["posts"]) == set(NAMES) and one["posts"][NAMES[1]]["mean"] == 4.0
+
+
+def test_weekly_report_tables(mrepo):
+    from metrics import report
+    collect.collect(ctx_for(mrepo, MONDAY, http=MetricsHTTP()))
+    text = report.report(mrepo, "2026-W47")
+    assert "| 2026-11-16 | Title dsa-p2 | facebook | published" in text
+    assert "| 2026-11-16 | Title dsa-p2 | linkedin | not published" in text
+    assert "| 2026-11-16 | youtube | - | 150 | 9 | 1 | - |" in text
+    assert "| telegram | 55 | 55 | +0 |" in text and "On schedule: 3 of" in text
