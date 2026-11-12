@@ -1,0 +1,19 @@
+---
+import Base from '../../layouts/Base.astro';
+import { SERIES, url } from '../../lib';
+import { liveNotes, livePosts } from '../../content';
+const all = [...(await liveNotes()), ...(await livePosts())];
+const rows = Object.entries(SERIES).map(([id, s]) => ({ id, ...s, count: all.filter((e) => e.data.series === id).length }));
+---
+<Base title="Series" description="Every series on Lab to Prod: DSA in Java, ML Foundations, AI Engineering, Cloud and DevOps, Climate x AI, Simulation, Physical AI and build logs.">
+  <h1>Series</h1>
+  <p class="lede">Each weekday has its own series, so you know what to expect.</p>
+  <ul class="entries">
+    {rows.map((s) => (
+      <li>
+        <a class="title" href={url(`/series/${s.id}/`)}>{s.name}</a>
+        <p>{s.count} {s.count === 1 ? 'entry' : 'entries'} · {s.kind === 'blog' ? 'Saturday article' : 'weekday note'}</p>
+      </li>
+    ))}
+  </ul>
+</Base>

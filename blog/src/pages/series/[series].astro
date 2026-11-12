@@ -1,0 +1,20 @@
+---
+import Base from '../../layouts/Base.astro';
+import Entries from '../../components/Entries.astro';
+import { SERIES } from '../../lib';
+import { liveNotes, livePosts } from '../../content';
+
+export function getStaticPaths() {
+  return Object.entries(SERIES).map(([id, s]) => ({ params: { series: id }, props: { id, s } }));
+}
+const { id, s } = Astro.props;
+const kind = s.kind === 'blog' ? 'posts' : 'notes';
+const items = (kind === 'posts' ? await livePosts() : await liveNotes())
+  .filter((e) => e.data.series === id)
+  .sort((a, b) => +a.data.date - +b.data.date);
+---
+<Base title={s.name} description={`All ${s.name} entries on Lab to Prod, in reading order, from part one to the latest.`}>
+  <p class="kicker">Series</p>
+  <h1>{s.name}</h1>
+  <Entries items={items} kind={kind} empty="Nothing published in this series yet." />
+</Base>

@@ -1,0 +1,60 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../site';
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: SITE.author,
+  jobTitle: 'AI Engineer',
+  description: 'AI engineer with a chemistry and materials background, working on LLM evaluation, agents and LLMOps.',
+  url: new URL(Astro.url.pathname, Astro.site).toString(),
+  sameAs: [SITE.github, SITE.x, SITE.linkedin].filter(Boolean),
+  knowsAbout: ['AI engineering', 'LLMOps', 'Agentic AI', 'LLM evaluation', 'Machine learning', 'Climate AI'],
+};
+---
+<Base title="About Nghiep Pham" description="Nghiep Pham is an AI engineer with a chemistry background, working on LLM evaluation, agents, LLMOps and climate AI. Short CV and contact links." jsonLd={jsonLd}>
+  <div class="prose">
+    <p class="kicker">About</p>
+    <h1>Nghiep Pham</h1>
+    <p class="lede">AI Engineer · LLMOps &amp; Agentic AI · Climate AI. From lab scientist to production AI.</p>
+
+    <p>
+      I started in a chemistry and materials lab, where a result only counts if someone else can
+      reproduce it. I now build AI systems, and I try to hold them to the same standard: measured,
+      evaluated, and boring to operate.
+    </p>
+
+    <h2>What I work on</h2>
+    <ul>
+      <li><strong>AI engineering in production:</strong> LLM evaluation, quality gates, agents and tool design, LLMOps.</li>
+      <li><strong>Simulation and physical AI:</strong> process simulation, digital twins, sim-to-real.</li>
+      <li><strong>Climate and materials:</strong> where machine learning meets chemistry and climate science.</li>
+    </ul>
+
+    <h2>What I am studying now</h2>
+    <ul>
+      <li>Data structures and algorithms in Java (GTx CS1332x)</li>
+      <li>Linear algebra and ML foundations</li>
+      <li>AWS Solutions Architect Professional (SAP-C03)</li>
+      <li>Climate Change AI coursework</li>
+    </ul>
+
+    <h2>This site</h2>
+    <p>
+      Lab to Prod is written in public and published by a pipeline that is itself the project:
+      drafts are prepared with Claude Code, checked by automated validation, approved by me in a
+      pull request, and posted by GitHub Actions. I read every post before it goes out and I am
+      responsible for what it says. If something here is wrong, please tell me; corrections are
+      added as visible notes, not silent edits.
+    </p>
+
+    <h2>Contact</h2>
+    <ul>
+      <li><a href={SITE.github} rel="me">GitHub</a></li>
+      {SITE.linkedin && <li><a href={SITE.linkedin} rel="me">LinkedIn</a></li>}
+      <li><a href={SITE.x} rel="me">X</a></li>
+    </ul>
+
+    <p class="meta">Views are my own and do not represent any employer or client, past or present.</p>
+  </div>
+</Base>

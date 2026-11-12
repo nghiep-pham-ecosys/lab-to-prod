@@ -1,0 +1,64 @@
+name: blog
+
+# Builds the Astro site and deploys it to GitHub Pages.
+# - on merge to main when the blog, the content or the brand changed
+# - every day at 08:20 Asia/Ho_Chi_Minh, so a note appears on its own date
+# - on pull requests: build and smoke test only, no deploy
+on:
+  push:
+    branches: [main]
+    paths: ["blog/**", "content/**", "brand/**", ".github/workflows/blog.yml"]
+  pull_request:
+    paths: ["blog/**", "content/**", "brand/**", ".github/workflows/blog.yml"]
+  schedule:
+    - cron: "20 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: blog-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Open Graph images, note images, favicon
+        run: |
+          pip install pillow pyyaml
+          python blog/scripts/prebuild.py
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: blog/.nvmrc
+          cache: npm
+          cache-dependency-path: blog/package-lock.json
+      - name: Build
+        working-directory: blog
+        run: |
+          npm ci
+          npx astro build
+          node scripts/check-dist.mjs
+      - uses: actions/upload-pages-artifact@v5
+        if: github.event_name != 'pull_request'
+        with:
+          path: blog/dist
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

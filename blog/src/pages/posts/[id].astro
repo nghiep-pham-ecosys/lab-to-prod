@@ -1,0 +1,41 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { SITE } from '../../site';
+import { abs, fmtDate, isLive, seriesName, url } from '../../lib';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts', (p) => !p.data.draft && isLive(p.data.date));
+  return posts.map((post) => ({ params: { id: post.id }, props: { post } }));
+}
+const { post } = Astro.props;
+const { Content } = await render(post);
+const d = post.data;
+const image = `/og/posts/${post.id}.png`;
+const words = (post.body ?? '').split(/\s+/).length;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: d.title,
+  description: d.description,
+  datePublished: d.date.toISOString(),
+  dateModified: (d.updated ?? d.date).toISOString(),
+  author: { '@type': 'Person', name: SITE.author, url: SITE.github },
+  image: abs(image, Astro.site),
+  keywords: d.tags.join(', '),
+  wordCount: words,
+  mainEntityOfPage: new URL(Astro.url.pathname, Astro.site).toString(),
+};
+---
+<Base title={d.title} description={d.description} image={image} imageAlt={d.title} type="article" published={d.date} jsonLd={jsonLd}>
+  <article>
+    <p class="kicker"><a href={url(`/series/${d.series}/`)}>{seriesName(d.series)}</a>{d.part ? ` · #${d.part}` : ''}</p>
+    <h1>{d.title}</h1>
+    <p class="meta">
+      <time datetime={d.date.toISOString().slice(0, 10)}>{fmtDate(d.date)}</time> · {Math.max(1, Math.round(words / 220))} min read
+      {d.updated && <> · updated {fmtDate(d.updated)}</>}
+    </p>
+    <div class="prose"><Content /></div>
+    {d.tags.length > 0 && <div class="tags">{d.tags.map((t) => <span>#{t}</span>)}</div>}
+  </article>
+</Base>

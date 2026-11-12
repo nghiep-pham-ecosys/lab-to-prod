@@ -73,9 +73,11 @@ content/_template/post.md        copy this to start a post
 claude/lesson-log.md             what the author studied; ground posts in it
 tools/validate.py                the checks that gate every pull request
 tools/banned_terms.yaml          hashed terms that fail the build
+brand/                           brand.yaml (palettes, fonts, themes), build.py, two options
+blog/                            Astro site; articles in blog/src/content/posts/, see blog/README.md
 ```
 
-Later steps add `brand/`, `blog/`, `render/`, `sim/`, `publish/`, `metrics/`, `reports/`.
+Later steps add `render/`, `sim/`, `publish/`, `metrics/`, `reports/`.
 
 ## Commands
 

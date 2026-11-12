@@ -1,0 +1,75 @@
+---
+import '../styles/global.css';
+import Wordmark from '../components/Wordmark.astro';
+import { SITE } from '../site';
+import { BRAND, abs, themeCss, url } from '../lib';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string; // site-relative path of the Open Graph image
+  imageAlt?: string;
+  type?: 'website' | 'article';
+  published?: Date;
+  jsonLd?: Record<string, unknown>;
+}
+const { title, description = SITE.description, image = '/og/default.png', imageAlt = SITE.title, type = 'website', published, jsonLd } = Astro.props;
+const fullTitle = title ? `${title} · ${SITE.short}` : `${SITE.title} — AI engineering, ML and climate notes`;
+const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+const ogImage = abs(image, Astro.site);
+const nav = [['/notes/', 'Notes'], ['/posts/', 'Articles'], ['/series/', 'Series'], ['/about/', 'About']];
+const here = Astro.url.pathname;
+const fontVars = `:root{--display:'${BRAND.fonts.display}';--body:'${BRAND.fonts.body}';--mono:'${BRAND.fonts.mono}'}`;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content={SITE.author} />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="application/rss+xml" title={SITE.title} href={url('/rss.xml')} />
+    <link rel="sitemap" href={url('/sitemap-index.xml')} />
+    <link rel="icon" type="image/png" href={url('/favicon.png')} />
+    <meta property="og:site_name" content={SITE.title} />
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={title ?? SITE.title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:alt" content={imageAlt} />
+    {published && <meta property="article:published_time" content={published.toISOString()} />}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:creator" content="@pqnghiep1354" />
+    {SITE.searchConsole && <meta name="google-site-verification" content={SITE.searchConsole} />}
+    <style is:inline set:html={themeCss + fontVars}></style>
+    {jsonLd && <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    {SITE.goatcounter && (
+      <script is:inline data-goatcounter={`https://${SITE.goatcounter}.goatcounter.com/count`} async src="https://gc.zgo.at/count.js"></script>
+    )}
+  </head>
+  <body>
+    <header class="site">
+      <div class="wrap">
+        <a class="home" href={url('/')} aria-label={`${SITE.title}, home`}><Wordmark /></a>
+        <nav class="main" aria-label="Main">
+          {nav.map(([href, label]) => (
+            <a href={url(href)} aria-current={here.startsWith(url(href)) ? 'page' : undefined}>{label}</a>
+          ))}
+        </nav>
+      </div>
+    </header>
+    <main><div class="wrap"><slot /></div></main>
+    <footer class="site">
+      <div class="wrap">
+        <span>© 2026 {SITE.author}. Writing CC BY 4.0, code MIT. Views are my own.</span>
+        <span>
+          <a href={url('/rss.xml')}>RSS</a> · <a href={SITE.repo}>Source</a>
+          {SITE.linkedin && <> · <a href={SITE.linkedin} rel="me">LinkedIn</a></>}
+        </span>
+      </div>
+    </footer>
+  </body>
+</html>
