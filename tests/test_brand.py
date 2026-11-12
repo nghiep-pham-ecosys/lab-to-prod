@@ -28,4 +28,7 @@ def test_selected_option_and_theme_keys():
     for opt in CFG["options"].values():
         assert opt["primary"] in opt["themes"] and opt["alt"] in opt["themes"]
         for theme in opt["themes"].values():
-            assert set(theme) == {"bg", "fg", "muted", "accent", "line", "panel", "panel_fg", "panel_accent"}
+            required = {"bg", "fg", "muted", "accent", "line", "panel", "panel_fg", "panel_accent"}
+            optional = {"bg2", "foil"}  # gradient end and metallic highlight (glossy options C/D/E)
+            assert required <= set(theme), required - set(theme)
+            assert set(theme) <= required | optional, set(theme) - required - optional
