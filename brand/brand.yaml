@@ -1,0 +1,80 @@
+# Brand source of truth. brand/build.py and render/ read this file.
+name: "Nghiep Pham · Lab to Prod"
+tagline: "AI engineering, ML and climate — notes from a chemist turned AI engineer"
+
+# Which option the render pipeline uses. Change to "b" to switch everything.
+selected: a
+
+options:
+  a:
+    title: "Bench: lab notebook, serif wordmark, reaction arrow"
+    fonts: {display: Fraunces, body: Inter, mono: JetBrainsMono}
+    primary: paper
+    alt: ink
+    themes:
+      paper:   # light, default
+        bg: "#F6F1E7"
+        fg: "#1B1F23"
+        muted: "#6B6459"
+        accent: "#0F766E"
+        line: "#E6DECF"
+        panel: "#1B1F23"
+        panel_fg: "#F6F1E7"
+      ink:     # dark
+        bg: "#1B1F23"
+        fg: "#F6F1E7"
+        muted: "#A39C8F"
+        accent: "#5EEAD4"
+        line: "#2A3036"
+        panel: "#11151A"
+        panel_fg: "#E8E2D6"
+      copper:  # warm accent, for numbers and results
+        bg: "#F0E4D2"
+        fg: "#2A1A12"
+        muted: "#7A5C48"
+        accent: "#B4410E"
+        line: "#E2D2BA"
+        panel: "#2A1A12"
+        panel_fg: "#F6EBDD"
+  b:
+    title: "Night shift: terminal, mono wordmark, hexagon node mark"
+    fonts: {display: SpaceGrotesk, body: SpaceGrotesk, mono: JetBrainsMono}
+    primary: night
+    alt: day
+    themes:
+      night:   # dark, default
+        bg: "#0B1220"
+        fg: "#E6EDF3"
+        muted: "#8B98A9"
+        accent: "#34D399"
+        line: "#18233A"
+        panel: "#111B2E"
+        panel_fg: "#D5DEE8"
+      day:     # light
+        bg: "#F4F6F8"
+        fg: "#0B1220"
+        muted: "#5B6777"
+        accent: "#047857"
+        line: "#DDE3EA"
+        panel: "#0B1220"
+        panel_fg: "#E6EDF3"
+      signal:  # amber accent, for warnings and bugs
+        bg: "#111827"
+        fg: "#F9FAFB"
+        muted: "#9CA3AF"
+        accent: "#FBBF24"
+        line: "#1F2937"
+        panel: "#0B0F19"
+        panel_fg: "#E5E7EB"
+
+# Text used on the sample cards (a toy example, same for both options).
+sample:
+  series: "DSA in Java · Part 2"
+  title: ["Same value,", "different", "object"]
+  code:
+    - ["Integer a = 127, b = 127;", false]
+    - ["a == b        // true (cached)", false]
+    - ["Integer c = 128, d = 128;", false]
+    - ["c == d        // false", true]
+    - ["c.equals(d)   // true", false]
+  lesson: "Use equals() for objects. Always."
