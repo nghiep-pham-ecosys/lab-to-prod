@@ -36,7 +36,7 @@ const lum = (hex: string) => parseInt(hex.slice(1, 3), 16) + parseInt(hex.slice(
 const pair: Theme[] = [option.themes[option.primary], option.themes[option.alt]].sort((a, b) => lum(b.bg) - lum(a.bg));
 export const BRAND = {
   key: brand.selected as string,
-  style: option.style as { mark: string; wordmark: 'arrow' | 'mono' | 'pill'; lockup?: boolean; gloss?: boolean },
+  style: option.style as { mark: string; wordmark: 'arrow' | 'mono' | 'pill'; lockup?: boolean; gloss?: boolean; texture?: string },
   fonts: option.fonts as { display: string; body: string; mono: string },
   light: pair[0],
   dark: pair[1],

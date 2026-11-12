@@ -9,6 +9,19 @@ body {
   margin: 0; background: var(--bg) linear-gradient(180deg, var(--bg) 0%, var(--bg2, var(--bg)) 100%) fixed; color: var(--fg);
   font-family: var(--body), system-ui, sans-serif; font-size: 1.0625rem; line-height: 1.65;
 }
+/* Brand option D's honeycomb: a faint hexagonal lattice in the accent colour, strongest at the
+   top right and kept off the text column (it is hidden on narrow screens). Pointy-top hexagons of
+   radius 26px: one tile is sqrt(3) x 26 by 3 x 26. */
+body.honeycomb::before {
+  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: var(--accent); opacity: 0.09;
+  --hex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='45.033' height='78' viewBox='0 0 45.033 78'%3E%3Cpath d='M22.517 13V-13M22.517 13L45.033 26M22.517 13L0 26M0 26V52M45.033 26V52M0 52L22.517 65L45.033 52M22.517 65V91' fill='none' stroke='%23000' stroke-width='1.2'/%3E%3C/svg%3E");
+  --fade: radial-gradient(circle at 100% 0, #000 0, rgb(0 0 0 / 0.5) 22rem, transparent 60rem);
+  --side: linear-gradient(90deg, #000 0, #000 calc(50% - 27rem), transparent calc(50% - 23rem), transparent calc(50% + 23rem), #000 calc(50% + 27rem));
+  -webkit-mask: var(--hex) 0 0 / 45.033px 78px, var(--fade), var(--side);
+  -webkit-mask-composite: source-in, source-in;
+  mask: var(--hex) 0 0 / 45.033px 78px, var(--fade), var(--side);
+  mask-composite: intersect;
+}
 .wrap { max-width: 44rem; margin: 0 auto; padding: 0 1.25rem; }
 a { color: var(--accent); text-underline-offset: 0.18em; }
 a:hover { text-decoration-thickness: 2px; }

@@ -50,7 +50,7 @@ const fontVars = `:root{--display:'${BRAND.fonts.display}';--body:'${BRAND.fonts
       <script is:inline data-goatcounter={`https://${SITE.goatcounter}.goatcounter.com/count`} async src="https://gc.zgo.at/count.js"></script>
     )}
   </head>
-  <body>
+  <body class={BRAND.style.texture === 'honeycomb' ? 'honeycomb' : undefined}>
     <header class="site">
       <div class="wrap">
         <a class="home" href={url('/')} aria-label={`${SITE.title}, home`}><Wordmark /></a>
