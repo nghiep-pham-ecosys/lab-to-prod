@@ -2,8 +2,8 @@
      Title:            Build log #1: how the Lab to Prod pipeline runs
      Subtitle:         Eight pull requests, 71 tests and one paid API I had to route around: how the pipeline behind this blog is built, before its first post goes out.
      Tags:             build-in-public, llmops, github-actions, ai-engineering
-     Cover image:      https://pqnghiep1354.github.io/lab-to-prod/og/posts/build-log-1-how-the-lab-to-prod-pipeline-runs.png
-     Article settings: "Are you republishing?" -> original URL = https://pqnghiep1354.github.io/lab-to-prod/posts/build-log-1-how-the-lab-to-prod-pipeline-runs/
+     Cover image:      https://nghiep-pham-ecosys.github.io/lab-to-prod/og/posts/build-log-1-how-the-lab-to-prod-pipeline-runs.png
+     Article settings: "Are you republishing?" -> original URL = https://nghiep-pham-ecosys.github.io/lab-to-prod/posts/build-log-1-how-the-lab-to-prod-pipeline-runs/
 -->
 
 71 tests, 8 pull requests, 5 channels posting through an API and 2 that I post by hand. That is
@@ -134,9 +134,9 @@ Next Saturday's article is a deeper version of this week's note on precision and
 build a quality gate for LLM output, from two numbers to a rubric. Build log #2 follows a week
 later, with the first real numbers.
 
-The code is at [github.com/pqnghiep1354/lab-to-prod](https://github.com/pqnghiep1354/lab-to-prod).
+The code is at [github.com/nghiep-pham-ecosys/lab-to-prod](https://github.com/nghiep-pham-ecosys/lab-to-prod).
 If you see a mistake in a post, open an issue. That is what a lab notebook is for.
 
 ---
 
-*Originally published on [Lab to Prod](https://pqnghiep1354.github.io/lab-to-prod/posts/build-log-1-how-the-lab-to-prod-pipeline-runs/).*
+*Originally published on [Lab to Prod](https://nghiep-pham-ecosys.github.io/lab-to-prod/posts/build-log-1-how-the-lab-to-prod-pipeline-runs/).*

@@ -135,5 +135,5 @@ Next Saturday's article is a deeper version of this week's note on precision and
 build a quality gate for LLM output, from two numbers to a rubric. Build log #2 follows a week
 later, with the first real numbers.
 
-The code is at [github.com/pqnghiep1354/lab-to-prod](https://github.com/pqnghiep1354/lab-to-prod).
+The code is at [github.com/nghiep-pham-ecosys/lab-to-prod](https://github.com/nghiep-pham-ecosys/lab-to-prod).
 If you see a mistake in a post, open an issue. That is what a lab notebook is for.

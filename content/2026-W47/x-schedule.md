@@ -20,7 +20,7 @@ Use equals() for objects.
 
 Image: `2026-11-17-ml-p1/image.png`  
 Alt text: Code: a 2 by 3 matrix W times a vector x of 3 numbers, plus a bias, gives the 2 numbers 6.1 and minus 0.5. That is one neural network layer.  
-First reply: https://pqnghiep1354.github.io/lab-to-prod/notes/2026-11-17-ml-p1/
+First reply: https://nghiep-pham-ecosys.github.io/lab-to-prod/notes/2026-11-17-ml-p1/
 
 ```text
 2 rows, 3 columns: that is a full neural network layer with 2 neurons and 3 inputs.
@@ -49,7 +49,7 @@ One number hides the other. Report both, with counts. (Toy example.)
 
 Image: `2026-11-19-cloud-p2/image.png`  
 Alt text: Table comparing AWS Site-to-Site VPN (IPsec over the internet, up to 1.25 Gbps per standard tunnel) with Direct Connect (private line, dedicated ports from 1 to 400 Gbps, not encrypted by default).  
-First reply: https://pqnghiep1354.github.io/lab-to-prod/notes/2026-11-19-cloud-p2/
+First reply: https://nghiep-pham-ecosys.github.io/lab-to-prod/notes/2026-11-19-cloud-p2/
 
 ```text
 1.25 Gbps: the ceiling of one standard AWS Site-to-Site VPN tunnel.
@@ -64,7 +64,7 @@ Private is not the same as encrypted.
 
 Image: `2026-11-20-climate-p1/image.png`  
 Alt text: A card with the figure under 1 minute: the time the GraphCast machine learning model needs for a 10-day global weather forecast at 0.25 degree resolution.  
-First reply: https://pqnghiep1354.github.io/lab-to-prod/notes/2026-11-20-climate-p1/
+First reply: https://nghiep-pham-ecosys.github.io/lab-to-prod/notes/2026-11-20-climate-p1/
 
 ```text
 10 days of global weather in under 1 minute: that is GraphCast, an ML model (Lam et al.).
