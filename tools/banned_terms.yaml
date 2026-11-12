@@ -1,0 +1,20 @@
+# Terms that must never appear in published text (content/, blog/src/content/, reports/).
+# Only SHA-256 hashes are stored here, so this public list does not advertise the names.
+# Each entry is the hash of one lowercase word, or of two consecutive words joined by a
+# single space (words are runs of a-z and 0-9; punctuation and case are ignored).
+# Add one with:  printf '%s' 'word' | sha256sum
+# Plain-text regular expressions go in tools/banned_terms.local.yaml, which is git-ignored
+# and therefore only checked on the author's machine.
+token_sha256:
+  - c2f458b52f981616df40d597e010132aad5fc79c4cff8879d70379ef1ec4dcbf
+  - cc8d0139cbf2a25ccd2644fbd85692662e2775cdfbb9e6c44dd3cf21e0b56b3f
+  - a861230bec2ed5f16c703be48377f22b97e6c335db752edde0b73e38e32e6e82
+  - 06a0dbcda0a6902bb108c4206ebf3ff6d5fe7d59c726c43f906785fe8985e1db
+  - 18a987b499da11626b00cde118949ab2cb284693c6e0831c01fe9cd87a369d4a
+  - 730005ba29f55ff682253ca1810a0958a34165e8ef5dbc3c2f1f30d4f17a1165
+  - 181e3a7021ec233f03eeee05792ce6a29b20889481464eaef222baf9a7378366
+  - 2a4d6c132179829ed9fd413502260feb8dcf8232b662f65f52af496b0e43e35c
+  - 0dc8ebcc311ab83e951c748895f8e89544db179daa02396ef09cf7bd6adbc8f5
+  - b533e2c473b16c8746cc2ba4b7ccdfecd14f212d14bb8988ef6112318e399957
+  - d191e74f394e7b199ef003f72723867848b02f58ad951d9fe30ed9f8ca066782
+  - ff1c12115aa27f3abac8c882215ce24ca1bab902a7581b766e302d3265508f9f

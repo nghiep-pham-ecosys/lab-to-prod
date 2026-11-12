@@ -1,0 +1,461 @@
+# Content calendar. Source of truth for what is posted on which day.
+# Weeks with stage "trial" are fixed for the 4-week trial (16 Nov to 13 Dec 2026).
+# Weeks with stage "backlog" are proposals: edit or delete freely before they are drafted.
+# tools/validate.py checks every post folder against this file.
+timezone: Asia/Ho_Chi_Minh
+post_time: "08:30"
+short_time: "19:00"
+
+# Target share of items per pillar. validate.py warns when the calendar drifts
+# more than 10 points from a target.
+pillars:
+  ai-engineering: {name: "AI Engineering in production", target: 0.35}
+  simulation-physical-ai: {name: "Simulation and Physical AI", target: 0.15}
+  climate-materials: {name: "Climate x AI, chemistry and materials", target: 0.15}
+  ml-foundations: {name: "ML Foundations", target: 0.20}
+  learning-in-public: {name: "Learning in public: DSA in Java, Cloud and DevOps", target: 0.15}
+
+series:
+  dsa-in-java: {name: "DSA in Java", pillar: learning-in-public, kind: post}
+  cloud-devops: {name: "Cloud & DevOps", pillar: learning-in-public, kind: post}
+  ml-foundations: {name: "ML Foundations", pillar: ml-foundations, kind: post}
+  ai-engineering: {name: "AI Engineering", pillar: ai-engineering, kind: post}
+  climate-ai: {name: "Climate x AI", pillar: climate-materials, kind: post, sources_required: true}
+  simulation: {name: "Simulation", pillar: simulation-physical-ai, kind: post, sources_required: true}
+  physical-ai: {name: "Physical AI", pillar: simulation-physical-ai, kind: post, sources_required: true}
+  build-log: {name: "Build log", pillar: ai-engineering, kind: blog}
+  deep-dive: {name: "Deep dive", pillar: ai-engineering, kind: blog}
+
+weeks:
+  - week: 2026-W47
+    stage: trial
+    experiment: "baseline: change nothing, record the reference numbers"
+    items:
+      - date: 2026-11-16
+        series: dsa-in-java
+        part: 2
+        slug: dsa-p2
+        topic: "Java == vs equals: the String and Integer comparison traps"
+        short:
+          publish_at: "2026-11-17T19:00:00+07:00"
+          topic: "== vs equals in Java"
+      - date: 2026-11-17
+        series: ml-foundations
+        part: 1
+        slug: ml-p1
+        topic: "A matrix-vector product is one neural network layer"
+      - date: 2026-11-18
+        series: ai-engineering
+        part: 2
+        slug: ai-eng-p2
+        topic: "Precision and recall for an LLM quality gate"
+        short:
+          publish_at: "2026-11-19T19:00:00+07:00"
+          topic: "Precision vs recall for LLM evaluation"
+      - date: 2026-11-19
+        series: cloud-devops
+        part: 2
+        slug: cloud-p2
+        topic: "Hybrid connectivity: Site-to-Site VPN or Direct Connect"
+      - date: 2026-11-20
+        series: climate-ai
+        part: 1
+        slug: climate-p1
+        topic: "How ML weather forecasting differs from physics-based models"
+      - date: 2026-11-21
+        series: build-log
+        part: 1
+        slug: build-log-p1
+        topic: "Build log #1: why I am building Lab to Prod in public and how it runs"
+  - week: 2026-W48
+    stage: trial
+    experiment: "hook opens with a measured number"
+    items:
+      - date: 2026-11-23
+        series: dsa-in-java
+        part: 3
+        slug: dsa-p3
+        topic: "Recursion and the call stack"
+        short:
+          publish_at: "2026-11-24T19:00:00+07:00"
+          topic: "The call stack of a recursive function"
+      - date: 2026-11-24
+        series: ml-foundations
+        part: 2
+        slug: ml-p2
+        topic: "Gradient descent in three lines of code"
+      - date: 2026-11-25
+        series: ai-engineering
+        part: 3
+        slug: ai-eng-p3
+        topic: "Designing tools and tool_choice for an agent"
+        short:
+          publish_at: "2026-11-26T19:00:00+07:00"
+          topic: "The agent loop and stop_reason"
+      - date: 2026-11-26
+        series: cloud-devops
+        part: 3
+        slug: cloud-p3
+        topic: "Identity federation: one sign-in for many AWS accounts"
+      - date: 2026-11-27
+        series: simulation
+        part: 1
+        slug: sim-p1
+        topic: "A digital twin of a process unit: physics model plus sensor data"
+        short:
+          publish_at: "2026-12-03T19:00:00+07:00"
+          topic: "A digital twin in 45 seconds"
+      - date: 2026-11-28
+        series: deep-dive
+        part: 1
+        slug: deep-dive-p1
+        topic: "Building an LLM quality gate: from precision and recall to a rubric"
+  - week: 2026-W49
+    stage: trial
+    experiment: "LinkedIn multi-page PDF document instead of one image, on two posts"
+    items:
+      - date: 2026-11-30
+        series: dsa-in-java
+        part: 4
+        slug: dsa-p4
+        topic: "Linked list vs array: when to use which"
+        short:
+          publish_at: "2026-12-01T19:00:00+07:00"
+          topic: "Inserting into a linked list"
+      - date: 2026-12-01
+        series: ml-foundations
+        part: 3
+        slug: ml-p3
+        topic: "Overfitting and the train/validation/test split"
+      - date: 2026-12-02
+        series: ai-engineering
+        part: 4
+        slug: ai-eng-p4
+        topic: "Gold sets and rubrics for LLM evaluation"
+      - date: 2026-12-03
+        series: cloud-devops
+        part: 4
+        slug: cloud-p4
+        topic: "Four disaster recovery strategies and their RTO/RPO"
+      - date: 2026-12-04
+        series: climate-ai
+        part: 2
+        slug: climate-p2
+        topic: "ML for new materials: sorbents and membranes"
+      - date: 2026-12-05
+        series: build-log
+        part: 2
+        slug: build-log-p2
+        topic: "Build log #2: can silent approval by LLM-as-judge be trusted"
+  - week: 2026-W50
+    stage: trial
+    experiment: "post at 12:00 instead of 08:30"
+    items:
+      - date: 2026-12-07
+        series: dsa-in-java
+        part: 5
+        slug: dsa-p5
+        topic: "Stack and queue: backed by an array or a linked list"
+        short:
+          publish_at: "2026-12-08T19:00:00+07:00"
+          topic: "Stack and queue"
+      - date: 2026-12-08
+        series: ml-foundations
+        part: 4
+        slug: ml-p4
+        topic: "Attention is a weighted average"
+        short:
+          publish_at: "2026-12-10T19:00:00+07:00"
+          topic: "Attention is a weighted average"
+      - date: 2026-12-09
+        series: ai-engineering
+        part: 5
+        slug: ai-eng-p5
+        topic: "Orchestrator-workers: when splitting work across agents pays off"
+      - date: 2026-12-10
+        series: cloud-devops
+        part: 5
+        slug: cloud-p5
+        topic: "Migration strategies: the 7 Rs"
+      - date: 2026-12-11
+        series: physical-ai
+        part: 1
+        slug: physical-ai-p1
+        topic: "Sim-to-real: why a robot trained in simulation fails in the world"
+      - date: 2026-12-12
+        series: build-log
+        part: 3
+        slug: build-log-p3
+        topic: "Build log #3: four weeks of the trial, numbers and lessons"
+  - week: 2026-W51
+    stage: backlog
+    items:
+      - date: 2026-12-14
+        series: dsa-in-java
+        part: 6
+        slug: dsa-p6
+        topic: "Binary search and the off-by-one bugs that break it"
+      - date: 2026-12-15
+        series: ml-foundations
+        part: 5
+        slug: ml-p5
+        topic: "Bias-variance trade-off with one polynomial fit"
+      - date: 2026-12-16
+        series: ai-engineering
+        part: 6
+        slug: ai-eng-p6
+        topic: "LLM-as-judge: when can you trust a model grading a model"
+      - date: 2026-12-17
+        series: ai-engineering
+        part: 7
+        slug: ai-eng-p7
+        topic: "Prompt caching: what gets cached and what breaks it"
+      - date: 2026-12-18
+        series: climate-ai
+        part: 3
+        slug: climate-p3
+        topic: "Downscaling: turning coarse climate model output into local detail"
+      - date: 2026-12-19
+        series: build-log
+        part: 4
+        slug: build-log-p4
+        topic: "Build log #4: the trial verdict and what changes next"
+        pillar: ai-engineering
+  - week: 2026-W52
+    stage: backlog
+    items:
+      - date: 2026-12-21
+        series: cloud-devops
+        part: 6
+        slug: cloud-p6
+        topic: "Multi-account networking: Transit Gateway vs VPC peering"
+      - date: 2026-12-22
+        series: ml-foundations
+        part: 6
+        slug: ml-p6
+        topic: "Eigenvectors: the directions a matrix only stretches"
+      - date: 2026-12-23
+        series: ai-engineering
+        part: 8
+        slug: ai-eng-p8
+        topic: "Regression tests for prompts: catching silent quality drops"
+      - date: 2026-12-24
+        series: climate-ai
+        part: 4
+        slug: climate-p4
+        topic: "Carbon accounting for ML: estimating the emissions of a training run"
+      - date: 2026-12-25
+        series: simulation
+        part: 2
+        slug: sim-p2
+        topic: "A first-order process model: a stirred tank in 20 lines of Python"
+      - date: 2026-12-26
+        series: deep-dive
+        part: 2
+        slug: deep-dive-p2
+        topic: "Gradient descent, from three lines to a training loop"
+        pillar: ml-foundations
+  - week: 2026-W53
+    stage: backlog
+    items:
+      - date: 2026-12-28
+        series: dsa-in-java
+        part: 7
+        slug: dsa-p7
+        topic: "Hash maps: hashCode, collisions and load factor"
+      - date: 2026-12-29
+        series: ml-foundations
+        part: 7
+        slug: ml-p7
+        topic: "Logistic regression is a one-neuron network"
+      - date: 2026-12-30
+        series: ai-engineering
+        part: 9
+        slug: ai-eng-p9
+        topic: "Structured output: schemas, retries and validation"
+      - date: 2026-12-31
+        series: ai-engineering
+        part: 10
+        slug: ai-eng-p10
+        topic: "Agent memory: context window vs files vs retrieval"
+      - date: 2027-01-01
+        series: climate-ai
+        part: 5
+        slug: climate-p5
+        topic: "Short-term solar and wind forecasting for the grid"
+      - date: 2027-01-02
+        series: build-log
+        part: 5
+        slug: build-log-p5
+        topic: "Build log #5: the pipeline's first six weeks in numbers"
+        pillar: ai-engineering
+  - week: 2027-W01
+    stage: backlog
+    items:
+      - date: 2027-01-04
+        series: cloud-devops
+        part: 7
+        slug: cloud-p7
+        topic: "DORA's four key metrics and what they actually measure"
+      - date: 2027-01-05
+        series: ml-foundations
+        part: 8
+        slug: ml-p8
+        topic: "Regularisation: L1 vs L2 in one picture"
+      - date: 2027-01-06
+        series: ai-engineering
+        part: 11
+        slug: ai-eng-p11
+        topic: "Tracing an agent run: what to log to debug it later"
+      - date: 2027-01-07
+        series: climate-ai
+        part: 6
+        slug: climate-p6
+        topic: "Detecting methane leaks from satellite data"
+      - date: 2027-01-08
+        series: physical-ai
+        part: 2
+        slug: physical-ai-p2
+        topic: "ROS 2 in one picture: nodes, topics and why it is not an OS"
+      - date: 2027-01-09
+        series: deep-dive
+        part: 3
+        slug: deep-dive-p3
+        topic: "Simulating a process unit end to end, from model to controller"
+        pillar: simulation-physical-ai
+  - week: 2027-W02
+    stage: backlog
+    items:
+      - date: 2027-01-11
+        series: dsa-in-java
+        part: 8
+        slug: dsa-p8
+        topic: "Binary search trees and why balance matters"
+      - date: 2027-01-12
+        series: ml-foundations
+        part: 9
+        slug: ml-p9
+        topic: "Backpropagation is the chain rule with bookkeeping"
+      - date: 2027-01-13
+        series: ai-engineering
+        part: 12
+        slug: ai-eng-p12
+        topic: "RAG evaluation: retrieval metrics vs answer metrics"
+      - date: 2027-01-14
+        series: ai-engineering
+        part: 13
+        slug: ai-eng-p13
+        topic: "Guardrails: input checks, output checks and what they miss"
+      - date: 2027-01-15
+        series: climate-ai
+        part: 7
+        slug: climate-p7
+        topic: "ML for battery materials: predicting properties before synthesis"
+      - date: 2027-01-16
+        series: build-log
+        part: 6
+        slug: build-log-p6
+        topic: "Build log #6: what LLM-as-judge got wrong"
+        pillar: ai-engineering
+  - week: 2027-W03
+    stage: backlog
+    items:
+      - date: 2027-01-18
+        series: cloud-devops
+        part: 8
+        slug: cloud-p8
+        topic: "Blue/green vs canary deployments"
+      - date: 2027-01-19
+        series: ml-foundations
+        part: 10
+        slug: ml-p10
+        topic: "Embeddings: why cosine similarity works"
+      - date: 2027-01-20
+        series: ai-engineering
+        part: 14
+        slug: ai-eng-p14
+        topic: "Inter-rater agreement: Cohen's kappa for human and LLM graders"
+      - date: 2027-01-21
+        series: climate-ai
+        part: 8
+        slug: climate-p8
+        topic: "Flood mapping with satellite imagery and segmentation"
+      - date: 2027-01-22
+        series: simulation
+        part: 3
+        slug: sim-p3
+        topic: "PID control on a simulated tank: tuning by reading the curve"
+      - date: 2027-01-23
+        series: deep-dive
+        part: 4
+        slug: deep-dive-p4
+        topic: "Attention, from a weighted average to a working layer"
+        pillar: ml-foundations
+  - week: 2027-W04
+    stage: backlog
+    items:
+      - date: 2027-01-25
+        series: dsa-in-java
+        part: 9
+        slug: dsa-p9
+        topic: "Heaps and priority queues"
+      - date: 2027-01-26
+        series: ml-foundations
+        part: 11
+        slug: ml-p11
+        topic: "PCA from the covariance matrix"
+      - date: 2027-01-27
+        series: ai-engineering
+        part: 15
+        slug: ai-eng-p15
+        topic: "Cost and latency budgets for an LLM feature"
+      - date: 2027-01-28
+        series: ai-engineering
+        part: 16
+        slug: ai-eng-p16
+        topic: "Human-in-the-loop: designing an approval gate"
+      - date: 2027-01-29
+        series: climate-ai
+        part: 9
+        slug: climate-p9
+        topic: "Emulators: ML surrogates for expensive climate simulations"
+      - date: 2027-01-30
+        series: build-log
+        part: 7
+        slug: build-log-p7
+        topic: "Build log #7: cost, latency and failure modes of the pipeline"
+        pillar: ai-engineering
+  - week: 2027-W05
+    stage: backlog
+    items:
+      - date: 2027-02-01
+        series: cloud-devops
+        part: 9
+        slug: cloud-p9
+        topic: "Cost allocation: tags, budgets and the bill nobody owns"
+      - date: 2027-02-02
+        series: ml-foundations
+        part: 12
+        slug: ml-p12
+        topic: "Cross-entropy loss, from coin flips to classifiers"
+      - date: 2027-02-03
+        series: ai-engineering
+        part: 17
+        slug: ai-eng-p17
+        topic: "Online vs offline evaluation of LLM systems"
+      - date: 2027-02-04
+        series: climate-ai
+        part: 10
+        slug: climate-p10
+        topic: "Catalyst discovery with ML: what the open datasets made possible"
+      - date: 2027-02-05
+        series: physical-ai
+        part: 3
+        slug: physical-ai-p3
+        topic: "Domain randomisation: training on many wrong simulations"
+      - date: 2027-02-06
+        series: deep-dive
+        part: 5
+        slug: deep-dive-p5
+        topic: "Sim-to-real: a reading list with experiments"
+        pillar: simulation-physical-ai

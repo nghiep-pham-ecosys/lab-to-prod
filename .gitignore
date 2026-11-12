@@ -1,5 +1,7 @@
 # private planning doc (job-search details, internal names) stays local
 docs/spec.md
+# plain-text banned terms stay local; the public list holds hashes only
+tools/banned_terms.local.yaml
 # secrets
 .env
 .env.*
