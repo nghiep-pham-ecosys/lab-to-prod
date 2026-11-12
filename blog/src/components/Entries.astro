@@ -1,0 +1,24 @@
+---
+import { fmtDate, seriesName, url } from '../lib';
+
+interface Entry { id: string; data: { title: string; description: string; date: Date; series: string; part?: number } }
+interface Props { items: Entry[]; kind: 'notes' | 'posts'; empty: string }
+const { items, kind, empty } = Astro.props;
+---
+{items.length === 0 ? (
+  <p class="empty">{empty}</p>
+) : (
+  <ul class="entries">
+    {items.map((e) => (
+      <li>
+        <div class="meta">
+          <time datetime={e.data.date.toISOString().slice(0, 10)}>{fmtDate(e.data.date)}</time> ·{' '}
+          <a href={url(`/series/${e.data.series}/`)}>{seriesName(e.data.series)}</a>
+          {e.data.part ? `, part ${e.data.part}` : ''}
+        </div>
+        <a class="title" href={url(`/${kind}/${e.id}/`)}>{e.data.title}</a>
+        <p>{e.data.description}</p>
+      </li>
+    ))}
+  </ul>
+)}

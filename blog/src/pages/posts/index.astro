@@ -1,0 +1,11 @@
+---
+import Base from '../../layouts/Base.astro';
+import Entries from '../../components/Entries.astro';
+import { livePosts } from '../../content';
+const posts = await livePosts();
+---
+<Base title="Articles" description="Long articles, one every Saturday: build logs of this publishing pipeline and deep dives into the best note of the week.">
+  <h1>Articles</h1>
+  <p class="lede">One long read every Saturday: a build log of this pipeline, or a deep dive.</p>
+  <Entries items={posts} kind="posts" empty="The first article is on its way." />
+</Base>

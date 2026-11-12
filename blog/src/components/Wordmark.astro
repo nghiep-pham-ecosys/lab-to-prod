@@ -1,0 +1,16 @@
+---
+import { BRAND } from '../lib';
+---
+{BRAND.key === 'a' ? (
+  <span class="wm wm-a">Lab<svg viewBox="0 0 44 16" aria-hidden="true"><path d="M1 8h40M34 2l7 6-7 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Prod</span>
+) : (
+  <span class="wm wm-b">lab<i>-to-</i>prod<b aria-hidden="true"></b></span>
+)}
+<style>
+  .wm { font-weight: 650; font-size: 1.45rem; color: var(--fg); white-space: nowrap; }
+  .wm-a { font-family: var(--display); }
+  .wm-a svg { width: 1.5em; height: 0.55em; margin: 0 0.28em; color: var(--accent); }
+  .wm-b { font-family: var(--mono); font-size: 1.25rem; }
+  .wm-b i { font-style: normal; color: var(--accent); }
+  .wm-b b { display: inline-block; width: 0.5em; height: 1em; margin-left: 0.1em; background: var(--accent); vertical-align: -0.12em; }
+</style>

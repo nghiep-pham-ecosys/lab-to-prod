@@ -1,0 +1,39 @@
+---
+import Base from '../layouts/Base.astro';
+import Entries from '../components/Entries.astro';
+import { SITE } from '../site';
+import { url } from '../lib';
+import { liveNotes, livePosts } from '../content';
+
+const posts = await livePosts();
+const notes = await liveNotes();
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Blog',
+  name: SITE.title,
+  description: SITE.description,
+  url: new URL(url('/'), Astro.site).toString(),
+  author: { '@type': 'Person', name: SITE.author, url: SITE.github },
+};
+---
+<Base jsonLd={jsonLd}>
+  <p class="kicker">Nghiep Pham</p>
+  <h1>From the lab bench to production AI</h1>
+  <p class="lede">
+    I trained as a chemist and now build AI systems. This is my notebook: one short note every
+    weekday on something I just learned, and one long article every Saturday.
+  </p>
+  <p>
+    Topics: AI engineering in production (evaluation, agents, LLMOps), ML foundations, simulation
+    and physical AI, climate and materials, and the data structures and cloud basics underneath.
+    The whole publishing pipeline is <a href={SITE.repo}>open source</a>.
+  </p>
+
+  <h2>Articles</h2>
+  <Entries items={posts.slice(0, 3)} kind="posts" empty="The first article is on its way." />
+  {posts.length > 3 && <p class="more"><a href={url('/posts/')}>All articles</a></p>}
+
+  <h2>Latest notes</h2>
+  <Entries items={notes.slice(0, 5)} kind="notes" empty="Daily notes start on Monday 16 November 2026." />
+  {notes.length > 5 && <p class="more"><a href={url('/notes/')}>All notes</a></p>}
+</Base>

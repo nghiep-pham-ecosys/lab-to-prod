@@ -1,0 +1,11 @@
+---
+import Base from '../../layouts/Base.astro';
+import Entries from '../../components/Entries.astro';
+import { liveNotes } from '../../content';
+const notes = await liveNotes();
+---
+<Base title="Notes" description="Short weekday notes on AI engineering, ML foundations, cloud, data structures, climate and simulation. One idea per note.">
+  <h1>Notes</h1>
+  <p class="lede">One idea per weekday, short enough to read with a coffee.</p>
+  <Entries items={notes} kind="notes" empty="Daily notes start on Monday 16 November 2026." />
+</Base>

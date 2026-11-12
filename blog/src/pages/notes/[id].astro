@@ -1,0 +1,41 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { SITE } from '../../site';
+import { abs, fmtDate, isLive, seriesName, url } from '../../lib';
+
+export async function getStaticPaths() {
+  const notes = await getCollection('notes', (n) => isLive(n.data.date));
+  return notes.map((note) => ({ params: { id: note.id }, props: { note } }));
+}
+const { note } = Astro.props;
+const { Content } = await render(note);
+const d = note.data;
+const image = d.hasImage ? `/notes/${note.id}.png` : undefined;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: d.title,
+  description: d.description,
+  datePublished: d.date.toISOString(),
+  author: { '@type': 'Person', name: SITE.author, url: SITE.github },
+  image: image ? abs(image, Astro.site) : undefined,
+  mainEntityOfPage: new URL(Astro.url.pathname, Astro.site).toString(),
+};
+---
+<Base title={d.title} description={d.description} image={image} imageAlt={d.imageAlt} type="article" published={d.date} jsonLd={jsonLd}>
+  <article>
+    <p class="kicker"><a href={url(`/series/${d.series}/`)}>{seriesName(d.series)}</a> · Part {d.part}</p>
+    <h1>{d.title}</h1>
+    <p class="meta"><time datetime={d.date.toISOString().slice(0, 10)}>{fmtDate(d.date)}</time></p>
+    {image && <img class="figure" src={url(image)} alt={d.imageAlt} width="1200" height="1200" loading="lazy" />}
+    <div class="prose"><Content /></div>
+    {d.sources.length > 0 && (
+      <div class="prose">
+        <h2>Sources</h2>
+        <ul>{d.sources.map((s) => <li><a href={s}>{s}</a></li>)}</ul>
+      </div>
+    )}
+    {d.tags.length > 0 && <div class="tags">{d.tags.map((t) => <span>#{t}</span>)}</div>}
+  </article>
+</Base>
