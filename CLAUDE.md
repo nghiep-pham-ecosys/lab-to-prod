@@ -75,7 +75,7 @@ content/_template/post.md        copy this to start a post
 claude/lesson-log.md             what the author studied; ground posts in it
 tools/validate.py                the checks that gate every pull request
 tools/banned_terms.yaml          hashed terms that fail the build
-brand/                           brand.yaml (palettes, fonts, themes), build.py, two options
+brand/                           brand.yaml (palettes, fonts, themes), build.py, five options (D selected)
 render/image/render.py           image.png from the card: block of a post (Pillow)
 render/short/render.mjs          short.mp4 + short.srt from short.json (Remotion)
 sim/                             small simulations and notebooks for the simulation series
@@ -103,7 +103,7 @@ uv run --with-requirements tools/requirements.txt python tools/validate.py
 ```
 
 ```bash
-uv run --with pillow --with pyyaml python render/image/render.py --week 2026-W47
+uv run --with-requirements tools/requirements.txt python render/image/render.py --week 2026-W47
 ```
 
 ```bash

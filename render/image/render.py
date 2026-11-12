@@ -7,7 +7,9 @@
 
 card:
   layout: code | stat | table
-  theme: paper            # optional; any theme of the selected brand option
+  theme: light            # optional; a theme of the selected brand option (a name from another
+                          # option maps to the same role: light, dark or the accent third theme,
+                          # so paper/ink/copper become light/dark/yellow under option D)
   headline: "Same value, different object"
   code: ["Integer a = 127;", "> c == d   // false"]      # layout code; "> " marks the highlighted line
   stat: {value: "0.62", label: "recall", note: "8 of 13 bad answers caught"}   # layout stat
@@ -63,6 +65,25 @@ def fit(c, text, font_name, weight, sizes, max_w, max_lines):
     raise ValueError(f"text does not fit in {max_lines} lines even at {sizes[-1]}px: {text!r}")
 
 
+def theme_role(opt: dict, name: str) -> str:
+    """'light' or 'dark' for the option's two main themes, 'third' for its accent theme."""
+    if name not in (opt["primary"], opt["alt"]):
+        return "third"
+    return "dark" if brand.is_dark(opt["themes"][name]) else "light"
+
+
+def resolve_theme(opt: dict, name: str) -> str:
+    """A theme of the selected option. A name from another option (a card written before the
+    brand changed) maps to the theme with the same role, so switching `selected` needs no edits."""
+    if name in opt["themes"]:
+        return name
+    for other in brand.CFG["options"].values():
+        if name in other["themes"]:
+            role = theme_role(other, name)
+            return next(t for t in opt["themes"] if theme_role(opt, t) == role)
+    raise ValueError(f"theme {name!r} is not one of {list(opt['themes'])}")
+
+
 def render(folder: Path, theme_name: str | None = None) -> Path:
     meta = load_post(folder)
     card = meta.get("card")
@@ -70,19 +91,25 @@ def render(folder: Path, theme_name: str | None = None) -> Path:
         raise ValueError(f"{folder}/post.md has no card: block")
     key = brand.CFG["selected"]
     opt = brand.CFG["options"][key]
-    theme_name = theme_name or card.get("theme") or opt["primary"]
-    if theme_name not in opt["themes"]:
-        raise ValueError(f"theme {theme_name!r} is not one of {list(opt['themes'])}")
+    theme_name = resolve_theme(opt, theme_name or card.get("theme") or opt["primary"])
     t, o = opt["themes"][theme_name], brand.OPT[key]
     inner = W - 2 * M
 
-    c = brand.Canvas(W, H, t["bg"])
-    brand.texture(c, key, t)
-    c.rect([M - 24, M - 24, W - M + 24, H - M + 24], fill=t["bg"])
-
+    # Same background, rule and panels as the sample cards in brand/build.py: glossy options get
+    # the bg -> bg2 gradient with soft light, a foil rule and foil accents; flat options a quiet
+    # patch over the texture.
+    # With the honeycomb texture, one foil benzene ring sits at the top right on the kicker line and
+    # the rule stops short of it; the lattice keeps clear of everything drawn here.
+    gloss = bool(brand.style(key).get("gloss"))
     kicker = f"{series_names().get(meta['series'], meta['series'])} · Part {meta['part']}".upper()
-    c.text((M, M + 14), kicker, brand.font(o["mono"], 30 * SS, 600), t["accent"], anchor="lm", spacing=3)
-    c.line([(M, M + 56), (W - M, M + 56)], t["line"], 2)
+    kicker_f = brand.font(o["mono"], 30 * SS, 700 if gloss else 600)
+    ring = brand.card_accent(key, W, M, M + brand.Canvas(1, 1, None).width(kicker, kicker_f, 3), M + 14)
+    c = brand.new_canvas(W, H, t, key, accent=ring)
+    if not gloss:
+        c.rect([M - 24, M - 24, W - M + 24, H - M + 24], fill=t["bg"])
+
+    c.text((M, M + 14), kicker, kicker_f, t["accent"], anchor="lm", spacing=3)
+    brand.rule(c, M, brand.rule_end(W, M, ring), M + 56, t, key)
 
     footer_top = H - M - 70
     c.line([(M, footer_top), (W - M, footer_top)], t["line"], 2)
@@ -95,7 +122,7 @@ def render(folder: Path, theme_name: str | None = None) -> Path:
         lesson_h = len(lesson_lines) * lsize * 1.3 + 30
 
     layout = card.get("layout", "code")
-    weight = 600 if key == "a" else 700
+    weight = brand.display_weight(key)
     y = M + 96
     body_bottom = footer_top - 30 - lesson_h
 
@@ -114,14 +141,14 @@ def render(folder: Path, theme_name: str | None = None) -> Path:
         plain = [ln[2:] if ln.startswith("> ") else ln for ln in lines]
         avail_h = body_bottom - y
         for size in (46, 42, 38, 34, 30, 27, 24):
-            fnt = brand.font(o["mono"], size * SS, 500)
+            fnt = brand.code_font(o["mono"], size * SS)
             lh = size * 1.52
             if max(c.width(ln, fnt) for ln in plain) <= inner - 80 and 72 + lh * len(lines) <= avail_h:
                 break
         else:
             raise ValueError("code block does not fit; shorten lines or remove some")
         bh = 72 + lh * len(lines)
-        c.rect([M, y, W - M, y + bh], fill=t["panel"], radius=18)
+        brand.panel(c, [M, y, W - M, y + bh], t, key)
         cy = y + 36 + lh / 2
         for raw, ln in zip(lines, plain):
             c.text((M + 40, cy), ln, fnt, t["panel_accent"] if raw.startswith("> ") else t["panel_fg"], anchor="lm")
@@ -131,7 +158,7 @@ def render(folder: Path, theme_name: str | None = None) -> Path:
         stat = card["stat"]
         headline(2, [72, 64, 56])
         box_h = min(430, body_bottom - y)
-        c.rect([M, y, W - M, y + box_h], fill=t["panel"], radius=18)
+        brand.panel(c, [M, y, W - M, y + box_h], t, key)
         vf, vsize, _ = fit(c, stat["value"], o["display"], weight, [230, 200, 170, 140, 110], inner - 100, 1)
         c.text((M + 50, y + box_h * 0.42), str(stat["value"]), vf, t["panel_accent"], anchor="lm")
         c.text((M + 54, y + box_h * 0.80), str(stat.get("label", "")).upper(), brand.font(o["mono"], 32 * SS, 600),

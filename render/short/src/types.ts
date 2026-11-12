@@ -1,4 +1,4 @@
-export type Theme = { bg: string; fg: string; muted: string; accent: string; line: string; panel: string; panel_fg: string; panel_accent: string };
+export type Theme = { bg: string; bg2?: string; fg: string; muted: string; accent: string; line: string; panel: string; panel_fg: string; panel_accent: string; foil?: string[] };
 
 export type Scene =
   | { type: 'title'; text: string; say: string; seconds: number }
@@ -12,6 +12,7 @@ export type ShortProps = {
   scenes: Scene[];
   theme: Theme;
   fonts: { display: string; body: string; mono: string };
-  brandKey: 'a' | 'b';
+  brandKey: string;
+  style: { mark: string; wordmark: string; lockup?: boolean; texture?: string };
   name: string;
 };

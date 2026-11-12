@@ -31,7 +31,7 @@ jobs:
           python-version: "3.12"
       - name: Open Graph images, note images, favicon
         run: |
-          pip install pillow pyyaml
+          pip install -r tools/requirements.txt
           python blog/scripts/prebuild.py
       - uses: actions/setup-node@v7
         with:

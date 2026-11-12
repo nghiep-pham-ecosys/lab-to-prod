@@ -2,11 +2,12 @@
 name: "Nghiep Pham · Lab to Prod"
 tagline: "AI engineering, ML and climate — notes from a chemist turned AI engineer"
 
-# Which option the render pipeline uses. Change to "b" to switch everything.
-selected: a
+# Which option the render pipeline uses. Change the key to switch everything.
+selected: d
 
 options:
   a:
+    style: {mark: arrow, wordmark: arrow, texture: grid}
     title: "Bench: lab notebook, serif wordmark, reaction arrow"
     fonts: {display: Fraunces, body: Inter, mono: JetBrainsMono}
     primary: paper
@@ -40,6 +41,7 @@ options:
         panel_fg: "#F6EBDD"
         panel_accent: "#FDBA74"
   b:
+    style: {mark: hexagon, wordmark: mono, texture: dots}
     title: "Night shift: terminal, mono wordmark, hexagon node mark"
     fonts: {display: SpaceGrotesk, body: SpaceGrotesk, mono: JetBrainsMono}
     primary: night
@@ -72,6 +74,124 @@ options:
         panel: "#0B0F19"
         panel_fg: "#E5E7EB"
         panel_accent: "#FBBF24"
+
+  c:
+    style: {mark: arrow, wordmark: arrow, texture: grid, gloss: true}
+    title: "Gold leaf: cream paper, black ink, gold-foil arrow"
+    fonts: {display: Fraunces, body: Inter, mono: JetBrainsMono}
+    primary: light
+    alt: dark
+    themes:
+      light:
+        bg: "#FCF7EA"
+        bg2: "#F6ECD0"
+        fg: "#12110D"
+        muted: "#6B624D"
+        accent: "#7A5600"
+        foil: ["#6B4A00", "#D9A514", "#946A00"]
+        line: "#E9DDBE"
+        panel: "#14130F"
+        panel_fg: "#FBF6E9"
+        panel_accent: "#F9D648"
+      dark:
+        bg: "#100F0B"
+        bg2: "#1E1B13"
+        fg: "#FBF6E9"
+        muted: "#A99F87"
+        accent: "#F2C230"
+        foil: ["#C8930E", "#FFF0A8", "#F2C230"]
+        line: "#2B271C"
+        panel: "#1F1C15"
+        panel_fg: "#F3EAD3"
+        panel_accent: "#F9D648"
+      gold:
+        bg: "#F9D648"
+        bg2: "#EDB81C"
+        fg: "#12110D"
+        muted: "#5A4708"
+        accent: "#12110D"
+        line: "#E3B21A"
+        panel: "#14130F"
+        panel_fg: "#FBF6E9"
+        panel_accent: "#F9D648"
+  d:
+    style: {mark: badge, wordmark: pill, texture: honeycomb, gloss: true, lockup: true}
+    title: "Signal: glossy gold badge with a benzene ring under L→P, honeycomb texture, bold grotesk"
+    fonts: {display: SpaceGrotesk, body: SpaceGrotesk, mono: JetBrainsMono}
+    primary: light
+    alt: dark
+    themes:
+      light:
+        bg: "#FFFCF2"
+        bg2: "#FAF1D6"
+        fg: "#0B0B0A"
+        muted: "#5F5846"
+        accent: "#6E5000"
+        foil: ["#5E4300", "#E0AA00", "#8A6200"]
+        line: "#EDE2C2"
+        panel: "#0B0B0A"
+        panel_fg: "#FFFCF2"
+        panel_accent: "#FFD21F"
+      dark:
+        bg: "#0B0B0A"
+        bg2: "#191813"
+        fg: "#FFFCF2"
+        muted: "#A8A08A"
+        accent: "#FFD21F"
+        foil: ["#F5B700", "#FFF6B8", "#FFD21F"]
+        line: "#2A2820"
+        panel: "#1A1914"
+        panel_fg: "#F6F0DC"
+        panel_accent: "#FFD21F"
+      yellow:
+        bg: "#FFD21F"
+        bg2: "#F5B700"
+        fg: "#0B0B0A"
+        muted: "#4F3F00"
+        accent: "#0B0B0A"
+        line: "#E8B300"
+        panel: "#0B0B0A"
+        panel_fg: "#FFFCF2"
+        panel_accent: "#FFD21F"
+  e:
+    style: {mark: hexagon, wordmark: mono, texture: dots, gloss: true, lockup: true}
+    title: "Honey: benzene-ring mark beside a mono wordmark, amber glow"
+    fonts: {display: SpaceGrotesk, body: Inter, mono: JetBrainsMono}
+    primary: light
+    alt: dark
+    themes:
+      light:
+        bg: "#FBF3DF"
+        bg2: "#F7E9C2"
+        fg: "#16130C"
+        muted: "#6E6148"
+        accent: "#7F4F00"
+        foil: ["#6E4200", "#E59A00", "#9A5E00"]
+        line: "#E8D8AE"
+        panel: "#16130C"
+        panel_fg: "#FBF3DF"
+        panel_accent: "#FFC233"
+      dark:
+        bg: "#12100A"
+        bg2: "#221C0E"
+        fg: "#FBF3DF"
+        muted: "#AD9F80"
+        accent: "#FFC233"
+        foil: ["#D98A00", "#FFEFB5", "#FFC233"]
+        line: "#2E2716"
+        panel: "#211C10"
+        panel_fg: "#F4E9CC"
+        panel_accent: "#FFC233"
+      amber:
+        bg: "#FFC233"
+        bg2: "#F2A900"
+        fg: "#16130C"
+        muted: "#573C00"
+        accent: "#16130C"
+        line: "#E39E00"
+        panel: "#16130C"
+        panel_fg: "#FBF3DF"
+        panel_accent: "#FFC233"
 
 # Text used on the sample cards (a toy example, same for both options).
 sample:

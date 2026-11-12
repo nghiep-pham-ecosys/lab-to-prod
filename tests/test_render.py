@@ -75,3 +75,61 @@ def test_calibration_recovers_the_valve_coefficient():
     k = tank.calibrate(t_obs, h_obs)
     assert k == pytest.approx(tank.K_TRUE, abs=2e-4)
     assert tank.rmse(k, t_obs, h_obs) < 0.03 < tank.rmse(tank.K_GUESS, t_obs, h_obs)
+
+
+def test_theme_names_of_another_option_map_to_the_same_role():
+    opt = image_render.brand.CFG["options"]["e"]
+    assert [image_render.resolve_theme(opt, n) for n in ("paper", "ink", "copper")] == ["light", "dark", "amber"]
+    assert [image_render.resolve_theme(opt, n) for n in ("night", "day", "signal")] == ["dark", "light", "amber"]
+    assert image_render.resolve_theme(opt, "dark") == "dark"
+    # option D, the selected one: the week 47 cards say paper, ink and copper
+    opt = image_render.brand.CFG["options"]["d"]
+    assert [image_render.resolve_theme(opt, n) for n in ("paper", "ink", "copper")] == ["light", "dark", "yellow"]
+    assert [image_render.resolve_theme(opt, n) for n in ("amber", "gold")] == ["yellow", "yellow"]
+
+
+def test_code_font_draws_double_equals_as_two_glyphs_not_a_ligature():
+    from PIL import Image as PILImage, ImageDraw
+
+    brand = image_render.brand
+    f = brand.code_font("JetBrainsMono", 80)
+    adv = f.getlength("=")
+    pair = PILImage.new("L", (300, 120), 0)
+    ImageDraw.Draw(pair).text((10, 10), "==", font=f, fill=255)
+    two = PILImage.new("L", (300, 120), 0)
+    d = ImageDraw.Draw(two)
+    d.text((10, 10), "=", font=f, fill=255)
+    d.text((10 + adv, 10), "=", font=f, fill=255)
+    assert pair.tobytes() == two.tobytes()
+
+
+def _selected_theme(role_name):
+    opt = image_render.brand.CFG["options"][image_render.brand.CFG["selected"]]
+    return image_render.resolve_theme(opt, role_name)
+
+
+def test_glossy_cards_get_the_bg_to_bg2_gradient(tmp_path):
+    out = image_render.render(folder_with(tmp_path, CARDS["code"]), _selected_theme("paper"))
+    im = Image.open(out).convert("RGB")
+    assert im.getpixel((30, 30)) != im.getpixel((30, 1170))
+
+
+def test_footer_badge_has_black_letters_on_gold_in_every_theme(tmp_path):
+    # Badge centre (W - M - 44, H - M - 22), size 110: the square spans +-44 px.
+    for role in ("paper", "ink", "copper"):
+        out = image_render.render(folder_with(tmp_path, CARDS["code"]), _selected_theme(role))
+        im = Image.open(out).convert("RGB")
+        r, g, b = im.getpixel((1068 - 34, 1090 + 30))   # lower left of the square, below the sheen
+        assert r > 200 and g > 150 and b < 120, role      # gold
+        badge = im.crop((1068 - 30, 1090 - 14, 1068 + 30, 1090 + 14))
+        assert min(sum(badge.getpixel((x, y))) for x in range(badge.width) for y in range(badge.height)) < 120, role   # black ink of L->P
+
+
+def test_card_accent_ring_sits_top_right_and_the_rule_stops_before_it(tmp_path):
+    out = image_render.render(folder_with(tmp_path, CARDS["code"]), _selected_theme("paper"))
+    im = Image.open(out).convert("RGB")
+    bg = im.getpixel((1150, 102))
+    ring_side = [im.getpixel((x, 102)) for x in range(1104, 1116)]   # right side of the ring
+    assert min(sum(p) for p in ring_side) < sum(bg) - 150
+    rule = [im.getpixel((x, 144)) for x in range(990, 1030)]
+    assert any(sum(p) < 500 for p in rule[:10]) and all(sum(p) > sum(bg) - 60 for p in rule[-6:])

@@ -9,6 +9,7 @@ const defaultProps: ShortProps = {
   kicker: 'Series · Part 1',
   name: 'Nghiep Pham · Lab to Prod',
   brandKey: 'a',
+  style: { mark: 'arrow', wordmark: 'arrow' },
   fonts: { display: 'Fraunces', body: 'Inter', mono: 'JetBrainsMono' },
   theme: { bg: '#1B1F23', fg: '#F6F1E7', muted: '#A39C8F', accent: '#5EEAD4', line: '#2A3036', panel: '#11151A', panel_fg: '#E8E2D6', panel_accent: '#5EEAD4' },
   scenes: [
