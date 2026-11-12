@@ -6,7 +6,7 @@ On x.com: compose, attach the image, add the alt text, choose Schedule. After ea
 
 Image: `2026-11-16-dsa-p2/image.png`  
 Alt text: Java code: two Integer variables holding 127 compare true with ==, two holding 128 compare false, and equals returns true.  
-First reply: https://pqnghiep1354.github.io/lab-to-prod/notes/2026-11-16-dsa-p2/
+First reply: https://nghiep-pham-ecosys.github.io/lab-to-prod/notes/2026-11-16-dsa-p2/
 
 ```text
 128 == 128 is false in Java. 127 == 127 is true.
@@ -20,7 +20,7 @@ Use equals() for objects.
 
 Image: `2026-11-18-ai-eng-p2/image.png`  
 Alt text: A card showing recall 0.62: a quality gate with 80 percent precision still caught only 8 of 13 bad answers.  
-First reply: https://pqnghiep1354.github.io/lab-to-prod/notes/2026-11-18-ai-eng-p2/
+First reply: https://nghiep-pham-ecosys.github.io/lab-to-prod/notes/2026-11-18-ai-eng-p2/
 
 ```text
 5 of 13 bad answers passed my LLM quality gate. Its precision was 80%.

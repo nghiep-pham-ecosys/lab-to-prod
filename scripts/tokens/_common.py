@@ -19,7 +19,7 @@ import urllib.parse
 import urllib.request
 import webbrowser
 
-DEFAULT_REPO = "pqnghiep1354/lab-to-prod"
+DEFAULT_REPO = "nghiep-pham-ecosys/lab-to-prod"
 
 
 class TokenError(Exception):

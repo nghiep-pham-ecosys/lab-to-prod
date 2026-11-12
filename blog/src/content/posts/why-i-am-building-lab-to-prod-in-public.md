@@ -40,7 +40,7 @@ every line of it.
 
 ## What "in public" means here
 
-Everything lives in [one repository](https://github.com/pqnghiep1354/lab-to-prod): the calendar,
+Everything lives in [one repository](https://github.com/nghiep-pham-ecosys/lab-to-prod): the calendar,
 every post as a markdown file, the code that draws the images and videos, the scripts that
 publish, and the metrics that come back.
 
