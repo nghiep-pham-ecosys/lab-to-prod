@@ -103,7 +103,7 @@ uv run --with-requirements tools/requirements.txt python tools/validate.py
 ```
 
 ```bash
-uv run --with pillow --with pyyaml python render/image/render.py --week 2026-W47
+uv run --with-requirements tools/requirements.txt python render/image/render.py --week 2026-W47
 ```
 
 ```bash
