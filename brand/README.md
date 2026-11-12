@@ -3,9 +3,14 @@
 Display name: **Nghiep Pham · Lab to Prod**
 Tagline: *AI engineering, ML and climate — notes from a chemist turned AI engineer*
 
-Two options are built from `brand.yaml` by `build.py`. Open `option-a/preview.png` and
-`option-b/preview.png`, pick one, and set `selected:` in `brand.yaml`. The image and video
-renderers read that key, so the choice is one line.
+Five options (A to E) are built from `brand.yaml` by `build.py`. Each `option-<key>/preview.png`
+shows one on a sheet; `selected:` in `brand.yaml` picks the one the image, video and blog
+renderers use, so the choice is one line. The selected option is **E, Honey**.
+
+Option E uses a lockup (`lockup: true` in its `style`): the logo and every banner set the benzene
+ring, with its one lit gold node, to the left of the `lab-to-prod` wordmark. The ring is about
+1.6 times the wordmark's cap height and vertically centred on it; in banners the "NGHIEP PHAM"
+kicker and the tagline start where the wordmark starts. Avatars stay mark only.
 
 | | Option A: Bench | Option B: Night shift |
 | --- | --- | --- |

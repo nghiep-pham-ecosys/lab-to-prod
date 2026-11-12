@@ -9,13 +9,15 @@ a preview sheet. Nothing here is drawn by hand, so a palette change is one edit.
 
 An option's `style` picks the mark, the wordmark and the background texture. With `gloss: true`
 backgrounds get a gradient and soft light, accents are drawn as metallic foil (the theme's
-`foil` colours), and panels get a shadow and a sheen.
+`foil` colours), and panels get a shadow and a sheen. With `lockup: true` the logo and the
+banners set the mark to the left of the wordmark (avatars stay mark only).
 """
 from __future__ import annotations
 
 import math
 import sys
 from contextlib import contextmanager
+from functools import lru_cache
 from pathlib import Path
 
 import yaml
@@ -210,7 +212,7 @@ def _foil(c: Canvas) -> bool:
 
 # ---------------------------------------------------------------- marks
 
-def mark_arrow(c: Canvas, cx, cy, size, fg, accent):
+def mark_arrow(c: Canvas, cx, cy, size, fg, accent, weight=1.0):
     """L, a reaction arrow, P. Reads as 'Lab yields Prod'."""
     f = font("Fraunces", size * 0.62 * SS, 600)
     gap = size * 0.34
@@ -220,22 +222,25 @@ def mark_arrow(c: Canvas, cx, cy, size, fg, accent):
         c.arrow(cx - gap * 0.72, cx + gap * 0.72, cy + size * 0.03, accent, size * (0.045 if _foil(c) else 0.035))
 
 
-def mark_hexagon(c: Canvas, cx, cy, size, fg, accent):
-    """A benzene-like hexagon whose vertices are nodes, one lit: lab ring, prod graph."""
+def mark_hexagon(c: Canvas, cx, cy, size, fg, accent, weight=1.0):
+    """A benzene-like hexagon whose vertices are nodes, one lit: lab ring, prod graph.
+
+    `weight` thickens strokes and nodes, so the ring holds its own next to a bold wordmark.
+    """
     r = size * 0.36
     pts = hexagon(cx, cy, r)
-    c.polygon(pts, outline=fg, width=size * 0.035)
-    inner = hexagon(cx, cy, r * 0.62)
+    c.polygon(pts, outline=fg, width=size * 0.035 * weight)
+    inner = hexagon(cx, cy, r * (0.62 - 0.03 * (weight - 1)))
     for i in (0, 2, 4):
-        c.line([inner[i], inner[(i + 1) % 6]], fg, size * 0.03)
+        c.line([inner[i], inner[(i + 1) % 6]], fg, size * 0.03 * weight)
     for i, p in enumerate(pts):
         if i != 5:
-            c.circle(p, size * 0.045, fg)
+            c.circle(p, size * 0.045 * (1 + (weight - 1) * 0.6), fg)
     with c.accent():
-        c.circle(pts[5], size * (0.075 if _foil(c) else 0.06), accent)
+        c.circle(pts[5], size * (0.075 if _foil(c) else 0.06) * (1 + (weight - 1) * 0.4), accent)
 
 
-def mark_badge(c: Canvas, cx, cy, size, fg, accent):
+def mark_badge(c: Canvas, cx, cy, size, fg, accent, weight=1.0):
     """A glossy yellow rounded square holding L, an arrow and P in black."""
     t = c.theme or {}
     ink = "#0B0B0A"
@@ -312,8 +317,61 @@ def wordmark_pill(c: Canvas, x, y, size, fg, accent, anchor="l"):
 
 MARKS = {"arrow": mark_arrow, "hexagon": mark_hexagon, "badge": mark_badge}
 WORDMARKS = {"arrow": wordmark_arrow, "mono": wordmark_mono, "pill": wordmark_pill}
+WORDMARK_FONT = {"arrow": ("Fraunces", 600), "mono": ("JetBrainsMono", 700), "pill": ("SpaceGrotesk", 700)}
 OPT = {key: {"mark": MARKS[opt["style"]["mark"]], "wordmark": WORDMARKS[opt["style"]["wordmark"]], **opt["fonts"]}
        for key, opt in CFG["options"].items()}
+
+
+# ---------------------------------------------------------------- lockup: mark left of the wordmark
+
+LOCKUP_MARK = 1.6   # mark ink height / wordmark cap height
+LOCKUP_GAP = 0.42   # space between the mark ink and the wordmark, in wordmark font sizes
+LOCKUP_WEIGHT = 1.7  # mark stroke weight next to the bold wordmark (hexagon only; other marks ignore it)
+
+
+def _ink_box(draw, w: int, h: int) -> tuple[float, float, float, float]:
+    """Bounding box (final pixels) of what `draw(canvas)` puts on an empty canvas."""
+    c = Canvas(w, h, None)
+    draw(c)
+    box = c.im.getchannel("A").getbbox()
+    return tuple(v / SS for v in box)
+
+
+@lru_cache(maxsize=None)
+def _mark_ink(key: str, ref: int) -> tuple[float, float, float, float]:
+    """Ink box of the option's mark drawn at size `ref`, centred at (ref, ref)."""
+    return _ink_box(lambda c: OPT[key]["mark"](c, ref, ref, ref, "#000000", "#000000", LOCKUP_WEIGHT), 2 * ref, 2 * ref)
+
+
+def wordmark_width(key: str, size: float) -> float:
+    return OPT[key]["wordmark"](Canvas(1, 1, None), 0, 0, size, "#000000", "#000000")
+
+
+def lockup_geometry(key: str, size: float) -> dict:
+    """Where the mark goes for a wordmark of font size `size` whose left edge is at x = 0.
+
+    mark: the size argument for the mark function; cx, dy: its centre (dy from the wordmark's
+    vertical centre); lead: where the wordmark starts; width: the whole lockup.
+    """
+    fname, weight = WORDMARK_FONT[style(key)["wordmark"]]
+    l, t, r, b = font(fname, 1000 * SS, weight).getbbox("H")
+    cap = (b - t) / 1000 / SS * size
+    ref = 1000
+    x0, y0, x1, y1 = _mark_ink(key, ref)
+    mark = LOCKUP_MARK * cap / ((y1 - y0) / ref)
+    k = mark / ref
+    lead = (x1 - x0) * k + LOCKUP_GAP * size
+    return {"mark": mark, "cx": (ref - x0) * k, "dy": (ref - (y0 + y1) / 2) * k, "lead": lead,
+            "width": lead + wordmark_width(key, size)}
+
+
+def lockup(c: Canvas, key: str, x, y, size, fg, accent, anchor="l") -> dict:
+    """Draw the mark and the wordmark side by side, vertically centred on y."""
+    g = lockup_geometry(key, size)
+    x = _place(x, g["width"], anchor)
+    OPT[key]["mark"](c, x + g["cx"], y + g["dy"], g["mark"], fg, accent, LOCKUP_WEIGHT)
+    OPT[key]["wordmark"](c, x + g["lead"], y, size, fg, accent, anchor="l")
+    return {**g, "x": x}
 
 
 def texture(c: Canvas, key: str, t: dict):
@@ -367,7 +425,10 @@ def rule(c: Canvas, x0, x1, y, t: dict, key: str):
 def build_logo(key, t, out, suffix=""):
     c = Canvas(1600, 400, None, t)
     size = {"arrow": 170, "mono": 150, "pill": 160}[style(key)["wordmark"]]
-    OPT[key]["wordmark"](c, 800, 200, size, t["fg"], t["accent"], anchor="m")
+    if style(key).get("lockup"):
+        lockup(c, key, 800, 200, size * 0.86, t["fg"], t["accent"], anchor="m")
+    else:
+        OPT[key]["wordmark"](c, 800, 200, size, t["fg"], t["accent"], anchor="m")
     c.save(out / f"logo{suffix}.png")
 
 
@@ -380,6 +441,37 @@ def build_avatar(key, t, out, name="avatar.png"):
         im.resize((640, 640), Image.LANCZOS).save(out / "avatar-telegram.png", optimize=True)
 
 
+def banner_layout(key, box, align="l") -> dict:
+    """Positions of the banner text. box = (x0, y0, x1, y1): the area safe from cropping and overlays.
+
+    Without a lockup the kicker, wordmark and tagline share one x (left edge or centre). With a
+    lockup the mark sits left of the wordmark and the kicker and tagline start where the wordmark
+    starts; when centred, the whole group (mark + text column) is centred in the box.
+    """
+    o = OPT[key]
+    x0, y0, x1, y1 = box
+    bh = y1 - y0
+    wm = bh * {"arrow": 0.30, "mono": 0.25, "pill": 0.27}[style(key)["wordmark"]]
+    tag_f = font(o["body"], bh * 0.088 * SS, 400)
+    small = bh * 0.085
+    lead = lockup_geometry(key, wm)["lead"] if style(key).get("lockup") else 0
+    one_line = Canvas(1, 1, None).width(TAGLINE, tag_f) <= (x1 - x0) - lead
+    tagline = [(TAGLINE, 0.78, "muted")] if one_line else list(zip(TAGLINE.split(" — "), (0.74, 0.88), ("fg", "muted")))
+    lay = {"wm": wm, "small": small, "tag_f": tag_f, "lead": lead, "anchor": "l" if align == "l" or lead else "m",
+           "y_kicker": y0 + bh * 0.13, "y_wm": y0 + bh * 0.44,
+           "tagline": [(s, y0 + bh * f, role) for s, f, role in tagline]}
+    if not lead:
+        lay["x_group"] = lay["x_text"] = x0 if align == "l" else (x0 + x1) / 2
+        return lay
+    m = Canvas(1, 1, None)
+    column = max([wordmark_width(key, wm)] + [m.width(s, tag_f) for s, _, _ in lay["tagline"]])
+    gx = x0 if align == "l" else (x0 + x1) / 2 - (lead + column) / 2
+    lay.update(x_group=gx, x_text=gx + lead, right=gx + lead + column)
+    if gx < x0 - 0.5 or lay["right"] > x1 + 0.5:
+        raise ValueError(f"option {key}: banner lockup ({gx:.0f}..{lay['right']:.0f}) leaves the safe box {box}")
+    return lay
+
+
 def banner(key, t, out, name, w, h, box, align="l"):
     """box = (x0, y0, x1, y1): the area that is safe from cropping and overlays."""
     o = OPT[key]
@@ -389,20 +481,16 @@ def banner(key, t, out, name, w, h, box, align="l"):
     bh = y1 - y0
     if not gloss:
         c.rect([x0 - bh * 0.12, y0, x1 + bh * 0.12, y1], fill=t["bg"])  # quiet patch behind the text
-    wm = bh * {"arrow": 0.30, "mono": 0.25, "pill": 0.27}[style(key)["wordmark"]]
-    small = bh * 0.085
-    x = x0 if align == "l" else (x0 + x1) / 2
-    anchor = "l" if align == "l" else "m"
-    tag_f = font(o["body"], bh * 0.088 * SS, 400)
-    c.text((x, y0 + bh * 0.13), "NGHIEP PHAM", font(o["mono"], small * SS, 600), t["accent"] if gloss else t["muted"],
+    lay = banner_layout(key, box, align)
+    x, anchor, small = lay["x_text"], lay["anchor"], lay["small"]
+    c.text((x, lay["y_kicker"]), "NGHIEP PHAM", font(o["mono"], small * SS, 600), t["accent"] if gloss else t["muted"],
            anchor=anchor + "m", spacing=0 if anchor == "m" else small * 0.18)
-    o["wordmark"](c, x, y0 + bh * 0.44, wm, t["fg"], t["accent"], anchor=anchor)
-    if c.width(TAGLINE, tag_f) <= (x1 - x0):
-        c.text((x, y0 + bh * 0.78), TAGLINE, tag_f, t["muted"], anchor=anchor + "m")
+    if lay["lead"]:
+        lockup(c, key, lay["x_group"], lay["y_wm"], lay["wm"], t["fg"], t["accent"])
     else:
-        head, tail = TAGLINE.split(" — ")
-        c.text((x, y0 + bh * 0.74), head, tag_f, t["fg"], anchor=anchor + "m")
-        c.text((x, y0 + bh * 0.88), tail, tag_f, t["muted"], anchor=anchor + "m")
+        o["wordmark"](c, x, lay["y_wm"], lay["wm"], t["fg"], t["accent"], anchor=anchor)
+    for s, y, role in lay["tagline"]:
+        c.text((x, y), s, lay["tag_f"], t[role], anchor=anchor + "m")
     c.save(out / f"banner-{name}.png")
 
 

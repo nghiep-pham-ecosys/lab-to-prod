@@ -2,8 +2,8 @@
 name: "Nghiep Pham · Lab to Prod"
 tagline: "AI engineering, ML and climate — notes from a chemist turned AI engineer"
 
-# Which option the render pipeline uses. Change to "b" to switch everything.
-selected: a
+# Which option the render pipeline uses. Change the key to switch everything.
+selected: e
 
 options:
   a:
@@ -154,7 +154,7 @@ options:
         panel_fg: "#FFFCF2"
         panel_accent: "#FFD21F"
   e:
-    style: {mark: hexagon, wordmark: mono, texture: dots, gloss: true}
+    style: {mark: hexagon, wordmark: mono, texture: dots, gloss: true, lockup: true}
     title: "Honey: honeycomb mark, amber glow, mono wordmark"
     fonts: {display: SpaceGrotesk, body: Inter, mono: JetBrainsMono}
     primary: light
