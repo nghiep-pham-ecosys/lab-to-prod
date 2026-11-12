@@ -1,0 +1,116 @@
+name: publish
+
+# DRY RUN unless the repository variable PUBLISH_LIVE is exactly "true".
+# - push to main (the weekly pull request was merged): Facebook schedules, YouTube uploads
+# - weekdays and Saturday 08:15 Asia/Ho_Chi_Minh: LinkedIn, Telegram, DEV for today's items
+# - pull requests: always a dry run, so the plan is visible before merging
+# - a file named PAUSE at the repository root stops everything
+on:
+  push:
+    branches: [main]
+    paths: ["content/**", "blog/src/content/posts/**"]
+  schedule:
+    - cron: "15 1 * * 1-6"
+  pull_request:
+    paths: ["content/**", "blog/src/content/posts/**", "publish/**", ".github/workflows/publish.yml"]
+  workflow_dispatch:
+    inputs:
+      event:
+        description: "Which trigger to act as"
+        type: choice
+        options: [daily, merge, both]
+        default: both
+      date:
+        description: "Act as if today were this date (YYYY-MM-DD); dry run only"
+        required: false
+      only:
+        description: "Limit to one channel"
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+      LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
+      FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+      FB_PAGE_TOKEN: ${{ secrets.FB_PAGE_TOKEN }}
+      YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+      YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+      YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHANNEL: ${{ secrets.TELEGRAM_CHANNEL }}
+      DEVTO_API_KEY: ${{ secrets.DEVTO_API_KEY }}
+      PUBLISH_LIVE: ${{ vars.PUBLISH_LIVE }}
+      EVENT_NAME: ${{ github.event_name }}
+      INPUT_EVENT: ${{ inputs.event }}
+      INPUT_DATE: ${{ inputs.date }}
+      INPUT_ONLY: ${{ inputs.only }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/requirements.txt
+      - run: pip install -r tools/requirements.txt
+
+      - name: Decide mode
+        id: mode
+        run: |
+          live=""
+          if [ "$PUBLISH_LIVE" = "true" ] && [ "$EVENT_NAME" != "pull_request" ] && [ -z "$INPUT_DATE" ]; then live="--live"; fi
+          extra=""
+          if [ -n "$INPUT_DATE" ]; then extra="$extra --date $INPUT_DATE"; fi
+          if [ -n "$INPUT_ONLY" ]; then extra="$extra --only $INPUT_ONLY"; fi
+          case "$EVENT_NAME" in
+            push) events="merge" ;;
+            schedule) events="merge daily" ;;
+            pull_request) events="merge daily" ;;
+            *) if [ "$INPUT_EVENT" = "both" ] || [ -z "$INPUT_EVENT" ]; then events="merge daily"; else events="$INPUT_EVENT"; fi ;;
+          esac
+          {
+            echo "live=$live"
+            echo "extra=$extra"
+            echo "events=$events"
+          } >> "$GITHUB_OUTPUT"
+          echo "mode: ${live:-dry run} | events: $events | extra:$extra" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish
+        id: run
+        env:
+          EVENTS: ${{ steps.mode.outputs.events }}
+          LIVE: ${{ steps.mode.outputs.live }}
+          EXTRA: ${{ steps.mode.outputs.extra }}
+        run: |
+          status=0
+          for event in $EVENTS; do
+            echo "::group::event $event"
+            # shellcheck disable=SC2086  # LIVE and EXTRA are flag lists built by the step above
+            python -m publish.run --event "$event" $LIVE $EXTRA | tee -a publish.log || status=1
+            echo "::endgroup::"
+          done
+          { echo '```'; cat publish.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit $status
+        shell: bash -o pipefail {0}
+
+      - name: Record what was published
+        if: always() && steps.mode.outputs.live == '--live'
+        run: |
+          if [ -n "$(git status --porcelain published.json)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add published.json
+            git commit -m "chore: record published posts"
+            for attempt in 1 2 3; do
+              git pull --rebase origin main && git push origin HEAD:main && break
+              sleep 5
+            done
+          fi

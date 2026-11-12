@@ -1,0 +1,79 @@
+name: automerge
+
+# Silent approval of the weekly pull request. OFF unless the repository variable
+# AUTOMERGE_ENABLED is exactly "true". It never calls a model: it only reads the judge.json
+# that the drafting session committed, and re-runs the same validation as the validate check.
+#
+# Sunday 22:00 Asia/Ho_Chi_Minh, for the open pull request labelled "weekly":
+#   - skipped if it has the label "hold"
+#   - gate 1: tools/validate.py passes, with every source link answering HTTP 200
+#   - gate 2: judge.json gives every post a mean of at least 4/5 with no score below 3,
+#             and the post has not changed since it was judged
+#   - a post that fails is set back to draft (it waits for a manual review); the rest merge
+on:
+  schedule:
+    - cron: "0 15 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: automerge
+  cancel-in-progress: false
+
+jobs:
+  automerge:
+    if: vars.AUTOMERGE_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Find the weekly pull request
+        id: pr
+        run: |
+          if [ -f PAUSE ]; then echo "PAUSE file present"; exit 0; fi
+          pr=$(gh pr list --state open --label weekly --json number,labels,headRefName,title \
+               --jq '[.[] | select([.labels[].name] | index("hold") | not)] | first // empty')
+          if [ -z "$pr" ]; then echo "no weekly pull request without a hold label"; exit 0; fi
+          {
+            echo "number=$(jq -r .number <<<"$pr")"
+            echo "branch=$(jq -r .headRefName <<<"$pr")"
+            echo "week=$(jq -r .title <<<"$pr" | grep -oE '[0-9]{4}-W[0-9]{2}' | head -1)"
+          } >> "$GITHUB_OUTPUT"
+      - name: Check out the pull request branch
+        if: steps.pr.outputs.number != '' && steps.pr.outputs.week != ''
+        env:
+          BRANCH: ${{ steps.pr.outputs.branch }}
+        run: git checkout "$BRANCH"
+      - uses: actions/setup-python@v7
+        if: steps.pr.outputs.number != '' && steps.pr.outputs.week != ''
+        with:
+          python-version: "3.12"
+      - name: Gates
+        if: steps.pr.outputs.number != '' && steps.pr.outputs.week != ''
+        env:
+          WEEK: ${{ steps.pr.outputs.week }}
+          PR: ${{ steps.pr.outputs.number }}
+        run: |
+          pip install -q -r tools/requirements.txt
+          python tools/automerge_gate.py --week "$WEEK" --apply --check-links | tee gate.log
+          python tools/validate.py --week "$WEEK" | tee -a gate.log
+          if [ -n "$(git status --porcelain content)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -am "chore: hold posts that did not pass the silent-approval gate"
+            git push origin HEAD
+          fi
+          { echo "Silent approval result:"; echo '```'; cat gate.log; echo '```'; } > comment.md
+          gh pr comment "$PR" --body-file comment.md
+          gh pr merge "$PR" --squash
+          # A merge made with the workflow token does not trigger other workflows: start them.
+          gh workflow run publish.yml -f event=merge
+          gh workflow run blog.yml
+        shell: bash -eo pipefail {0}
