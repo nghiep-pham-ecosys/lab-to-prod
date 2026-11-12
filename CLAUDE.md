@@ -83,6 +83,8 @@ publish/                         one publisher per channel + run.py; see publish
 published.json                   what was posted where (written by publish/run.py, never by hand)
 metrics/collect.py                daily numbers into metrics/metrics.csv; token health check
 tools/automerge_gate.py          reads content/<week>/judge.json; holds failing posts
+scripts/tokens/                  local scripts that fetch tokens and store them with gh; never print them
+docs/setup.md                    the author's one-time manual steps (Vietnamese)
 docs/operations.md               switches, workflows, going live, incident steps
 blog/                            Astro site; articles in blog/src/content/posts/, see blog/README.md
 ```
