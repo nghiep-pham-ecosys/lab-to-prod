@@ -1,0 +1,22 @@
+# private planning doc (job-search details, internal names) stays local
+docs/spec.md
+# secrets
+.env
+.env.*
+*.token
+token*.json
+client_secret*.json
+credentials*.json
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# node
+node_modules/
+dist/
+.astro/
+# render scratch
+render/short/out/
+*.log
+.DS_Store
