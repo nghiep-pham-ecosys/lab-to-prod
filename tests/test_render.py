@@ -82,3 +82,36 @@ def test_theme_names_of_another_option_map_to_the_same_role():
     assert [image_render.resolve_theme(opt, n) for n in ("paper", "ink", "copper")] == ["light", "dark", "amber"]
     assert [image_render.resolve_theme(opt, n) for n in ("night", "day", "signal")] == ["dark", "light", "amber"]
     assert image_render.resolve_theme(opt, "dark") == "dark"
+
+
+def test_code_font_draws_double_equals_as_two_glyphs_not_a_ligature():
+    from PIL import Image as PILImage, ImageDraw
+
+    brand = image_render.brand
+    f = brand.code_font("JetBrainsMono", 80)
+    adv = f.getlength("=")
+    pair = PILImage.new("L", (300, 120), 0)
+    ImageDraw.Draw(pair).text((10, 10), "==", font=f, fill=255)
+    two = PILImage.new("L", (300, 120), 0)
+    d = ImageDraw.Draw(two)
+    d.text((10, 10), "=", font=f, fill=255)
+    d.text((10 + adv, 10), "=", font=f, fill=255)
+    assert pair.tobytes() == two.tobytes()
+
+
+def _selected_theme(role_name):
+    opt = image_render.brand.CFG["options"][image_render.brand.CFG["selected"]]
+    return image_render.resolve_theme(opt, role_name)
+
+
+def test_glossy_cards_get_the_bg_to_bg2_gradient(tmp_path):
+    out = image_render.render(folder_with(tmp_path, CARDS["code"]), _selected_theme("paper"))
+    im = Image.open(out).convert("RGB")
+    assert im.getpixel((30, 30)) != im.getpixel((30, 1170))
+
+
+def test_lit_node_is_light_on_the_amber_card(tmp_path):
+    # Mark centre (W - M - 44, H - M - 22), size 110: the lit vertex is up and to the right.
+    out = image_render.render(folder_with(tmp_path, CARDS["code"]), _selected_theme("copper"))
+    r, g, b = Image.open(out).convert("RGB").getpixel((1102, 1070))
+    assert r + g + b > 600

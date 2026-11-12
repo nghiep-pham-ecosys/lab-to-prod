@@ -6,6 +6,9 @@ import type { Scene, ShortProps, Theme } from './types';
 const SAFE = { top: 220, bottom: 400, side: 80 };
 const FONT_FILES = ['Fraunces', 'Inter', 'SpaceGrotesk', 'JetBrainsMono'];
 
+// JetBrains Mono draws `==` and friends as one glyph; code must read as typed (the Java post is about ==).
+const NO_LIGATURES: React.CSSProperties = { fontVariantLigatures: 'none', fontFeatureSettings: '"liga" 0, "calt" 0' };
+
 const useFonts = () => {
   const [handle] = useState(() => delayRender('fonts'));
   useEffect(() => {
@@ -29,7 +32,7 @@ const Lines = ({ text, style }: { text: string; style: React.CSSProperties }) =>
   <div style={style}>
     {text.split('\n').map((line, i) => (
       <div key={i} style={useEnter(i * 6)}>
-        {line.split(/(==)/).map((part, j) => (part === '==' ? <span key={j} style={{ fontFamily: 'JetBrainsMono', fontWeight: 600, fontSize: '0.8em' }}>==</span> : part))}
+        {line.split(/(==)/).map((part, j) => (part === '==' ? <span key={j} style={{ fontFamily: 'JetBrainsMono', fontWeight: 600, fontSize: '0.8em', ...NO_LIGATURES }}>==</span> : part))}
       </div>
     ))}
   </div>
@@ -79,6 +82,9 @@ const Benzene = ({ t, size }: { t: Theme; size: number }) => {
   const outer = [0, 1, 2, 3, 4, 5].map((i) => pt(36, i));
   const inner = [0, 1, 2, 3, 4, 5].map((i) => pt(36 * 0.6, i));
   const foil = t.foil ?? [t.accent, t.accent, t.accent];
+  // Without foil, an accent equal to the ink (the amber theme) would hide the lit node: draw it
+  // light with an ink outline instead, as brand/build.py does.
+  const inkLit = !t.foil && t.accent.toLowerCase() === t.fg.toLowerCase();
   return (
     <svg viewBox="-50 -50 100 100" width={size * 1.45} height={size * 1.45} style={{ marginRight: size * 0.22, flex: 'none' }} aria-hidden="true">
       <defs>
@@ -93,13 +99,17 @@ const Benzene = ({ t, size }: { t: Theme; size: number }) => {
         <line key={i} x1={inner[i][0]} y1={inner[i][1]} x2={inner[(i + 1) % 6][0]} y2={inner[(i + 1) % 6][1]} stroke={t.fg} strokeWidth={5} />
       ))}
       {outer.slice(0, 5).map((q, i) => <circle key={i} cx={q[0]} cy={q[1]} r={6.2} fill={t.fg} />)}
-      <circle cx={outer[5][0]} cy={outer[5][1]} r={9.6} fill="url(#foil)" />
+      {inkLit ? (
+        <circle cx={outer[5][0]} cy={outer[5][1]} r={9.6 - 2.5} fill={t.panel_fg} stroke={t.fg} strokeWidth={5} />
+      ) : (
+        <circle cx={outer[5][0]} cy={outer[5][1]} r={9.6} fill="url(#foil)" />
+      )}
     </svg>
   );
 };
 
 const CodeLine = ({ text, color, size, font, delay }: { text: string; color: string; size: number; font: string; delay: number }) => (
-  <div style={{ ...useEnter(delay), fontFamily: font, fontSize: size, fontWeight: 500, color, whiteSpace: 'pre', lineHeight: 1.7 }}>{text}</div>
+  <div style={{ ...useEnter(delay), fontFamily: font, fontSize: size, fontWeight: 500, color, whiteSpace: 'pre', lineHeight: 1.7, ...NO_LIGATURES }}>{text}</div>
 );
 
 const Caption = ({ text, t, font }: { text: string; t: Theme; font: string }) => (

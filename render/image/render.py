@@ -94,13 +94,17 @@ def render(folder: Path, theme_name: str | None = None) -> Path:
     t, o = opt["themes"][theme_name], brand.OPT[key]
     inner = W - 2 * M
 
-    c = brand.Canvas(W, H, t["bg"])
-    brand.texture(c, key, t)
-    c.rect([M - 24, M - 24, W - M + 24, H - M + 24], fill=t["bg"])
+    # Same background, rule and panels as the sample cards in brand/build.py: glossy options get
+    # the bg -> bg2 gradient with soft light, a foil rule and foil accents; flat options a quiet
+    # patch over the texture.
+    gloss = bool(brand.style(key).get("gloss"))
+    c = brand.new_canvas(W, H, t, key)
+    if not gloss:
+        c.rect([M - 24, M - 24, W - M + 24, H - M + 24], fill=t["bg"])
 
     kicker = f"{series_names().get(meta['series'], meta['series'])} · Part {meta['part']}".upper()
-    c.text((M, M + 14), kicker, brand.font(o["mono"], 30 * SS, 600), t["accent"], anchor="lm", spacing=3)
-    c.line([(M, M + 56), (W - M, M + 56)], t["line"], 2)
+    c.text((M, M + 14), kicker, brand.font(o["mono"], 30 * SS, 700 if gloss else 600), t["accent"], anchor="lm", spacing=3)
+    brand.rule(c, M, W - M, M + 56, t, key)
 
     footer_top = H - M - 70
     c.line([(M, footer_top), (W - M, footer_top)], t["line"], 2)
@@ -113,7 +117,7 @@ def render(folder: Path, theme_name: str | None = None) -> Path:
         lesson_h = len(lesson_lines) * lsize * 1.3 + 30
 
     layout = card.get("layout", "code")
-    weight = 600 if key == "a" else 700
+    weight = brand.display_weight(key)
     y = M + 96
     body_bottom = footer_top - 30 - lesson_h
 
@@ -132,14 +136,14 @@ def render(folder: Path, theme_name: str | None = None) -> Path:
         plain = [ln[2:] if ln.startswith("> ") else ln for ln in lines]
         avail_h = body_bottom - y
         for size in (46, 42, 38, 34, 30, 27, 24):
-            fnt = brand.font(o["mono"], size * SS, 500)
+            fnt = brand.code_font(o["mono"], size * SS)
             lh = size * 1.52
             if max(c.width(ln, fnt) for ln in plain) <= inner - 80 and 72 + lh * len(lines) <= avail_h:
                 break
         else:
             raise ValueError("code block does not fit; shorten lines or remove some")
         bh = 72 + lh * len(lines)
-        c.rect([M, y, W - M, y + bh], fill=t["panel"], radius=18)
+        brand.panel(c, [M, y, W - M, y + bh], t, key)
         cy = y + 36 + lh / 2
         for raw, ln in zip(lines, plain):
             c.text((M + 40, cy), ln, fnt, t["panel_accent"] if raw.startswith("> ") else t["panel_fg"], anchor="lm")
@@ -149,7 +153,7 @@ def render(folder: Path, theme_name: str | None = None) -> Path:
         stat = card["stat"]
         headline(2, [72, 64, 56])
         box_h = min(430, body_bottom - y)
-        c.rect([M, y, W - M, y + box_h], fill=t["panel"], radius=18)
+        brand.panel(c, [M, y, W - M, y + box_h], t, key)
         vf, vsize, _ = fit(c, stat["value"], o["display"], weight, [230, 200, 170, 140, 110], inner - 100, 1)
         c.text((M + 50, y + box_h * 0.42), str(stat["value"]), vf, t["panel_accent"], anchor="lm")
         c.text((M + 54, y + box_h * 0.80), str(stat.get("label", "")).upper(), brand.font(o["mono"], 32 * SS, 600),

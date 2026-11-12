@@ -155,7 +155,7 @@ options:
         panel_accent: "#FFD21F"
   e:
     style: {mark: hexagon, wordmark: mono, texture: dots, gloss: true, lockup: true}
-    title: "Honey: honeycomb mark, amber glow, mono wordmark"
+    title: "Honey: benzene-ring mark beside a mono wordmark, amber glow"
     fonts: {display: SpaceGrotesk, body: Inter, mono: JetBrainsMono}
     primary: light
     alt: dark

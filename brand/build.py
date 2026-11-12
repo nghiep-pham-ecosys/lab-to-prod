@@ -31,8 +31,11 @@ NAME = CFG["name"]
 TAGLINE = CFG["tagline"]
 
 
-def font(name: str, size: float, weight: int = 400) -> ImageFont.FreeTypeFont:
-    f = ImageFont.truetype(str(HERE / "fonts" / f"{name}.ttf"), int(size))
+def font(name: str, size: float, weight: int = 400, ligatures: bool = True) -> ImageFont.FreeTypeFont:
+    """A brand font at `size` (supersampled pixels). `ligatures=False` uses Pillow's basic layout,
+    which applies no OpenType substitutions, so JetBrains Mono draws `==` as two characters."""
+    engine = None if ligatures else ImageFont.Layout.BASIC
+    f = ImageFont.truetype(str(HERE / "fonts" / f"{name}.ttf"), int(size), layout_engine=engine)
     values = []
     for a in f.get_variation_axes():
         label = a["name"].decode() if isinstance(a["name"], bytes) else a["name"]
@@ -206,6 +209,18 @@ def style(key: str) -> dict:
     return CFG["options"][key].get("style", {})
 
 
+def code_font(name: str, size: float, weight: int = 500) -> ImageFont.FreeTypeFont:
+    """The font for code panels: no programming ligatures, so code reads as typed."""
+    return font(name, size, weight, ligatures=False)
+
+
+def display_weight(key: str) -> int:
+    """Headline weight: the serif is lighter, and a little heavier on glossy backgrounds."""
+    if OPT[key]["display"] == "Fraunces":
+        return 650 if style(key).get("gloss") else 600
+    return 700
+
+
 def _foil(c: Canvas) -> bool:
     return bool((c.theme or {}).get("foil"))
 
@@ -236,6 +251,14 @@ def mark_hexagon(c: Canvas, cx, cy, size, fg, accent, weight=1.0):
     for i, p in enumerate(pts):
         if i != 5:
             c.circle(p, size * 0.045 * (1 + (weight - 1) * 0.6), fg)
+    t = c.theme or {}
+    if t and not _foil(c) and accent.lower() == fg.lower():
+        # The accent is the ink colour (an amber card): a filled node would not read as lit, so
+        # draw a light node with an ink outline, the size of the foil node.
+        r = size * 0.075 * (1 + (weight - 1) * 0.4)
+        c.circle(pts[5], r, fg)
+        c.circle(pts[5], r - size * 0.03 * weight, t.get("panel_fg", "#FFFFFF"))
+        return
     with c.accent():
         c.circle(pts[5], size * (0.075 if _foil(c) else 0.06) * (1 + (weight - 1) * 0.4), accent)
 
@@ -505,13 +528,12 @@ def sample_card(key, t, out, name, sample):
     c.text((m, m + 14), sample["series"].upper(), font(o["mono"], 30 * SS, 700 if gloss else 600), t["accent"], anchor="lm", spacing=3)
     rule(c, m, 1200 - m, m + 56, t, key)
     y = m + 130
-    weight = 600 if o["display"] == "Fraunces" and not gloss else 650 if o["display"] == "Fraunces" else 700
-    title_f = font(o["display"], 92 * SS, weight)
+    title_f = font(o["display"], 92 * SS, display_weight(key))
     for ln in sample["title"]:
         c.text((m, y), ln, title_f, t["fg"], anchor="lm")
         y += 108
     y += 40
-    code_f = font(o["mono"], 38 * SS, 500)
+    code_f = code_font(o["mono"], 38 * SS)
     bh = 76 + 58 * len(sample["code"])
     panel(c, [m, y, 1200 - m, y + bh], t, key)
     cy = y + 38 + 29
