@@ -1,0 +1,31 @@
+1
+00:00:00,000 --> 00:00:04,950
+A gate with 80% precision still let 5 bad answers through.
+
+2
+00:00:05,000 --> 00:00:10,950
+Toy example: an LLM gives 100 answers. A reviewer marks 13 as bad.
+
+3
+00:00:11,000 --> 00:00:16,950
+An automated gate flags 10 answers. 8 of them are really bad.
+
+4
+00:00:17,000 --> 00:00:22,950
+Precision: of what the gate flagged, how much was bad?
+
+5
+00:00:23,000 --> 00:00:28,950
+Recall: of what was bad, how much did the gate catch?
+
+6
+00:00:29,000 --> 00:00:34,950
+One number hides the other. 0.80 says nothing about the 5 it missed.
+
+7
+00:00:35,000 --> 00:00:40,950
+Decide which mistake costs more, then tune. Report both, with counts.
+
+8
+00:00:41,000 --> 00:00:43,950
+Part 2 of my AI Engineering notes.

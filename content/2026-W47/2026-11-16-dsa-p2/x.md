@@ -3,8 +3,8 @@
      First reply after it is live: https://nghiep-pham-ecosys.github.io/lab-to-prod/notes/2026-11-16-dsa-p2/
 -->
 
-128 == 128 is false in Java. 127 == 127 is true.
+128 == 128 can be false in Java. 127 == 127 is always true.
 
-Integer is an object, and == compares references, not values. Java caches Integer objects from -128 to 127, so small numbers share one object and "work" by accident.
+Integer is an object, and == compares references, not values. Java only guarantees shared Integer objects from -128 to 127, so small numbers "work" by accident.
 
 Use equals() for objects.

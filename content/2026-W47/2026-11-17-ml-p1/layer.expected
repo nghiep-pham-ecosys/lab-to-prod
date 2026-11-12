@@ -1,0 +1,5 @@
+W shape: (2, 3) x shape: (3,)
+W @ x     = [6.  1.5]
+W @ x + b = [ 6.1 -0.5]
+ReLU      = [6.1 0. ]
+by hand, neuron 1: 6.1

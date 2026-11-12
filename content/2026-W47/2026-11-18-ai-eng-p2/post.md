@@ -7,7 +7,7 @@ channels: [linkedin, facebook, telegram, x_manual, youtube]
 short_publish_at: 2026-11-19T19:00:00+07:00
 sources: []
 image_alt: "A card showing recall 0.62: a quality gate with 80 percent precision still caught only 8 of 13 bad answers."
-status: draft
+status: approved
 card:
   layout: stat
   theme: ink
@@ -21,7 +21,7 @@ card:
 
 ## linkedin
 
-5 of 13 bad answers passed my quality gate, and its precision was 80%.
+5 of 13 bad answers passed a quality gate, and its precision was 80%.
 
 This is a toy example, but the mistake is one I see often: reporting one number for a gate that can fail in two different ways.
 
@@ -50,7 +50,7 @@ Part 2 of my AI Engineering notes.
 
 ## x
 
-5 of 13 bad answers passed my LLM quality gate. Its precision was 80%.
+5 of 13 bad answers passed an LLM quality gate. Its precision was 80%.
 
 Precision: of what the gate flagged, how much was bad? 8/10.
 Recall: of what was bad, how much did it catch? 8/13.
