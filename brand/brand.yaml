@@ -20,6 +20,7 @@ options:
         line: "#E6DECF"
         panel: "#1B1F23"
         panel_fg: "#F6F1E7"
+        panel_accent: "#5EEAD4"
       ink:     # dark
         bg: "#1B1F23"
         fg: "#F6F1E7"
@@ -28,6 +29,7 @@ options:
         line: "#2A3036"
         panel: "#11151A"
         panel_fg: "#E8E2D6"
+        panel_accent: "#5EEAD4"
       copper:  # warm accent, for numbers and results
         bg: "#F0E4D2"
         fg: "#2A1A12"
@@ -36,6 +38,7 @@ options:
         line: "#E2D2BA"
         panel: "#2A1A12"
         panel_fg: "#F6EBDD"
+        panel_accent: "#FDBA74"
   b:
     title: "Night shift: terminal, mono wordmark, hexagon node mark"
     fonts: {display: SpaceGrotesk, body: SpaceGrotesk, mono: JetBrainsMono}
@@ -50,6 +53,7 @@ options:
         line: "#18233A"
         panel: "#111B2E"
         panel_fg: "#D5DEE8"
+        panel_accent: "#34D399"
       day:     # light
         bg: "#F4F6F8"
         fg: "#0B1220"
@@ -58,6 +62,7 @@ options:
         line: "#DDE3EA"
         panel: "#0B1220"
         panel_fg: "#E6EDF3"
+        panel_accent: "#34D399"
       signal:  # amber accent, for warnings and bugs
         bg: "#111827"
         fg: "#F9FAFB"
@@ -66,6 +71,7 @@ options:
         line: "#1F2937"
         panel: "#0B0F19"
         panel_fg: "#E5E7EB"
+        panel_accent: "#FBBF24"
 
 # Text used on the sample cards (a toy example, same for both options).
 sample:

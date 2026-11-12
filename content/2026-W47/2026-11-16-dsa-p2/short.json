@@ -1,0 +1,14 @@
+{
+  "title": "Why is 128 == 128 false in Java?",
+  "kicker": "DSA in Java · Part 2",
+  "scenes": [
+    {"type": "title", "text": "128 == 128\nis false in Java", "say": "In Java, 128 == 128 can be false.", "seconds": 5},
+    {"type": "code", "code": ["Integer a = 127, b = 127;", "> a == b   // true"], "say": "With 127 the comparison is true.", "seconds": 6},
+    {"type": "code", "code": ["Integer c = 128, d = 128;", "> c == d   // false"], "say": "With 128 the same code says false.", "seconds": 6},
+    {"type": "text", "text": "== asks:\nsame object?", "note": "not: same value?", "say": "On objects, == compares references. It asks if both variables point at the same object.", "seconds": 8},
+    {"type": "text", "text": "Integer cache:\n-128 to 127", "note": "small numbers share one object", "say": "Java caches Integer objects from minus 128 to 127, so small numbers share one object.", "seconds": 8},
+    {"type": "code", "code": ["Integer c = 128, d = 128;", "> c.equals(d)   // true"], "say": "equals() compares the values, so it is true.", "seconds": 6},
+    {"type": "text", "text": "== for primitives\nequals() for objects", "say": "Use == for primitives and equals() for objects.", "seconds": 6},
+    {"type": "outro", "say": "Part 2 of my DSA in Java notes.", "seconds": 3}
+  ]
+}

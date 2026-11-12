@@ -26,7 +26,7 @@ const calendar = YAML.parse(fs.readFileSync(path.join(repoRoot, 'content/calenda
 export const SERIES: Record<string, SeriesInfo> = calendar.series;
 export const seriesName = (id: string) => SERIES[id]?.name ?? id;
 
-type Theme = Record<'bg' | 'fg' | 'muted' | 'accent' | 'line' | 'panel' | 'panel_fg', string>;
+type Theme = Record<'bg' | 'fg' | 'muted' | 'accent' | 'line' | 'panel' | 'panel_fg' | 'panel_accent', string>;
 const brand = YAML.parse(fs.readFileSync(path.join(repoRoot, 'brand/brand.yaml'), 'utf8'));
 const option = brand.options[brand.selected];
 const lum = (hex: string) => parseInt(hex.slice(1, 3), 16) + parseInt(hex.slice(3, 5), 16) + parseInt(hex.slice(5, 7), 16);
@@ -37,5 +37,5 @@ export const BRAND = {
   light: pair[0],
   dark: pair[1],
 };
-const vars = (t: Theme) => Object.entries(t).map(([k, v]) => `--${k.replace('_', '-')}:${v}`).join(';');
+const vars = (t: Theme) => Object.entries(t).map(([k, v]) => `--${k.replaceAll('_', '-')}:${v}`).join(';');
 export const themeCss = `:root{${vars(BRAND.light)}}@media (prefers-color-scheme: dark){:root{${vars(BRAND.dark)}}}`;

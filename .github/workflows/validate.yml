@@ -23,3 +23,9 @@ jobs:
         run: python -m pytest -q
       - name: Validate calendar, posts, banned terms and secrets
         run: python tools/validate.py
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Run the Java samples quoted in posts
+        run: tools/run_samples.sh
