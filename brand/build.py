@@ -11,6 +11,11 @@ An option's `style` picks the mark, the wordmark and the background texture. Wit
 backgrounds get a gradient and soft light, accents are drawn as metallic foil (the theme's
 `foil` colours), and panels get a shadow and a sheen. With `lockup: true` the logo and the
 banners set the mark to the left of the wordmark (avatars stay mark only).
+
+`texture: honeycomb` lays a faint hexagonal lattice over the background. It is anchored on one
+accent benzene ring in foil (top right of cards, banners and Open Graph images), fades with
+distance from it, and is kept off everything drawn on top: text, panels and marks get a clear
+halo, so the lattice never sits behind a letter.
 """
 from __future__ import annotations
 
@@ -21,7 +26,7 @@ from functools import lru_cache
 from pathlib import Path
 
 import yaml
-from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont, ImageOps
 
 HERE = Path(__file__).resolve().parent
 CFG = yaml.safe_load((HERE / "brand.yaml").read_text(encoding="utf-8"))
@@ -65,6 +70,7 @@ class Canvas:
         self.theme = theme
         self.im = Image.new("RGBA", (w * SS, h * SS), bg or (0, 0, 0, 0))
         self.d = ImageDraw.Draw(self.im)
+        self.finish: list = []  # callables run once before saving (the honeycomb texture)
 
     # ---- layers: gloss effects are drawn on a transparent layer, then composited
 
@@ -88,9 +94,10 @@ class Canvas:
             self.d = ImageDraw.Draw(self.im)
 
     @contextmanager
-    def accent(self):
-        """Whatever is drawn inside becomes metallic foil when the theme has `foil` colours."""
-        foil = (self.theme or {}).get("foil")
+    def accent(self, foil=None):
+        """Whatever is drawn inside becomes metallic foil: the given colours, or the theme's `foil`
+        colours (without either, it is drawn flat as given)."""
+        foil = foil or (self.theme or {}).get("foil")
         if not foil:
             yield
             return
@@ -194,6 +201,9 @@ class Canvas:
                 self.circle((x, y), r, fill)
 
     def save(self, path: Path) -> Image.Image:
+        for step in self.finish:
+            step(self)
+        self.finish = []
         out = self.im.resize((self.w, self.h), Image.LANCZOS)
         path.parent.mkdir(parents=True, exist_ok=True)
         out.save(path, optimize=True)
@@ -203,6 +213,15 @@ class Canvas:
 def hexagon(cx, cy, r, rot=30):
     return [(cx + r * math.cos(math.radians(rot + 60 * i)), cy + r * math.sin(math.radians(rot + 60 * i)))
             for i in range(6)]
+
+
+def kekule(c: Canvas, cx, cy, r, fill, width, inner=0.62):
+    """A benzene ring as chemists draw it: a hexagon with three inner double-bond lines."""
+    pts = hexagon(cx, cy, r)
+    c.polygon(pts, outline=fill, width=width)
+    ip = hexagon(cx, cy, r * inner)
+    for i in (0, 2, 4):
+        c.line([ip[i], ip[(i + 1) % 6]], fill, width * 0.9)
 
 
 def style(key: str) -> dict:
@@ -263,23 +282,59 @@ def mark_hexagon(c: Canvas, cx, cy, size, fg, accent, weight=1.0):
         c.circle(pts[5], size * (0.075 if _foil(c) else 0.06) * (1 + (weight - 1) * 0.4), accent)
 
 
-def mark_badge(c: Canvas, cx, cy, size, fg, accent, weight=1.0):
-    """A glossy yellow rounded square holding L, an arrow and P in black."""
-    t = c.theme or {}
-    ink = "#0B0B0A"
-    half, rad = size * 0.40, size * 0.17
-    box = [cx - half, cy - half, cx + half, cy + half]
-    if _foil(c) and size > 200:
-        c.shadow(box, radius=rad, blur=size * 0.04, alpha=80, dy=size * 0.025)
-    with c.accent():
-        c.rect(box, fill=t.get("panel_accent", accent), radius=rad)
-    if _foil(c):
-        c.sheen(box, radius=rad, alpha=60)
+# The badge is always bright gold, whatever the theme: black L->P keeps full contrast on it, even at
+# avatar size. A darker gold edge separates it from cream and yellow backgrounds.
+BADGE_GOLD = ("#E8A600", "#FFF2A6", "#FFCC14")
+BADGE_INK = "#0B0B0A"
+
+
+def _badge_letters(c: Canvas, cx, cy, size, ink):
     f = font("SpaceGrotesk", size * 0.34 * SS, 700)
     gap = size * 0.12
     c.text((cx - gap, cy), "L", f, ink, anchor="rm")
     c.text((cx + gap, cy), "P", f, ink, anchor="lm")
     c.arrow(cx - gap * 0.72, cx + gap * 0.72, cy + size * 0.012, ink, size * 0.03)
+
+
+def _badge_ring(c: Canvas, cx, cy, size):
+    """A benzene ring pressed into the badge, under the letters.
+
+    Drawn as a groove: a deep-gold line with a pale lip below right, so it reads as relief rather
+    than ink. Where it passes behind L->P it is cut back around the letters, which stay crisp.
+    """
+    r, w, lip = size * 0.30, size * 0.024, size * 0.008
+    base = c.im
+    c.im = Image.new("RGBA", base.size, (0, 0, 0, 0))
+    c.d = ImageDraw.Draw(c.im)
+    _badge_letters(c, cx, cy, size, "#000000")
+    knock = c.im.getchannel("A").filter(ImageFilter.GaussianBlur(size * 0.016 * SS)).point(lambda v: 255 if v > 8 else 0)
+    c.im = Image.new("RGBA", base.size, (0, 0, 0, 0))
+    c.d = ImageDraw.Draw(c.im)
+    kekule(c, cx + lip, cy + lip, r, (255, 251, 222, 165), w)   # light catches the lower lip
+    kekule(c, cx, cy, r, (139, 92, 0, 125), w)                 # the groove
+    ring = c.im
+    ring.putalpha(ImageChops.subtract(ring.getchannel("A"), knock))
+    c.im = Image.alpha_composite(base, ring)
+    c.d = ImageDraw.Draw(c.im)
+
+
+def mark_badge(c: Canvas, cx, cy, size, fg, accent, weight=1.0, ring=True):
+    """A glossy gold rounded square: a benzene ring pressed into it, L, an arrow and P in black on top.
+
+    `ring=False` leaves the ring out, for sizes where it would only be noise (the favicon).
+    """
+    half, rad = size * 0.40, size * 0.17
+    box = [cx - half, cy - half, cx + half, cy + half]
+    if c.theme is not None:
+        c.shadow(box, radius=rad, blur=max(1.0, size * 0.035), alpha=110 if is_dark(c.theme) else 70, dy=size * 0.022)
+    with c.accent(BADGE_GOLD):
+        c.rect(box, fill="#000000", radius=rad)
+    c.rect(box, outline=(122, 82, 0, 120), width=max(1.0, size * 0.007), radius=rad)
+    if ring:
+        _badge_ring(c, cx, cy, size)
+    if c.theme is not None:
+        c.sheen(box, radius=rad, alpha=60)
+    _badge_letters(c, cx, cy, size, BADGE_INK)
 
 
 # ---------------------------------------------------------------- wordmarks (y is the vertical centre)
@@ -347,7 +402,7 @@ OPT = {key: {"mark": MARKS[opt["style"]["mark"]], "wordmark": WORDMARKS[opt["sty
 
 # ---------------------------------------------------------------- lockup: mark left of the wordmark
 
-LOCKUP_MARK = 1.6   # mark ink height / wordmark cap height
+LOCKUP_MARK = {"hexagon": 1.6, "badge": 1.8}   # mark ink height / wordmark cap height, per mark
 LOCKUP_GAP = 0.42   # space between the mark ink and the wordmark, in wordmark font sizes
 LOCKUP_WEIGHT = 1.7  # mark stroke weight next to the bold wordmark (hexagon only; other marks ignore it)
 
@@ -381,7 +436,7 @@ def lockup_geometry(key: str, size: float) -> dict:
     cap = (b - t) / 1000 / SS * size
     ref = 1000
     x0, y0, x1, y1 = _mark_ink(key, ref)
-    mark = LOCKUP_MARK * cap / ((y1 - y0) / ref)
+    mark = LOCKUP_MARK.get(style(key)["mark"], 1.6) * cap / ((y1 - y0) / ref)
     k = mark / ref
     lead = (x1 - x0) * k + LOCKUP_GAP * size
     return {"mark": mark, "cx": (ref - x0) * k, "dy": (ref - (y0 + y1) / 2) * k, "lead": lead,
@@ -397,20 +452,79 @@ def lockup(c: Canvas, key: str, x, y, size, fg, accent, anchor="l") -> dict:
     return {**g, "x": x}
 
 
-def texture(c: Canvas, key: str, t: dict):
+HONEY = {"near": 0.085, "far": 0.03, "halo": 16, "line": 1.4}   # lattice opacity near / far from the
+# accent ring, the clear halo (px) around anything drawn on top, the stroke width (px)
+
+
+def texture(c: Canvas, key: str, t: dict, accent=None):
+    """The option's background texture. `accent` = (cx, cy, r): where the honeycomb's foil ring sits."""
     kind = style(key).get("texture")
     if kind == "grid":
         c.grid(48, t["line"], 1)   # lab notebook squares
     elif kind == "dots":
         c.dots(40, t["line"], 1.6)  # terminal dot grid
+    elif kind == "honeycomb":
+        honeycomb(c, t, accent)
 
 
-def new_canvas(w: int, h: int, t: dict, key: str) -> Canvas:
-    """A canvas with the option's background: flat, or gradient plus soft light when glossy."""
+def honeycomb(c: Canvas, t: dict, accent=None):
+    """Queue the lattice: it is drawn when the canvas is saved, so it can stay clear of whatever
+    goes on top. A snapshot of the bare background now tells it later what was added."""
+    w, h = c.w, c.h
+    if accent:
+        cx, cy, r = accent
+        falloff = 0.85 * math.hypot(w, h)
+    else:
+        cx, cy, r, falloff = w / 2, h / 2, min(w, h) * 0.05, 0
+    bare = c.im.copy()
+    color = t["panel_accent"] if is_dark(t) else t["accent"]
+
+    def draw(c: Canvas):
+        W, H = c.im.size
+        # 1. the lattice, anchored so that one cell is exactly the accent ring
+        lat = Image.new("L", (W, H), 0)
+        d = ImageDraw.Draw(lat)
+        dx, dy = math.sqrt(3) * r, 1.5 * r
+        for row in range(math.floor(-cy / dy) - 1, math.ceil((h - cy) / dy) + 2):
+            shift = dx / 2 if row % 2 else 0
+            for col in range(math.floor((-cx - shift) / dx) - 1, math.ceil((w - cx - shift) / dx) + 2):
+                pts = [(x * SS, y * SS) for x, y in hexagon(cx + col * dx + shift, cy + row * dy, r)]
+                d.line(pts + pts[:1], fill=255, width=max(1, round(HONEY["line"] * SS)))
+        # 2. how strong it is: strongest at the accent ring, fading with distance
+        sw, sh = max(1, w // 8), max(1, h // 8)
+        import numpy as np
+        yy, xx = np.mgrid[0:sh, 0:sw]
+        dist = np.hypot(xx * 8 - cx, yy * 8 - cy)
+        k = np.clip(1 - dist / falloff, 0, 1) ** 1.3 if falloff else np.full((sh, sw), 0.6)
+        level = (HONEY["far"] + (HONEY["near"] - HONEY["far"]) * k) * 255
+        fade = Image.fromarray(level.astype("uint8"), "L").resize((W, H), Image.BILINEAR)
+        # 3. a clear halo around everything drawn since the snapshot
+        diff = ImageChops.difference(c.im.convert("RGB"), bare.convert("RGB")).convert("L")
+        drawn = diff.point(lambda v: 255 if v > 6 else 0)
+        halo = drawn.filter(ImageFilter.GaussianBlur(HONEY["halo"] * SS)).point(lambda v: min(255, v * 10))
+        alpha = ImageChops.multiply(ImageChops.multiply(lat, fade), ImageChops.invert(halo))
+        top = Image.new("RGBA", (W, H), (*_rgb(color), 0))
+        top.putalpha(alpha)
+        c.im = Image.alpha_composite(c.im, top)
+        c.d = ImageDraw.Draw(c.im)
+        if accent:
+            # 4. the one lit cell: a benzene ring in foil, double bonds and all
+            with c.accent():
+                kekule(c, cx, cy, r, t["accent"] if not t.get("foil") else t["panel_accent"], max(1.6, r * 0.085))
+
+    c.finish.append(draw)
+
+
+def new_canvas(w: int, h: int, t: dict, key: str, accent=None) -> Canvas:
+    """A canvas with the option's background: flat, or gradient plus soft light when glossy.
+
+    `accent` = (cx, cy, r) places the honeycomb's foil ring (options with that texture only).
+    """
     c = Canvas(w, h, t["bg"], t)
     if style(key).get("gloss"):
         c.gradient(t["bg"], t.get("bg2", t["bg"]))
-        texture(c, key, t)
+        if style(key).get("texture") != "honeycomb":
+            texture(c, key, t)
         big = max(w, h)
         if is_dark(t):
             c.glow((w * 0.86, h * 0.02), big * 0.34, t["panel_accent"], 62)
@@ -418,9 +532,30 @@ def new_canvas(w: int, h: int, t: dict, key: str) -> Canvas:
         else:
             c.glow((w * 0.12, h * 0.0), big * 0.36, "#FFFFFF", 150)
             c.glow((w * 0.95, h * 1.0), big * 0.30, t["panel_accent"], 70)
+        if style(key).get("texture") == "honeycomb":
+            texture(c, key, t, accent)   # after the light, so its snapshot is the whole background
     else:
-        texture(c, key, t)
+        texture(c, key, t, accent)
     return c
+
+
+CARD_RING = 48   # accent ring radius on a 1200 px card; the rule under the kicker ends before it
+
+
+def card_accent(key: str, w: int, m: float, kicker_right: float, y_kicker: float, r: float = CARD_RING):
+    """(cx, cy, r) of a card's accent ring: right-aligned to the margin on the kicker line, or None
+    when the option has no honeycomb or a long kicker leaves no room."""
+    if style(key).get("texture") != "honeycomb":
+        return None
+    cx = w - m - math.sqrt(3) / 2 * r
+    if kicker_right > cx - math.sqrt(3) / 2 * r - 40:
+        return None
+    return (cx, y_kicker, r)
+
+
+def rule_end(w: int, m: float, accent) -> float:
+    """Where the rule under the kicker stops: at the margin, or short of the accent ring."""
+    return w - m if not accent else accent[0] - math.sqrt(3) / 2 * accent[2] - 22
 
 
 def panel(c: Canvas, box, t: dict, key: str, radius=18):
@@ -437,8 +572,11 @@ def panel(c: Canvas, box, t: dict, key: str, radius=18):
 
 def rule(c: Canvas, x0, x1, y, t: dict, key: str):
     if style(key).get("gloss"):
+        # On a flat accent theme (yellow, amber, gold) the panel accent is the background colour,
+        # so the rule takes the ink-coloured accent instead of vanishing.
+        flat = not t.get("foil") and abs(sum(_rgb(t["panel_accent"])) - sum(_rgb(t["bg"]))) < 120
         with c.accent():
-            c.line([(x0, y), (x1, y)], t["panel_accent"], 3)
+            c.line([(x0, y), (x1, y)], t["accent"] if flat else t["panel_accent"], 3)
     else:
         c.line([(x0, y), (x1, y)], t["line"], 2)
 
@@ -462,6 +600,19 @@ def build_avatar(key, t, out, name="avatar.png"):
     im = c.save(out / name)
     if name == "avatar.png":
         im.resize((640, 640), Image.LANCZOS).save(out / "avatar-telegram.png", optimize=True)
+
+
+def build_favicon(key, path: Path, px: int = 96):
+    """The mark alone on a transparent square, for browser tabs. The badge leaves its ring out:
+    at 16-32 px it would only blur the letters."""
+    c = Canvas(px, px, None, CFG["options"][key]["themes"][CFG["options"][key]["primary"]])
+    t = c.theme
+    if style(key)["mark"] == "badge":
+        c.theme = None   # no shadow or sheen: they muddy a tiny icon
+        mark_badge(c, px / 2, px / 2, px / 0.8, t["fg"], t["accent"], ring=False)
+    else:
+        OPT[key]["mark"](c, px / 2, px / 2, px * 1.1, t["fg"], t["accent"])
+    c.save(path)
 
 
 def banner_layout(key, box, align="l") -> dict:
@@ -495,16 +646,26 @@ def banner_layout(key, box, align="l") -> dict:
     return lay
 
 
+def banner_accent(key, box, lay):
+    """(cx, cy, r) of a banner's accent ring: on the kicker line, right-aligned to the safe box, so
+    it stays visible wherever the platform crops. None without the honeycomb texture."""
+    if style(key).get("texture") != "honeycomb":
+        return None
+    x0, y0, x1, y1 = box
+    r = (y1 - y0) * 0.11
+    return (x1 - math.sqrt(3) / 2 * r, lay["y_kicker"], r)
+
+
 def banner(key, t, out, name, w, h, box, align="l"):
     """box = (x0, y0, x1, y1): the area that is safe from cropping and overlays."""
     o = OPT[key]
     gloss = style(key).get("gloss")
-    c = new_canvas(w, h, t, key)
+    lay = banner_layout(key, box, align)
+    c = new_canvas(w, h, t, key, accent=banner_accent(key, box, lay))
     x0, y0, x1, y1 = box
     bh = y1 - y0
     if not gloss:
         c.rect([x0 - bh * 0.12, y0, x1 + bh * 0.12, y1], fill=t["bg"])  # quiet patch behind the text
-    lay = banner_layout(key, box, align)
     x, anchor, small = lay["x_text"], lay["anchor"], lay["small"]
     c.text((x, lay["y_kicker"]), "NGHIEP PHAM", font(o["mono"], small * SS, 600), t["accent"] if gloss else t["muted"],
            anchor=anchor + "m", spacing=0 if anchor == "m" else small * 0.18)
@@ -521,12 +682,14 @@ def sample_card(key, t, out, name, sample):
     """A 1200x1200 post image in one theme. render/image draws the real ones the same way."""
     o = OPT[key]
     gloss = style(key).get("gloss")
-    c = new_canvas(1200, 1200, t, key)
     m = 88
+    kicker, kicker_f = sample["series"].upper(), font(o["mono"], 30 * SS, 700 if gloss else 600)
+    ring = card_accent(key, 1200, m, m + Canvas(1, 1, None).width(kicker, kicker_f, 3), m + 14)
+    c = new_canvas(1200, 1200, t, key, accent=ring)
     if not gloss:
         c.rect([m - 24, m - 24, 1200 - m + 24, 1200 - m + 24], fill=t["bg"])
-    c.text((m, m + 14), sample["series"].upper(), font(o["mono"], 30 * SS, 700 if gloss else 600), t["accent"], anchor="lm", spacing=3)
-    rule(c, m, 1200 - m, m + 56, t, key)
+    c.text((m, m + 14), kicker, kicker_f, t["accent"], anchor="lm", spacing=3)
+    rule(c, m, rule_end(1200, m, ring), m + 56, t, key)
     y = m + 130
     title_f = font(o["display"], 92 * SS, display_weight(key))
     for ln in sample["title"]:
@@ -556,7 +719,11 @@ def preview(key, opt, out):
     d = ImageDraw.Draw(sheet)
     inter = str(HERE / "fonts" / "Inter.ttf")
     lab = ImageFont.truetype(inter, 34)
-    d.text((pad, 30), f"Option {key.upper()} — {opt['title']}", font=ImageFont.truetype(inter, 52), fill="#111")
+    heading = f"Option {key.upper()} — {opt['title']}"
+    hsize = 52
+    while ImageFont.truetype(inter, hsize).getlength(heading) > W - 2 * pad and hsize > 30:
+        hsize -= 2
+    d.text((pad, 30), heading, font=ImageFont.truetype(inter, hsize), fill="#111")
     y = 130
     x = pad
     for fname, caption in (("avatar.png", "avatar"), ("avatar-alt.png", "avatar, dark")):

@@ -36,6 +36,7 @@ card:
   layout: code            # code | stat | table
   theme: light            # optional, a theme of the selected brand option; a name from another
                           # option (paper, ink, copper) maps to the same role: light, dark, accent
+                          # (yellow under option D)
   headline: "Same value, different object"
   code: ["Integer c = 128, d = 128;", "> c == d   // false"]   # "> " highlights a line
   # stat: {value: "0.62", label: "recall of the gate", note: "8 of 13 caught"}

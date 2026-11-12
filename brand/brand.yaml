@@ -3,7 +3,7 @@ name: "Nghiep Pham · Lab to Prod"
 tagline: "AI engineering, ML and climate — notes from a chemist turned AI engineer"
 
 # Which option the render pipeline uses. Change the key to switch everything.
-selected: e
+selected: d
 
 options:
   a:
@@ -115,8 +115,8 @@ options:
         panel_fg: "#FBF6E9"
         panel_accent: "#F9D648"
   d:
-    style: {mark: badge, wordmark: pill, texture: none, gloss: true}
-    title: "Signal: bold grotesk, glossy yellow badge, maximum contrast"
+    style: {mark: badge, wordmark: pill, texture: honeycomb, gloss: true, lockup: true}
+    title: "Signal: glossy gold badge with a benzene ring under L→P, honeycomb texture, bold grotesk"
     fonts: {display: SpaceGrotesk, body: SpaceGrotesk, mono: JetBrainsMono}
     primary: light
     alt: dark

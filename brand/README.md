@@ -5,12 +5,32 @@ Tagline: *AI engineering, ML and climate — notes from a chemist turned AI engi
 
 Five options (A to E) are built from `brand.yaml` by `build.py`. Each `option-<key>/preview.png`
 shows one on a sheet; `selected:` in `brand.yaml` picks the one the image, video and blog
-renderers use, so the choice is one line. The selected option is **E, Honey**.
+renderers use, so the choice is one line. The selected option is **D, Signal**.
 
-Option E uses a lockup (`lockup: true` in its `style`): the logo and every banner set the benzene
-ring, with its one lit gold node, to the left of the `lab-to-prod` wordmark. The ring is about
-1.6 times the wordmark's cap height and vertically centred on it; in banners the "NGHIEP PHAM"
-kicker and the tagline start where the wordmark starts. Avatars stay mark only.
+Option D in short:
+
+- **Badge.** A glossy gold rounded square with "L→P" in bold black. A benzene ring (Kekulé, with
+  its three double bonds) is pressed into the gold underneath the letters: a deep-gold groove with
+  a pale lip, about 75% of the badge, cut back around the letters so they stay crisp at 64 px. The
+  badge is the same bright gold in every theme, so the black letters keep full contrast. The blog
+  favicon is the badge without the ring (at 16-32 px the ring is only noise).
+- **Wordmark.** "Lab (→) Prod" in Space Grotesk 700, the arrow inside a gold pill.
+- **Lockup** (`lockup: true`): the logo, every banner, the blog header and the Short outro set the
+  badge left of the wordmark, 1.8 times the wordmark's cap height, vertically centred; in banners
+  the "NGHIEP PHAM" kicker and the tagline start where the wordmark starts. Avatars are the badge
+  alone.
+- **Honeycomb** (`texture: honeycomb`): a faint hexagonal lattice over the background gradient,
+  anchored on one foil benzene ring. The ring sits at the top right on the kicker line (cards,
+  Open Graph images, banners inside their safe box, Shorts); the rule under a card's kicker stops
+  short of it. The lattice is about 8% opaque next to that ring and fades to 3% far from it, and
+  it keeps a clear halo around everything drawn on top (text, panels, marks), so it never sits
+  behind a letter. On the blog it is a CSS mask, strongest at the top right and off the text
+  column.
+- **Themes.** `light` (default), `dark` (used by Shorts), `yellow`. A card written with another
+  option's theme name keeps its role: `paper`/`ink`/`copper` become `light`/`dark`/`yellow`.
+
+Option E (the previous choice) also uses a lockup: its benzene ring, with one lit gold node, sits
+left of the `lab-to-prod` mono wordmark at 1.6 times the cap height.
 
 | | Option A: Bench | Option B: Night shift |
 | --- | --- | --- |
@@ -30,6 +50,7 @@ kicker and the tagline start where the wordmark starts. Avatars stay mark only.
 | `banner-youtube.png` | 2560x1440 | YouTube channel art; text is inside the 1546x423 area visible on all devices |
 | `banner-facebook.png` | 1640x624 | Facebook Page cover; text is centred because phones crop the sides |
 | `theme-*.png` | 1200x1200 | sample post image in each of the 3 themes |
+| `avatar-alt.png`, `banner-linkedin-alt.png` | | dark variants (glossy options C, D, E) |
 | `preview.png` | | everything on one sheet |
 
 ## Rebuild

@@ -8,7 +8,8 @@
 card:
   layout: code | stat | table
   theme: light            # optional; a theme of the selected brand option (a name from another
-                          # option maps to the same role: light, dark or the accent third theme)
+                          # option maps to the same role: light, dark or the accent third theme,
+                          # so paper/ink/copper become light/dark/yellow under option D)
   headline: "Same value, different object"
   code: ["Integer a = 127;", "> c == d   // false"]      # layout code; "> " marks the highlighted line
   stat: {value: "0.62", label: "recall", note: "8 of 13 bad answers caught"}   # layout stat
@@ -97,14 +98,18 @@ def render(folder: Path, theme_name: str | None = None) -> Path:
     # Same background, rule and panels as the sample cards in brand/build.py: glossy options get
     # the bg -> bg2 gradient with soft light, a foil rule and foil accents; flat options a quiet
     # patch over the texture.
+    # With the honeycomb texture, one foil benzene ring sits at the top right on the kicker line and
+    # the rule stops short of it; the lattice keeps clear of everything drawn here.
     gloss = bool(brand.style(key).get("gloss"))
-    c = brand.new_canvas(W, H, t, key)
+    kicker = f"{series_names().get(meta['series'], meta['series'])} · Part {meta['part']}".upper()
+    kicker_f = brand.font(o["mono"], 30 * SS, 700 if gloss else 600)
+    ring = brand.card_accent(key, W, M, M + brand.Canvas(1, 1, None).width(kicker, kicker_f, 3), M + 14)
+    c = brand.new_canvas(W, H, t, key, accent=ring)
     if not gloss:
         c.rect([M - 24, M - 24, W - M + 24, H - M + 24], fill=t["bg"])
 
-    kicker = f"{series_names().get(meta['series'], meta['series'])} · Part {meta['part']}".upper()
-    c.text((M, M + 14), kicker, brand.font(o["mono"], 30 * SS, 700 if gloss else 600), t["accent"], anchor="lm", spacing=3)
-    brand.rule(c, M, W - M, M + 56, t, key)
+    c.text((M, M + 14), kicker, kicker_f, t["accent"], anchor="lm", spacing=3)
+    brand.rule(c, M, brand.rule_end(W, M, ring), M + 56, t, key)
 
     footer_top = H - M - 70
     c.line([(M, footer_top), (W - M, footer_top)], t["line"], 2)

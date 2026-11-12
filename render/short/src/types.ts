@@ -13,6 +13,6 @@ export type ShortProps = {
   theme: Theme;
   fonts: { display: string; body: string; mono: string };
   brandKey: string;
-  style: { mark: string; wordmark: string; lockup?: boolean };
+  style: { mark: string; wordmark: string; lockup?: boolean; texture?: string };
   name: string;
 };
