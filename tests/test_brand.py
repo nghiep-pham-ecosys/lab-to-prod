@@ -152,12 +152,62 @@ def test_honeycomb_keeps_clear_of_what_is_drawn_on_top(monkeypatch, tmp_path):
 def test_badge_ring_is_pressed_in_and_left_out_of_the_favicon(tmp_path):
     build = _build()
     av = Image.open(BRAND / "option-d" / "avatar.png").convert("RGB")
-    # the left side of the ring passes just above the L: groove darker than the gold around it
-    groove = av.getpixel((234, 300))
-    gold = av.getpixel((200, 300))
+    # the upper left side of the ring, above the L: groove darker than the gold around it
+    groove = av.getpixel((317, 230))
+    gold = av.getpixel((317, 205))
     assert sum(groove) < sum(gold) - 60
     build.build_favicon("d", tmp_path / "favicon.png")
     fav = Image.open(tmp_path / "favicon.png")
     assert fav.size == (96, 96) and fav.mode == "RGBA"
     assert fav.getpixel((0, 0))[3] == 0          # transparent corners
     assert fav.getpixel((48, 10))[3] == 255      # the badge fills the square
+
+
+def _ink(px) -> bool:
+    return sum(px) < 150
+
+
+@pytest.mark.parametrize("name", ["avatar.png", "avatar-alt.png", "avatar-telegram.png"])
+def test_avatar_is_a_round_seal_with_the_name_on_the_bottom_arc(name):
+    import math
+    av = Image.open(BRAND / "option-d" / name).convert("RGB")
+    n = av.width
+    k = n / 800
+
+    def at(radius, deg):   # deg: 0 = bottom centre, positive = to the left
+        a = math.radians(90 + deg)
+        return av.getpixel((round(n / 2 + radius * k * math.cos(a)), round(n / 2 + radius * k * math.sin(a))))
+
+    # gold reaches the inscribed circle: platforms that crop to it show only the badge
+    for deg in range(0, 360, 30):
+        px = at(380, deg)
+        assert px[0] > 180 and px[2] < 190, (deg, px)
+    # NGHIEP PHAM AI: ink along the bottom of the circle, from left of centre to right of it
+    band = [(r, d) for r in range(304, 346, 3) for d in range(-50, 51)]
+    inked = {d for r, d in band if _ink(at(r, d))}
+    assert {d for d in inked if d > 30} and {d for d in inked if d < -30} and {d for d in inked if abs(d) < 10}
+    # nothing above it in that band (the text is only on the bottom arc), and nothing outside 88%
+    # of the radius, where platform crops and ring overlays start
+    assert not any(_ink(at(r, d)) for r in range(304, 346, 3) for d in range(120, 241, 2))
+    assert not any(_ink(at(r, d)) for r in range(354, 388, 2) for d in range(0, 360, 2))
+    # the text keeps clear of the benzene ring and L->P: no ink between them
+    assert not any(_ink(at(r, d)) for r in range(240, 290, 3) for d in range(-60, 61, 2))
+
+
+def test_avatar_badge_is_a_disc_not_a_rounded_square(tmp_path):
+    import math
+    build = _build()
+    t = CFG["options"]["d"]["themes"]["light"]
+    c = build.Canvas(800, 800, None, t)          # transparent, so the shape alone shows in alpha
+    build.avatar_badge(c, 800)
+    av = c.save(tmp_path / "seal.png")
+    for x, y in ((0, 0), (799, 0), (0, 799), (799, 799)):
+        assert av.getpixel((x, y))[3] == 0                       # corners stay background
+    for deg in range(0, 360, 10):
+        a = math.radians(deg)
+        inside = av.getpixel((round(400 + 386 * math.cos(a)), round(400 + 386 * math.sin(a))))
+        assert inside[3] == 255, deg                             # the disc fills the circle
+    for deg in (45, 135, 225, 315):
+        a = math.radians(deg)
+        out = av.getpixel((round(400 + 440 * math.cos(a)), round(400 + 440 * math.sin(a))))
+        assert out[3] < 8, deg                                   # a rounded square would be gold here

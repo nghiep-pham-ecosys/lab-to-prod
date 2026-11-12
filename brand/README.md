@@ -17,8 +17,15 @@ Option D in short:
 - **Wordmark.** "Lab (→) Prod" in Space Grotesk 700, the arrow inside a gold pill.
 - **Lockup** (`lockup: true`): the logo, every banner, the blog header and the Short outro set the
   badge left of the wordmark, 1.8 times the wordmark's cap height, vertically centred; in banners
-  the "NGHIEP PHAM" kicker and the tagline start where the wordmark starts. Avatars are the badge
-  alone.
+  the "NGHIEP PHAM" kicker and the tagline start where the wordmark starts.
+- **Avatar** (`avatar.png`, `avatar-alt.png`, `avatar-telegram.png`): the badge as a round seal,
+  because every platform shows avatars as circles. A glossy gold disc fills the canvas circle, with
+  a thin groove just inside its edge; the pressed-in benzene ring and L→P sit a little above the
+  centre, and "NGHIEP PHAM AI" in Space Grotesk 700 runs along the bottom of the circle, letters
+  upright towards the centre, reading left to right. The text keeps inside 88% of the radius, so a
+  platform's circle crop or ring overlay does not touch it. It reads at 128 px; at 64 px only L→P
+  does. Everywhere else (cards, logo, banners, blog header, favicon) the badge stays a rounded
+  square.
 - **Honeycomb** (`texture: honeycomb`): a faint hexagonal lattice over the background gradient,
   anchored on one foil benzene ring. The ring sits at the top right on the kicker line (cards,
   Open Graph images, banners inside their safe box, Shorts); the rule under a card's kicker stops

@@ -10,7 +10,8 @@ a preview sheet. Nothing here is drawn by hand, so a palette change is one edit.
 An option's `style` picks the mark, the wordmark and the background texture. With `gloss: true`
 backgrounds get a gradient and soft light, accents are drawn as metallic foil (the theme's
 `foil` colours), and panels get a shadow and a sheen. With `lockup: true` the logo and the
-banners set the mark to the left of the wordmark (avatars stay mark only).
+banners set the mark to the left of the wordmark. Avatars carry no wordmark: the badge option draws
+its avatar as a round seal with NGHIEP PHAM AI on the bottom arc (`avatar_badge`).
 
 `texture: honeycomb` lays a faint hexagonal lattice over the background. It is anchored on one
 accent benzene ring in foil (top right of cards, banners and Open Graph images), fades with
@@ -135,18 +136,24 @@ class Canvas:
             x0, y0, x1, y1 = box
             self.rect([x0, y0 + dy, x1, y1 + dy], fill=(0, 0, 0, alpha), radius=radius)
 
-    def sheen(self, box, radius=0, alpha=34):
-        """A highlight that fades from the top edge of a panel to nothing at its middle, as on glass."""
+    def sheen(self, box, radius=0, alpha=34, disc=False):
+        """A highlight that fades from the top edge of a panel to nothing at its middle, as on glass.
+        `disc=True`: the panel is the circle inscribed in `box`."""
         x0, y0, x1, y1 = (int(v * SS) for v in box)
         w, h = x1 - x0, y1 - y0
         fade = Image.linear_gradient("L").resize((w, h)).point(lambda v: max(0, int(alpha * (1 - v / 255 * 2))))
         shape = Image.new("L", (w, h), 0)
-        ImageDraw.Draw(shape).rounded_rectangle([0, 0, w - 1, h - 1], radius=int(radius * SS), fill=255)
+        if disc:
+            ImageDraw.Draw(shape).ellipse([0, 0, w - 1, h - 1], fill=255)
+        else:
+            ImageDraw.Draw(shape).rounded_rectangle([0, 0, w - 1, h - 1], radius=int(radius * SS), fill=255)
         mask = Image.composite(fade, Image.new("L", (w, h), 0), shape)
         top = Image.new("RGBA", self.im.size, (255, 255, 255, 0))
         top.paste(Image.new("RGBA", (w, h), (255, 255, 255, 255)), (x0, y0), mask)
         self.im = Image.alpha_composite(self.im, top)
         self.d = ImageDraw.Draw(self.im)
+        if disc:
+            return
         with self.layer(tint="#FFFFFF"):
             self.line([(box[0] + radius, box[1] + 1.5), (box[2] - radius, box[1] + 1.5)], (255, 255, 255, 90), 1.5)
 
@@ -335,6 +342,66 @@ def mark_badge(c: Canvas, cx, cy, size, fg, accent, weight=1.0, ring=True):
     if c.theme is not None:
         c.sheen(box, radius=rad, alpha=60)
     _badge_letters(c, cx, cy, size, BADGE_INK)
+
+
+AVATAR_TEXT = "NGHIEP PHAM AI"
+
+
+def _arc_text(c: Canvas, s, cx, cy, radius, fnt, fill, spacing=0.0):
+    """`s` set along the bottom of a circle, centred at the bottom and reading left to right: each
+    letter stands on the circle of `radius` (its baseline outside), its top towards the centre.
+    Letters are spaced on the circle through their middle, so the gaps look even."""
+    top = fnt.getbbox("H", anchor="ls")[1]
+    mid = radius + top / SS / 2                   # top is negative: half the cap height inwards
+    adv = [fnt.getlength(ch) / SS + spacing for ch in s]
+    total = sum(adv) - spacing
+    phi = math.pi / 2 + total / 2 / mid           # the left end; moving right lowers the angle
+    tile = int(fnt.size * 2)
+    for ch, a in zip(s, adv):
+        width = a - spacing
+        at = phi - width / 2 / mid
+        phi -= a / mid
+        if not ch.strip():
+            continue
+        glyph = Image.new("RGBA", (tile, tile), (*_rgb(fill), 0))
+        ImageDraw.Draw(glyph).text((tile / 2, tile / 2), ch, font=fnt, fill=fill, anchor="ms")
+        glyph = glyph.rotate(math.degrees(math.pi / 2 - at), resample=Image.BICUBIC)
+        x, y = (cx + radius * math.cos(at)) * SS, (cy + radius * math.sin(at)) * SS
+        c.im.alpha_composite(glyph, dest=(round(x - tile / 2), round(y - tile / 2)))
+    c.d = ImageDraw.Draw(c.im)
+
+
+def _groove_circle(c: Canvas, cx, cy, r, w, lip):
+    """A thin circle pressed into the gold, drawn like the ring: deep-gold groove, pale lower lip."""
+    with c.layer():
+        for dx, color in ((lip, (255, 251, 222, 165)), (0, (139, 92, 0, 125))):
+            b = [(cx + dx - r) * SS, (cy + dx - r) * SS, (cx + dx + r) * SS, (cy + dx + r) * SS]
+            c.d.ellipse(b, outline=color, width=max(1, round(w * SS)))
+
+
+def avatar_badge(c: Canvas, size: float):
+    """The badge as a round seal that fills the avatar: glossy gold disc, the pressed-in benzene ring
+    under L->P (raised to make room), and NGHIEP PHAM AI along the bottom of the circle.
+
+    Platforms crop avatars to the inscribed circle, so the disc fills it and the arc text keeps
+    inside 88% of its radius.
+    """
+    cx = cy = size / 2
+    R = size * 0.49
+    box = [cx - R, cy - R, cx + R, cy + R]
+    dark = is_dark(c.theme)
+    with c.layer(blur=size * 0.012):
+        c.circle((cx, cy + size * 0.008), R, (0, 0, 0, 120 if dark else 70))
+    with c.accent(BADGE_GOLD):
+        c.circle((cx, cy), R, "#000000")
+    c.d.ellipse([v * SS for v in box], outline=(122, 82, 0, 140), width=max(1, round(size * 0.004 * SS)))
+    _groove_circle(c, cx, cy, size * 0.458, size * 0.006, size * 0.0025)
+    mark, my = size * 0.80, cy - size * 0.03
+    _badge_ring(c, cx, my, mark)
+    c.sheen(box, alpha=60, disc=True)
+    _badge_letters(c, cx, my, mark, BADGE_INK)
+    f = font("SpaceGrotesk", size * 0.08 * SS, 700)
+    _arc_text(c, AVATAR_TEXT, cx, cy, size * 0.434, f, BADGE_INK, spacing=size * 0.008)
 
 
 # ---------------------------------------------------------------- wordmarks (y is the vertical centre)
@@ -595,8 +662,11 @@ def build_logo(key, t, out, suffix=""):
 
 def build_avatar(key, t, out, name="avatar.png"):
     c = new_canvas(800, 800, t, key)
-    size = {"arrow": 430, "hexagon": 600, "badge": 640}[style(key)["mark"]]
-    OPT[key]["mark"](c, 400, 400, size, t["fg"], t["accent"])
+    if style(key)["mark"] == "badge":
+        avatar_badge(c, 800)   # round, with the name on the arc: avatars are shown as circles
+    else:
+        size = {"arrow": 430, "hexagon": 600}[style(key)["mark"]]
+        OPT[key]["mark"](c, 400, 400, size, t["fg"], t["accent"])
     im = c.save(out / name)
     if name == "avatar.png":
         im.resize((640, 640), Image.LANCZOS).save(out / "avatar-telegram.png", optimize=True)
