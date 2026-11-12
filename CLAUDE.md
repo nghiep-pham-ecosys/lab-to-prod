@@ -85,11 +85,15 @@ metrics/collect.py                daily numbers into metrics/metrics.csv; token 
 tools/automerge_gate.py          reads content/<week>/judge.json; holds failing posts
 scripts/tokens/                  local scripts that fetch tokens and store them with gh; never print them
 docs/setup.md                    the author's one-time manual steps (Vietnamese)
+.claude/commands/draft-week.md   /draft-week: the weekly drafting run
+.claude/skills/                  write-post, write-blog, fact-check, render-image, render-short, judge, weekly-report
+tools/judge_file.py              writes content/<week>/judge.json from the judging subagent's scores
+metrics/report.py                tables for the weekly report
+reports/                         one report per week
 docs/operations.md               switches, workflows, going live, incident steps
 blog/                            Astro site; articles in blog/src/content/posts/, see blog/README.md
 ```
 
-Later steps add `reports/`.
 
 ## Commands
 
