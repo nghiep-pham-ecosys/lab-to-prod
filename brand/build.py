@@ -1,18 +1,25 @@
 #!/usr/bin/env python3
 """Build every brand asset from brand.yaml.
 
-    uv run --with pillow --with pyyaml python brand/build.py
+    uv run --with pillow --with pyyaml python brand/build.py          # every option
+    uv run --with pillow --with pyyaml python brand/build.py c d e    # only these
 
-Writes brand/option-a/ and brand/option-b/: logo, avatar, channel banners, one sample card per
-image theme and a preview sheet. Nothing here is drawn by hand, so a palette change is one edit.
+Writes brand/option-<key>/: logo, avatar, channel banners, one sample card per image theme and
+a preview sheet. Nothing here is drawn by hand, so a palette change is one edit.
+
+An option's `style` picks the mark, the wordmark and the background texture. With `gloss: true`
+backgrounds get a gradient and soft light, accents are drawn as metallic foil (the theme's
+`foil` colours), and panels get a shadow and a sheen.
 """
 from __future__ import annotations
 
 import math
+import sys
+from contextlib import contextmanager
 from pathlib import Path
 
 import yaml
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
 
 HERE = Path(__file__).resolve().parent
 CFG = yaml.safe_load((HERE / "brand.yaml").read_text(encoding="utf-8"))
@@ -24,9 +31,8 @@ TAGLINE = CFG["tagline"]
 
 def font(name: str, size: float, weight: int = 400) -> ImageFont.FreeTypeFont:
     f = ImageFont.truetype(str(HERE / "fonts" / f"{name}.ttf"), int(size))
-    axes = f.get_variation_axes()
     values = []
-    for a in axes:
+    for a in f.get_variation_axes():
         label = a["name"].decode() if isinstance(a["name"], bytes) else a["name"]
         if label.lower().startswith("weight"):
             values.append(max(a["minimum"], min(a["maximum"], weight)))
@@ -38,13 +44,101 @@ def font(name: str, size: float, weight: int = 400) -> ImageFont.FreeTypeFont:
     return f
 
 
+def _rgb(hex_color: str) -> tuple[int, int, int]:
+    return tuple(int(hex_color[i:i + 2], 16) for i in (1, 3, 5))
+
+
+def is_dark(t: dict) -> bool:
+    return sum(_rgb(t["bg"])) < 384
+
+
 class Canvas:
     """A supersampled RGBA canvas with a few drawing helpers. Coordinates are final pixels."""
 
-    def __init__(self, w: int, h: int, bg: str | None):
+    def __init__(self, w: int, h: int, bg: str | None, theme: dict | None = None):
         self.w, self.h = w, h
+        self.theme = theme
         self.im = Image.new("RGBA", (w * SS, h * SS), bg or (0, 0, 0, 0))
         self.d = ImageDraw.Draw(self.im)
+
+    # ---- layers: gloss effects are drawn on a transparent layer, then composited
+
+    @contextmanager
+    def layer(self, blur: float = 0, tint: str | None = None):
+        """Draw on a transparent layer; on exit blur it and composite it onto the canvas.
+
+        `tint` is the colour of the transparent pixels: blurring mixes them in, so it must match
+        what is drawn, or a light glow gets a grey fringe.
+        """
+        base_im = self.im
+        self.im = Image.new("RGBA", base_im.size, (*_rgb(tint), 0) if tint else (0, 0, 0, 0))
+        self.d = ImageDraw.Draw(self.im)
+        try:
+            yield
+        finally:
+            top = self.im
+            if blur:
+                top = top.filter(ImageFilter.GaussianBlur(blur * SS))
+            self.im = Image.alpha_composite(base_im, top)
+            self.d = ImageDraw.Draw(self.im)
+
+    @contextmanager
+    def accent(self):
+        """Whatever is drawn inside becomes metallic foil when the theme has `foil` colours."""
+        foil = (self.theme or {}).get("foil")
+        if not foil:
+            yield
+            return
+        base_im = self.im
+        self.im = Image.new("RGBA", base_im.size, (0, 0, 0, 0))
+        self.d = ImageDraw.Draw(self.im)
+        try:
+            yield
+        finally:
+            mask = self.im.getchannel("A")
+            box = mask.getbbox()
+            if box:
+                w, h = box[2] - box[0], box[3] - box[1]
+                side = int(math.hypot(w, h)) + 2
+                ramp = Image.linear_gradient("L").resize((side, side)).rotate(-35, resample=Image.BICUBIC)
+                left, top = (side - w) // 2, (side - h) // 2
+                ramp = ramp.crop((left, top, left + w, top + h))
+                grad = ImageOps.colorize(ramp, black=foil[0], mid=foil[1], white=foil[2], midpoint=118).convert("RGBA")
+                base_im.paste(grad, box[:2], mask.crop(box))
+            self.im = base_im
+            self.d = ImageDraw.Draw(self.im)
+
+    def gradient(self, top: str, bottom: str):
+        ramp = Image.linear_gradient("L").resize(self.im.size)
+        self.im = ImageOps.colorize(ramp, black=top, white=bottom).convert("RGBA")
+        self.d = ImageDraw.Draw(self.im)
+
+    def glow(self, c, r, color, alpha):
+        """A soft blob of light."""
+        with self.layer(blur=r * 0.45, tint=color):
+            self.circle(c, r, (*_rgb(color), alpha))
+
+    def shadow(self, box, radius=0, blur=24, alpha=70, dy=14):
+        with self.layer(blur=blur):
+            x0, y0, x1, y1 = box
+            self.rect([x0, y0 + dy, x1, y1 + dy], fill=(0, 0, 0, alpha), radius=radius)
+
+    def sheen(self, box, radius=0, alpha=34):
+        """A highlight that fades from the top edge of a panel to nothing at its middle, as on glass."""
+        x0, y0, x1, y1 = (int(v * SS) for v in box)
+        w, h = x1 - x0, y1 - y0
+        fade = Image.linear_gradient("L").resize((w, h)).point(lambda v: max(0, int(alpha * (1 - v / 255 * 2))))
+        shape = Image.new("L", (w, h), 0)
+        ImageDraw.Draw(shape).rounded_rectangle([0, 0, w - 1, h - 1], radius=int(radius * SS), fill=255)
+        mask = Image.composite(fade, Image.new("L", (w, h), 0), shape)
+        top = Image.new("RGBA", self.im.size, (255, 255, 255, 0))
+        top.paste(Image.new("RGBA", (w, h), (255, 255, 255, 255)), (x0, y0), mask)
+        self.im = Image.alpha_composite(self.im, top)
+        self.d = ImageDraw.Draw(self.im)
+        with self.layer(tint="#FFFFFF"):
+            self.line([(box[0] + radius, box[1] + 1.5), (box[2] - radius, box[1] + 1.5)], (255, 255, 255, 90), 1.5)
+
+    # ---- primitives
 
     def text(self, xy, s, fnt, fill, anchor="la", spacing=0.0):
         x, y = xy
@@ -60,7 +154,7 @@ class Canvas:
         return fnt.getlength(s) / SS + spacing * len(s)
 
     def line(self, pts, fill, width):
-        self.d.line([(x * SS, y * SS) for x, y in pts], fill=fill, width=int(width * SS), joint="curve")
+        self.d.line([(x * SS, y * SS) for x, y in pts], fill=fill, width=max(1, int(width * SS)), joint="curve")
 
     def rect(self, box, fill=None, outline=None, width=1, radius=0):
         b = [v * SS for v in box]
@@ -106,37 +200,28 @@ def hexagon(cx, cy, r, rot=30):
             for i in range(6)]
 
 
+def style(key: str) -> dict:
+    return CFG["options"][key].get("style", {})
+
+
+def _foil(c: Canvas) -> bool:
+    return bool((c.theme or {}).get("foil"))
+
+
 # ---------------------------------------------------------------- marks
 
-def mark_a(c: Canvas, cx, cy, size, fg, accent):
-    """Option A mark: L, a reaction arrow, P. Reads as 'Lab yields Prod'."""
+def mark_arrow(c: Canvas, cx, cy, size, fg, accent):
+    """L, a reaction arrow, P. Reads as 'Lab yields Prod'."""
     f = font("Fraunces", size * 0.62 * SS, 600)
     gap = size * 0.34
     c.text((cx - gap, cy), "L", f, fg, anchor="rm")
     c.text((cx + gap, cy), "P", f, fg, anchor="lm")
-    c.arrow(cx - gap * 0.72, cx + gap * 0.72, cy + size * 0.03, accent, size * 0.035)
+    with c.accent():
+        c.arrow(cx - gap * 0.72, cx + gap * 0.72, cy + size * 0.03, accent, size * (0.045 if _foil(c) else 0.035))
 
 
-def wordmark_a(c: Canvas, x, y, size, fg, accent, anchor="l"):
-    """'Lab ⟶ Prod' set in a serif, with a drawn reaction arrow. y is the vertical centre."""
-    f = font("Fraunces", size * SS, 600)
-    w_lab, w_prod = c.width("Lab", f), c.width("Prod", f)
-    arrow = size * 1.15
-    pad = size * 0.28
-    total = w_lab + pad + arrow + pad + w_prod
-    if anchor == "m":
-        x -= total / 2
-    elif anchor == "r":
-        x -= total
-    c.text((x, y), "Lab", f, fg, anchor="lm")
-    ax = x + w_lab + pad
-    c.arrow(ax, ax + arrow, y + size * 0.06, accent, size * 0.07)
-    c.text((ax + arrow + pad, y), "Prod", f, fg, anchor="lm")
-    return total
-
-
-def mark_b(c: Canvas, cx, cy, size, fg, accent):
-    """Option B mark: a benzene-like hexagon whose vertices are nodes, one lit: lab ring, prod graph."""
+def mark_hexagon(c: Canvas, cx, cy, size, fg, accent):
+    """A benzene-like hexagon whose vertices are nodes, one lit: lab ring, prod graph."""
     r = size * 0.36
     pts = hexagon(cx, cy, r)
     c.polygon(pts, outline=fg, width=size * 0.035)
@@ -144,76 +229,178 @@ def mark_b(c: Canvas, cx, cy, size, fg, accent):
     for i in (0, 2, 4):
         c.line([inner[i], inner[(i + 1) % 6]], fg, size * 0.03)
     for i, p in enumerate(pts):
-        c.circle(p, size * (0.06 if i == 5 else 0.045), accent if i == 5 else fg)
+        if i != 5:
+            c.circle(p, size * 0.045, fg)
+    with c.accent():
+        c.circle(pts[5], size * (0.075 if _foil(c) else 0.06), accent)
 
 
-def wordmark_b(c: Canvas, x, y, size, fg, accent, anchor="l"):
-    """'lab-to-prod' in mono, with the 'to' in the accent colour and a block cursor."""
-    f = font("JetBrainsMono", size * SS, 700)
-    parts = [("lab", fg), ("-to-", accent), ("prod", fg)]
-    total = sum(c.width(t, f) for t, _ in parts) + size * 0.55
-    if anchor == "m":
-        x -= total / 2
-    elif anchor == "r":
-        x -= total
-    for t, col in parts:
-        x = c.text((x, y), t, f, col, anchor="lm")
-    c.rect([x + size * 0.1, y - size * 0.42, x + size * 0.5, y + size * 0.42], fill=accent)
+def mark_badge(c: Canvas, cx, cy, size, fg, accent):
+    """A glossy yellow rounded square holding L, an arrow and P in black."""
+    t = c.theme or {}
+    ink = "#0B0B0A"
+    half, rad = size * 0.40, size * 0.17
+    box = [cx - half, cy - half, cx + half, cy + half]
+    if _foil(c) and size > 200:
+        c.shadow(box, radius=rad, blur=size * 0.04, alpha=80, dy=size * 0.025)
+    with c.accent():
+        c.rect(box, fill=t.get("panel_accent", accent), radius=rad)
+    if _foil(c):
+        c.sheen(box, radius=rad, alpha=60)
+    f = font("SpaceGrotesk", size * 0.34 * SS, 700)
+    gap = size * 0.12
+    c.text((cx - gap, cy), "L", f, ink, anchor="rm")
+    c.text((cx + gap, cy), "P", f, ink, anchor="lm")
+    c.arrow(cx - gap * 0.72, cx + gap * 0.72, cy + size * 0.012, ink, size * 0.03)
+
+
+# ---------------------------------------------------------------- wordmarks (y is the vertical centre)
+
+def _place(x, total, anchor):
+    return x - total / 2 if anchor == "m" else x - total if anchor == "r" else x
+
+
+def wordmark_arrow(c: Canvas, x, y, size, fg, accent, anchor="l"):
+    """'Lab ⟶ Prod' set in a serif, with a drawn reaction arrow."""
+    f = font("Fraunces", size * SS, 600)
+    w_lab, w_prod = c.width("Lab", f), c.width("Prod", f)
+    arrow, pad = size * 1.15, size * 0.28
+    total = w_lab + pad + arrow + pad + w_prod
+    x = _place(x, total, anchor)
+    c.text((x, y), "Lab", f, fg, anchor="lm")
+    ax = x + w_lab + pad
+    with c.accent():
+        c.arrow(ax, ax + arrow, y + size * 0.06, accent, size * (0.085 if _foil(c) else 0.07))
+    c.text((ax + arrow + pad, y), "Prod", f, fg, anchor="lm")
     return total
 
 
-OPT = {
-    "a": {"mark": mark_a, "wordmark": wordmark_a, "display": "Fraunces", "body": "Inter", "mono": "JetBrainsMono"},
-    "b": {"mark": mark_b, "wordmark": wordmark_b, "display": "SpaceGrotesk", "body": "SpaceGrotesk", "mono": "JetBrainsMono"},
-}
+def wordmark_mono(c: Canvas, x, y, size, fg, accent, anchor="l"):
+    """'lab-to-prod' in mono, with the 'to' in the accent colour and a block cursor."""
+    f = font("JetBrainsMono", size * SS, 700)
+    w_lab, w_to, w_prod = (c.width(s, f) for s in ("lab", "-to-", "prod"))
+    total = w_lab + w_to + w_prod + size * 0.55
+    x = _place(x, total, anchor)
+    c.text((x, y), "lab", f, fg, anchor="lm")
+    c.text((x + w_lab + w_to, y), "prod", f, fg, anchor="lm")
+    end = x + w_lab + w_to + w_prod
+    with c.accent():
+        c.text((x + w_lab, y), "-to-", f, accent, anchor="lm")
+        c.rect([end + size * 0.1, y - size * 0.42, end + size * 0.5, y + size * 0.42], fill=accent)
+    return total
+
+
+def wordmark_pill(c: Canvas, x, y, size, fg, accent, anchor="l"):
+    """'Lab' and 'Prod' in a heavy grotesk around a glossy yellow pill that carries the arrow."""
+    t = c.theme or {}
+    f = font("SpaceGrotesk", size * SS, 700)
+    w_lab, w_prod = c.width("Lab", f), c.width("Prod", f)
+    pill_w, pill_h, pad = size * 1.25, size * 0.66, size * 0.22
+    total = w_lab + pad + pill_w + pad + w_prod
+    x = _place(x, total, anchor)
+    c.text((x, y), "Lab", f, fg, anchor="lm")
+    px = x + w_lab + pad
+    box = [px, y - pill_h / 2 + size * 0.03, px + pill_w, y + pill_h / 2 + size * 0.03]
+    with c.accent():
+        c.rect(box, fill=t.get("panel_accent", accent), radius=pill_h / 2)
+    if _foil(c):
+        c.sheen(box, radius=pill_h / 2, alpha=70)
+    c.arrow(px + pill_w * 0.22, px + pill_w * 0.78, y + size * 0.03, "#0B0B0A", size * 0.075)
+    c.text((px + pill_w + pad, y), "Prod", f, fg, anchor="lm")
+    return total
+
+
+MARKS = {"arrow": mark_arrow, "hexagon": mark_hexagon, "badge": mark_badge}
+WORDMARKS = {"arrow": wordmark_arrow, "mono": wordmark_mono, "pill": wordmark_pill}
+OPT = {key: {"mark": MARKS[opt["style"]["mark"]], "wordmark": WORDMARKS[opt["style"]["wordmark"]], **opt["fonts"]}
+       for key, opt in CFG["options"].items()}
 
 
 def texture(c: Canvas, key: str, t: dict):
-    if key == "a":
-        c.grid(48, t["line"], 1)  # lab notebook squares
-    else:
+    kind = style(key).get("texture")
+    if kind == "grid":
+        c.grid(48, t["line"], 1)   # lab notebook squares
+    elif kind == "dots":
         c.dots(40, t["line"], 1.6)  # terminal dot grid
+
+
+def new_canvas(w: int, h: int, t: dict, key: str) -> Canvas:
+    """A canvas with the option's background: flat, or gradient plus soft light when glossy."""
+    c = Canvas(w, h, t["bg"], t)
+    if style(key).get("gloss"):
+        c.gradient(t["bg"], t.get("bg2", t["bg"]))
+        texture(c, key, t)
+        big = max(w, h)
+        if is_dark(t):
+            c.glow((w * 0.86, h * 0.02), big * 0.34, t["panel_accent"], 62)
+            c.glow((w * 0.04, h * 1.0), big * 0.26, t["panel_accent"], 30)
+        else:
+            c.glow((w * 0.12, h * 0.0), big * 0.36, "#FFFFFF", 150)
+            c.glow((w * 0.95, h * 1.0), big * 0.30, t["panel_accent"], 70)
+    else:
+        texture(c, key, t)
+    return c
+
+
+def panel(c: Canvas, box, t: dict, key: str, radius=18):
+    """A dark block for code or a number; glossy options add a shadow, a sheen and a gold edge."""
+    if style(key).get("gloss"):
+        c.shadow(box, radius=radius, blur=26, alpha=120 if is_dark(t) else 64)
+        c.rect(box, fill=t["panel"], radius=radius)
+        c.sheen(box, radius=radius, alpha=16)
+        with c.accent():
+            c.rect(box, outline=t["panel_accent"], width=2.5, radius=radius)
+    else:
+        c.rect(box, fill=t["panel"], radius=radius)
+
+
+def rule(c: Canvas, x0, x1, y, t: dict, key: str):
+    if style(key).get("gloss"):
+        with c.accent():
+            c.line([(x0, y), (x1, y)], t["panel_accent"], 3)
+    else:
+        c.line([(x0, y), (x1, y)], t["line"], 2)
 
 
 # ---------------------------------------------------------------- assets
 
 def build_logo(key, t, out, suffix=""):
-    c = Canvas(1600, 400, None)
-    OPT[key]["wordmark"](c, 800, 200, 170 if key == "a" else 150, t["fg"], t["accent"], anchor="m")
+    c = Canvas(1600, 400, None, t)
+    size = {"arrow": 170, "mono": 150, "pill": 160}[style(key)["wordmark"]]
+    OPT[key]["wordmark"](c, 800, 200, size, t["fg"], t["accent"], anchor="m")
     c.save(out / f"logo{suffix}.png")
 
 
-def build_avatar(key, t, out):
-    c = Canvas(800, 800, t["bg"])
-    texture(c, key, t)
-    OPT[key]["mark"](c, 400, 400, 430 if key == "a" else 600, t["fg"], t["accent"])
-    im = c.save(out / "avatar.png")
-    im.resize((640, 640), Image.LANCZOS).save(out / "avatar-telegram.png", optimize=True)
+def build_avatar(key, t, out, name="avatar.png"):
+    c = new_canvas(800, 800, t, key)
+    size = {"arrow": 430, "hexagon": 600, "badge": 640}[style(key)["mark"]]
+    OPT[key]["mark"](c, 400, 400, size, t["fg"], t["accent"])
+    im = c.save(out / name)
+    if name == "avatar.png":
+        im.resize((640, 640), Image.LANCZOS).save(out / "avatar-telegram.png", optimize=True)
 
 
 def banner(key, t, out, name, w, h, box, align="l"):
     """box = (x0, y0, x1, y1): the area that is safe from cropping and overlays."""
     o = OPT[key]
-    c = Canvas(w, h, t["bg"])
-    texture(c, key, t)
+    gloss = style(key).get("gloss")
+    c = new_canvas(w, h, t, key)
     x0, y0, x1, y1 = box
     bh = y1 - y0
-    c.rect([x0 - bh * 0.12, y0, x1 + bh * 0.12, y1], fill=t["bg"])  # quiet patch behind the text
-    wm = bh * (0.30 if key == "a" else 0.25)
+    if not gloss:
+        c.rect([x0 - bh * 0.12, y0, x1 + bh * 0.12, y1], fill=t["bg"])  # quiet patch behind the text
+    wm = bh * {"arrow": 0.30, "mono": 0.25, "pill": 0.27}[style(key)["wordmark"]]
     small = bh * 0.085
     x = x0 if align == "l" else (x0 + x1) / 2
     anchor = "l" if align == "l" else "m"
     tag_f = font(o["body"], bh * 0.088 * SS, 400)
-    tag = TAGLINE
-    if c.width(tag, tag_f) > (x1 - x0):
-        head, tail = tag.split(" — ")
-        tag = None
-    c.text((x, y0 + bh * 0.13), "NGHIEP PHAM", font(o["mono"], small * SS, 600), t["muted"],
+    c.text((x, y0 + bh * 0.13), "NGHIEP PHAM", font(o["mono"], small * SS, 600), t["accent"] if gloss else t["muted"],
            anchor=anchor + "m", spacing=0 if anchor == "m" else small * 0.18)
     o["wordmark"](c, x, y0 + bh * 0.44, wm, t["fg"], t["accent"], anchor=anchor)
-    if tag:
-        c.text((x, y0 + bh * 0.78), tag, tag_f, t["muted"], anchor=anchor + "m")
+    if c.width(TAGLINE, tag_f) <= (x1 - x0):
+        c.text((x, y0 + bh * 0.78), TAGLINE, tag_f, t["muted"], anchor=anchor + "m")
     else:
+        head, tail = TAGLINE.split(" — ")
         c.text((x, y0 + bh * 0.74), head, tag_f, t["fg"], anchor=anchor + "m")
         c.text((x, y0 + bh * 0.88), tail, tag_f, t["muted"], anchor=anchor + "m")
     c.save(out / f"banner-{name}.png")
@@ -222,27 +409,29 @@ def banner(key, t, out, name, w, h, box, align="l"):
 def sample_card(key, t, out, name, sample):
     """A 1200x1200 post image in one theme. render/image draws the real ones the same way."""
     o = OPT[key]
-    c = Canvas(1200, 1200, t["bg"])
-    texture(c, key, t)
+    gloss = style(key).get("gloss")
+    c = new_canvas(1200, 1200, t, key)
     m = 88
-    c.rect([m - 24, m - 24, 1200 - m + 24, 1200 - m + 24], fill=t["bg"])
-    c.text((m, m + 14), sample["series"].upper(), font(o["mono"], 30 * SS, 600), t["accent"], anchor="lm", spacing=3)
-    c.line([(m, m + 56), (1200 - m, m + 56)], t["line"], 2)
+    if not gloss:
+        c.rect([m - 24, m - 24, 1200 - m + 24, 1200 - m + 24], fill=t["bg"])
+    c.text((m, m + 14), sample["series"].upper(), font(o["mono"], 30 * SS, 700 if gloss else 600), t["accent"], anchor="lm", spacing=3)
+    rule(c, m, 1200 - m, m + 56, t, key)
     y = m + 130
-    title_f = font(o["display"], 92 * SS, 600 if key == "a" else 700)
+    weight = 600 if o["display"] == "Fraunces" and not gloss else 650 if o["display"] == "Fraunces" else 700
+    title_f = font(o["display"], 92 * SS, weight)
     for ln in sample["title"]:
         c.text((m, y), ln, title_f, t["fg"], anchor="lm")
         y += 108
     y += 40
     code_f = font(o["mono"], 38 * SS, 500)
     bh = 76 + 58 * len(sample["code"])
-    c.rect([m, y, 1200 - m, y + bh], fill=t["panel"], radius=18)
+    panel(c, [m, y, 1200 - m, y + bh], t, key)
     cy = y + 38 + 29
     for ln, hot in sample["code"]:
         c.text((m + 40, cy), ln, code_f, t["panel_accent"] if hot else t["panel_fg"], anchor="lm")
         cy += 58
     y += bh + 46
-    c.text((m, y), sample["lesson"], font(o["body"], 44 * SS, 500), t["fg"], anchor="lm")
+    c.text((m, y), sample["lesson"], font(o["body"], 44 * SS, 600 if gloss else 500), t["fg"], anchor="lm")
     c.line([(m, 1200 - m - 70), (1200 - m, 1200 - m - 70)], t["line"], 2)
     c.text((m, 1200 - m - 22), NAME, font(o["body"], 30 * SS, 500), t["muted"], anchor="lm")
     o["mark"](c, 1200 - m - 44, 1200 - m - 22, 110, t["fg"], t["accent"])
@@ -252,45 +441,53 @@ def sample_card(key, t, out, name, sample):
 def preview(key, opt, out):
     """One sheet with everything, for choosing between the options."""
     W, pad = 2400, 60
-    files = ["banner-linkedin.png", "banner-facebook.png"]
-    sheet = Image.new("RGB", (W, 4200), "#D9D9D9")
+    themes = opt["themes"]
+    sheet = Image.new("RGB", (W, 5200), "#D9D9D9")
     d = ImageDraw.Draw(sheet)
-    lab = ImageFont.truetype(str(HERE / "fonts" / "Inter.ttf"), 34)
-    d.text((pad, 30), f"Option {key.upper()} — {opt['title']}", font=ImageFont.truetype(str(HERE / "fonts" / "Inter.ttf"), 52), fill="#111")
+    inter = str(HERE / "fonts" / "Inter.ttf")
+    lab = ImageFont.truetype(inter, 34)
+    d.text((pad, 30), f"Option {key.upper()} — {opt['title']}", font=ImageFont.truetype(inter, 52), fill="#111")
     y = 130
-    av = Image.open(out / "avatar.png").resize((520, 520), Image.LANCZOS)
-    mask = Image.new("L", av.size, 0)
-    ImageDraw.Draw(mask).ellipse([0, 0, 519, 519], fill=255)
-    sheet.paste(av, (pad, y), mask)
-    d.text((pad, y + 535), "avatar (shown round)", font=lab, fill="#333")
-    lx = pad + 600
-    for i, (fname, bgc) in enumerate([("logo.png", opt["themes"][opt["primary"]]["bg"]), ("logo-alt.png", opt["themes"][opt["alt"]]["bg"])]):
-        lg = Image.open(out / fname).resize((1000, 250), Image.LANCZOS)
-        tile = Image.new("RGB", (1000, 250), bgc)
-        tile.paste(lg, (0, 0), lg)
-        sheet.paste(tile, (lx, y + i * 275))
-    yt = Image.open(out / "banner-youtube.png").resize((640, 360), Image.LANCZOS)
-    sheet.paste(yt, (lx + 1060, y))
-    d.text((lx + 1060, y + 370), "YouTube 2560x1440", font=lab, fill="#333")
-    y += 620
-    for fname in files:
-        im = Image.open(out / fname)
+    x = pad
+    for fname, caption in (("avatar.png", "avatar"), ("avatar-alt.png", "avatar, dark")):
+        if not (out / fname).exists():
+            continue
+        av = Image.open(out / fname).convert("RGB").resize((420, 420), Image.LANCZOS)
+        mask = Image.new("L", av.size, 0)
+        ImageDraw.Draw(mask).ellipse([0, 0, 419, 419], fill=255)
+        sheet.paste(av, (x, y), mask)
+        d.text((x, y + 432), caption, font=lab, fill="#333")
+        x += 470
+    lx = x + 30
+    lw = W - pad - lx
+    lh = min(lw // 4, 210)
+    for i, (fname, theme) in enumerate([("logo.png", themes[opt["primary"]]), ("logo-alt.png", themes[opt["alt"]])]):
+        lg = Image.open(out / fname).resize((lh * 4, lh), Image.LANCZOS)
+        tile = Image.new("RGB", (lw, lh), theme["bg"])
+        tile.paste(lg, ((lw - lh * 4) // 2, 0), lg)
+        sheet.paste(tile, (lx, y + i * (lh + 16)))
+    y += 510
+    for fname in ("banner-linkedin.png", "banner-linkedin-alt.png", "banner-facebook.png"):
+        if not (out / fname).exists():
+            continue
+        im = Image.open(out / fname).convert("RGB")
         w = W - 2 * pad
         im = im.resize((w, int(im.height * w / im.width)), Image.LANCZOS)
         sheet.paste(im, (pad, y))
         d.text((pad, y + im.height + 8), fname, font=lab, fill="#333")
         y += im.height + 70
     tw = (W - 4 * pad) // 3
-    for i, name in enumerate(opt["themes"]):
-        im = Image.open(out / f"theme-{name}.png").resize((tw, tw), Image.LANCZOS)
+    for i, name in enumerate(themes):
+        im = Image.open(out / f"theme-{name}.png").convert("RGB").resize((tw, tw), Image.LANCZOS)
         sheet.paste(im, (pad + i * (tw + pad), y))
-        d.text((pad + i * (tw + pad), y + tw + 8), f"theme: {name}", font=lab, fill="#333")
-    sheet = sheet.crop((0, 0, W, y + tw + 70))
-    sheet.save(out / "preview.png", optimize=True)
+        d.text((pad + i * (tw + pad), y + tw + 8), f"post image, theme: {name}", font=lab, fill="#333")
+    sheet.crop((0, 0, W, y + tw + 70)).save(out / "preview.png", optimize=True)
 
 
-def main():
+def main(keys: list[str] | None = None):
     for key, opt in CFG["options"].items():
+        if keys and key not in keys:
+            continue
         out = HERE / f"option-{key}"
         themes = opt["themes"]
         t, alt = themes[opt["primary"]], themes[opt["alt"]]
@@ -303,6 +500,9 @@ def main():
         banner(key, t, out, "youtube", 2560, 1440, (507, 509, 2053, 931), align="m")
         # Facebook Page cover: phones crop the sides, so keep to the centre.
         banner(key, t, out, "facebook", 1640, 624, (300, 150, 1340, 474), align="m")
+        if style(key).get("gloss"):   # dark variants for platforms shown in dark mode
+            build_avatar(key, alt, out, "avatar-alt.png")
+            banner(key, alt, out, "linkedin-alt", 1584, 396, (560, 70, 1500, 330))
         for name, th in themes.items():
             sample_card(key, th, out, name, CFG["sample"])
         preview(key, opt, out)
@@ -310,4 +510,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:] or None)
