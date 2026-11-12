@@ -1,6 +1,6 @@
 # Blog
 
-Astro site, deployed to GitHub Pages at `https://pqnghiep1354.github.io/lab-to-prod/`.
+Astro site, deployed to GitHub Pages at `https://nghiep-pham-ecosys.github.io/lab-to-prod/`.
 
 | Route | Source |
 | --- | --- |

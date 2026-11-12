@@ -10,7 +10,7 @@ channels:
   hashnode: manual   # API needs a paid Pro plan since 13 May 2026 (hashnode.com/announcements/graphql-api)
   x: manual          # API is pay-per-use
 
-site_url: "https://pqnghiep1354.github.io/lab-to-prod"
+site_url: "https://nghiep-pham-ecosys.github.io/lab-to-prod"
 timezone_offset: "+07:00"
 post_time: "08:30"
 

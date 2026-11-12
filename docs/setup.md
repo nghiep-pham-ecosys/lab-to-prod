@@ -60,7 +60,7 @@ trong `publish/config.yaml`.
 
 1. Repo → **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 2. Sau khi merge các PR dựng repo, workflow `blog` tự build. Blog ở
-   `https://pqnghiep1354.github.io/lab-to-prod/`.
+   `https://nghiep-pham-ecosys.github.io/lab-to-prod/`.
 3. GoatCounter: tạo tài khoản tại goatcounter.com, chọn một mã (ví dụ `labtoprod`), điền mã đó
    vào `goatcounter` trong `blog/src/site.ts`.
 4. Google Search Console: thêm property kiểu **URL prefix** với địa chỉ blog → chọn cách xác
@@ -138,7 +138,7 @@ Token LinkedIn sống 60 ngày và không gia hạn tự động được. Workf
 ## 7. Kiểm tra (5 phút)
 
 ```bash
-gh secret list --repo pqnghiep1354/lab-to-prod
+gh secret list --repo nghiep-pham-ecosys/lab-to-prod
 ```
 
 Phải có 10 secret:
@@ -174,7 +174,7 @@ anh đã đọc một lần dry-run và thấy đúng.
 
 - **Headline:** `AI Engineer · LLMOps & Agentic AI · Climate AI · From lab scientist to production AI`
 - **Banner:** `brand/option-a/banner-linkedin.png`
-- **Featured:** thêm link blog `https://pqnghiep1354.github.io/lab-to-prod/`
+- **Featured:** thêm link blog `https://nghiep-pham-ecosys.github.io/lab-to-prod/`
 - **About (gợi ý, anh sửa cho đúng mình):**
 
   > I started in a chemistry and materials lab and now build AI systems. I work on LLM

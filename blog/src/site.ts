@@ -7,7 +7,7 @@ export const SITE = {
     'Notes on AI engineering, machine learning and climate by Nghiep Pham, a chemist turned AI engineer. Short notes on weekdays, one long article every Saturday.',
   author: 'Nghiep Pham',
   github: 'https://github.com/pqnghiep1354',
-  repo: 'https://github.com/pqnghiep1354/lab-to-prod',
+  repo: 'https://github.com/nghiep-pham-ecosys/lab-to-prod',
   x: 'https://x.com/pqnghiep1354',
   linkedin: '', // full profile URL; the link is hidden while this is empty
   goatcounter: '', // GoatCounter site code, e.g. "labtoprod"; no script is loaded while empty

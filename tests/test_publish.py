@@ -220,9 +220,9 @@ def test_devto_publishes_article_on_its_day_with_canonical_and_absolute_links(re
     ctx = ctx_for(repo, dt.datetime(2026, 11, 21, 8, 15, tzinfo=TZ))
     assert runner.run(ctx, "daily", only=["devto"]) == 0
     sent = next(kw for m, u, kw in ctx.http.calls if m == "POST" and u.endswith("/api/articles"))["json"]["article"]
-    assert sent["canonical_url"] == "https://pqnghiep1354.github.io/lab-to-prod/posts/why/"
+    assert sent["canonical_url"] == "https://nghiep-pham-ecosys.github.io/lab-to-prod/posts/why/"
     assert sent["tags"] == "buildinpublic,llmops" and sent["published"] is True
-    assert "](https://pqnghiep1354.github.io/lab-to-prod/rss.xml)" in sent["body_markdown"]
+    assert "](https://nghiep-pham-ecosys.github.io/lab-to-prod/rss.xml)" in sent["body_markdown"]
     assert json.loads((repo / "published.json").read_text())["article:why"]["devto"]["id"] == 77
     early = ctx_for(repo, dt.datetime(2026, 11, 20, 8, 15, tzinfo=TZ))
     (repo / "published.json").unlink()
@@ -235,7 +235,7 @@ def test_devto_finds_an_existing_article_instead_of_duplicating(repo):
         def _handle(self, method, url, **kw):
             if "articles/me/all" in url:
                 self.calls.append((method, url, kw))
-                return Resp(200, [{"id": 9, "url": "https://dev.to/x/old", "canonical_url": "https://pqnghiep1354.github.io/lab-to-prod/posts/why/"}])
+                return Resp(200, [{"id": 9, "url": "https://dev.to/x/old", "canonical_url": "https://nghiep-pham-ecosys.github.io/lab-to-prod/posts/why/"}])
             return super()._handle(method, url, **kw)
     ctx = ctx_for(repo, MONDAY, http=Existing())
     assert devto.publish(ctx, load_articles(repo)[0]) == {"id": 9, "url": "https://dev.to/x/old", "found_existing": True}
@@ -248,7 +248,7 @@ def test_export_writes_x_and_hashnode_files_without_any_call(repo):
     assert names == ["hashnode-why.md", "x-schedule.md", "x.md", "x.md", "x.md"] and ctx.http.calls == []
     sheet = (repo / "content/2026-W47/x-schedule.md").read_text()
     assert "Mon 16 Nov, 08:30" in sheet and "An X post." in sheet
-    assert "original URL = https://pqnghiep1354.github.io/lab-to-prod/posts/why/" in (repo / "content/2026-W47/hashnode-why.md").read_text()
+    assert "original URL = https://nghiep-pham-ecosys.github.io/lab-to-prod/posts/why/" in (repo / "content/2026-W47/hashnode-why.md").read_text()
 
 
 def test_state_survives_reload(repo):
