@@ -1,0 +1,5 @@
+127 == 127: true
+128 == 128: false
+128 equals 128: true
+literal == new String: false
+literal equals new String: true

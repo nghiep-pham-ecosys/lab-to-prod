@@ -74,10 +74,13 @@ claude/lesson-log.md             what the author studied; ground posts in it
 tools/validate.py                the checks that gate every pull request
 tools/banned_terms.yaml          hashed terms that fail the build
 brand/                           brand.yaml (palettes, fonts, themes), build.py, two options
+render/image/render.py           image.png from the card: block of a post (Pillow)
+render/short/render.mjs          short.mp4 + short.srt from short.json (Remotion)
+sim/                             small simulations and notebooks for the simulation series
 blog/                            Astro site; articles in blog/src/content/posts/, see blog/README.md
 ```
 
-Later steps add `render/`, `sim/`, `publish/`, `metrics/`, `reports/`.
+Later steps add `publish/`, `metrics/`, `reports/`.
 
 ## Commands
 
@@ -86,7 +89,16 @@ uv run --with-requirements tools/requirements.txt python -m pytest -q
 uv run --with-requirements tools/requirements.txt python tools/validate.py
 ```
 
-Run both before opening a pull request. A red `validate` check blocks the merge.
+```bash
+uv run --with pillow --with pyyaml python render/image/render.py --week 2026-W47
+```
+
+```bash
+node render/short/render.mjs content/2026-W47/2026-11-16-dsa-p2
+```
+
+Run the first two before opening a pull request. Open every rendered image, and a few frames
+of every video, before committing them. A red `validate` check blocks the merge.
 
 ## Working agreement
 

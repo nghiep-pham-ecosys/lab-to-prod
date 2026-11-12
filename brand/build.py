@@ -239,7 +239,7 @@ def sample_card(key, t, out, name, sample):
     c.rect([m, y, 1200 - m, y + bh], fill=t["panel"], radius=18)
     cy = y + 38 + 29
     for ln, hot in sample["code"]:
-        c.text((m + 40, cy), ln, code_f, t["accent"] if hot else t["panel_fg"], anchor="lm")
+        c.text((m + 40, cy), ln, code_f, t["panel_accent"] if hot else t["panel_fg"], anchor="lm")
         cy += 58
     y += bh + 46
     c.text((m, y), sample["lesson"], font(o["body"], 44 * SS, 500), t["fg"], anchor="lm")

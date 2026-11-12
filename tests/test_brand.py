@@ -28,4 +28,4 @@ def test_selected_option_and_theme_keys():
     for opt in CFG["options"].values():
         assert opt["primary"] in opt["themes"] and opt["alt"] in opt["themes"]
         for theme in opt["themes"].values():
-            assert set(theme) == {"bg", "fg", "muted", "accent", "line", "panel", "panel_fg"}
+            assert set(theme) == {"bg", "fg", "muted", "accent", "line", "panel", "panel_fg", "panel_accent"}

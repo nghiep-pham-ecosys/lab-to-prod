@@ -10,6 +10,8 @@ One post = one folder: `content/<ISO week>/<date>-<slug>/`, for example
 | `image.png` | when `status` is `approved` | 1200x1200, rendered by `render/image` |
 | `short.mp4` | when `youtube` is in `channels` | 1080x1920, 30-60 s |
 | `short.srt` | when `youtube` is in `channels` | subtitles for the whole video |
+| `short.json` | when there is a Short | scenes for `render/short`, see below |
+| `*.java` + `*.expected`, `*.py` | when the post quotes code output | the sample and its expected output; CI runs the Java ones |
 | `x.md` | generated | the X post, written out by `publish/run.py` for manual scheduling |
 
 ## Front matter
@@ -24,6 +26,41 @@ One post = one folder: `content/<ISO week>/<date>-<slug>/`, for example
 | `sources` | list of links; at least one for climate, simulation and physical AI posts |
 | `image_alt` | alt text for `image.png` |
 | `status` | `draft`, `approved` or `published` |
+
+## The image: `card:` in the front matter
+
+`render/image/render.py` draws `image.png` from this block. Three layouts:
+
+```yaml
+card:
+  layout: code            # code | stat | table
+  theme: paper            # optional, a theme of the selected brand option
+  headline: "Same value, different object"
+  code: ["Integer c = 128, d = 128;", "> c == d   // false"]   # "> " highlights a line
+  # stat: {value: "0.62", label: "recall of the gate", note: "8 of 13 caught"}
+  # rows: [["VPN", "hours to set up"], ["Direct Connect", "weeks to provision"]]
+  lesson: "== compares references. equals() compares values."
+```
+
+Text that does not fit raises an error; it is never clipped. Look at the image before committing.
+
+## The Short: `short.json`
+
+`render/short/render.mjs` writes `short.mp4` and `short.srt` from it. Total length 30-60 s.
+Every scene needs a `say` line: it is the burned-in caption and the subtitle.
+
+```json
+{
+  "title": "Why is 128 == 128 false in Java?",
+  "kicker": "DSA in Java · Part 2",
+  "scenes": [
+    {"type": "title", "text": "128 == 128\nis false in Java", "say": "...", "seconds": 5},
+    {"type": "code", "code": ["Integer c = 128, d = 128;", "> c == d   // false"], "say": "...", "seconds": 6},
+    {"type": "text", "text": "== asks:\nsame object?", "note": "not: same value?", "say": "...", "seconds": 8},
+    {"type": "outro", "say": "Part 2 of my DSA in Java notes.", "seconds": 3}
+  ]
+}
+```
 
 ## Sections and limits
 
