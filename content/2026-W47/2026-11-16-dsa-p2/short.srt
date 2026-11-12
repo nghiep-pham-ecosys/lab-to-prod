@@ -8,7 +8,7 @@ With 127 the comparison is true.
 
 3
 00:00:11,000 --> 00:00:16,950
-With 128 the same code says false.
+With 128 the same code says false on a default JVM.
 
 4
 00:00:17,000 --> 00:00:24,950
@@ -16,7 +16,7 @@ On objects, == compares references. It asks if both variables point at the same 
 
 5
 00:00:25,000 --> 00:00:32,950
-Java caches Integer objects from minus 128 to 127, so small numbers share one object.
+Java guarantees shared Integer objects only from -128 to 127.
 
 6
 00:00:33,000 --> 00:00:38,950

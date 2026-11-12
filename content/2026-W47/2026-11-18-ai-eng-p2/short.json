@@ -1,0 +1,14 @@
+{
+  "title": "Precision vs recall for an LLM quality gate",
+  "kicker": "AI Engineering · Part 2",
+  "scenes": [
+    {"type": "title", "text": "80% precision.\n5 bad answers\ngot through.", "say": "A gate with 80% precision still let 5 bad answers through.", "seconds": 5},
+    {"type": "text", "text": "100 answers\n13 are bad", "note": "toy example", "say": "Toy example: an LLM gives 100 answers. A reviewer marks 13 as bad.", "seconds": 6},
+    {"type": "text", "text": "The gate\nflags 10", "note": "8 of them are really bad", "say": "An automated gate flags 10 answers. 8 of them are really bad.", "seconds": 6},
+    {"type": "code", "code": ["precision", "> 8 / 10 = 0.80"], "say": "Precision: of what the gate flagged, how much was bad?", "seconds": 6},
+    {"type": "code", "code": ["recall", "> 8 / 13 = 0.62"], "say": "Recall: of what was bad, how much did the gate catch?", "seconds": 6},
+    {"type": "text", "text": "Same gate,\ntwo stories", "note": "0.80 hides the 5 it missed", "say": "One number hides the other. 0.80 says nothing about the 5 it missed.", "seconds": 6},
+    {"type": "text", "text": "Which mistake\ncosts more?", "note": "decide before tuning", "say": "Decide which mistake costs more, then tune. Report both, with counts.", "seconds": 6},
+    {"type": "outro", "say": "Part 2 of my AI Engineering notes.", "seconds": 3}
+  ]
+}

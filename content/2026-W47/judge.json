@@ -1,0 +1,75 @@
+{
+  "week": "2026-W47",
+  "judged_at": "2026-11-12T09:12:33+00:00",
+  "judge": "subagent that did not see the drafting session",
+  "rubric": [
+    "technical_accuracy",
+    "sources",
+    "one_clear_idea",
+    "voice",
+    "no_banned_info"
+  ],
+  "pass_rule": "mean >= 4 and no score below 3",
+  "posts": {
+    "2026-11-16-dsa-p2": {
+      "sha256": "eb83b9271415a266bfae966e6a94051dd5b3152a6d014eb1cf521c0f3127e44d",
+      "scores": {
+        "technical_accuracy": 3,
+        "sources": 4,
+        "one_clear_idea": 5,
+        "voice": 5,
+        "no_banned_info": 5
+      },
+      "mean": 4.4,
+      "notes": "Round 2. All text channels are correctly hedged ('can be false', 'on a default JVM'). Wrong at judging time: the Short had not been re-rendered after the round-1 fix; its title card still said '128 == 128 is false in Java'. Minor: the card shows 'c == d // false' unqualified. Output reproduced only by CI (no JDK locally); the JLS 5.1.7 guarantee has no link. To raise: fix and re-render the Short, add the JLS link to sources."
+    },
+    "2026-11-17-ml-p1": {
+      "sha256": "3cbc9034ce2cfd96aa665283f85c76171dc502448ea8e085b40ed162938ea833",
+      "scores": {
+        "technical_accuracy": 5,
+        "sources": 5,
+        "one_clear_idea": 5,
+        "voice": 5,
+        "no_banned_info": 5
+      },
+      "mean": 5.0,
+      "notes": "Ran layer.py with numpy: output identical to layer.expected. W @ x + b = [6.1, -0.5], ReLU = [6.1, 0], hand sum for neuron 1 = 6.1; all match the post, card and alt text. Shape reading and the collapse of stacked linear layers are correct. Labelled toy example. Trivial quibble: Facebook calls the bias 'a small number' while the example bias is -2.0."
+    },
+    "2026-11-18-ai-eng-p2": {
+      "sha256": "1bbec9e539e4ed1257118b2be5376dec95a0dbf46fc52019566c67c2855a225d",
+      "scores": {
+        "technical_accuracy": 5,
+        "sources": 5,
+        "one_clear_idea": 5,
+        "voice": 4,
+        "no_banned_info": 5
+      },
+      "mean": 4.8,
+      "notes": "Round 2. Ran quality_gate.py; every number in every channel, the card and the Short matches. Voice: 'the mistake is one I see often' is an unsupported observation; 'a common one' would be safer. The hook states the result before the toy label appears."
+    },
+    "2026-11-19-cloud-p2": {
+      "sha256": "b02be27efd821e833e3fb002c73088e88168c3d1b736f2bcae097782bf4e2f24",
+      "scores": {
+        "technical_accuracy": 4,
+        "sources": 5,
+        "one_clear_idea": 4,
+        "voice": 4,
+        "no_banned_info": 5
+      },
+      "mean": 4.4,
+      "notes": "Round 2. Opened all four AWS pages; every figure found. Imprecise: Facebook says Direct Connect is 'much bigger', true only from 10 Gbps up (a 1 Gbps port is below one 1.25 Gbps tunnel). The hook's 'ceiling' ignores 5 Gbps large bandwidth tunnels on a transit gateway ('standard' keeps it true). Hook is about bandwidth, lesson about encryption. 'NOT' in capitals on X reads as shouting."
+    },
+    "2026-11-20-climate-p1": {
+      "sha256": "8199c651687e00ce9975418cd6e4235345683009f79069e756fb42b54d2f5db8",
+      "scores": {
+        "technical_accuracy": 4,
+        "sources": 5,
+        "one_clear_idea": 4,
+        "voice": 5,
+        "no_banned_info": 5
+      },
+      "mean": 4.6,
+      "notes": "Round 2. Both sources confirm every figure; the round-1 attribution error is fixed in X, Facebook and Telegram. Imprecise: the 'stands on physics twice' argument never says the initial conditions come from physics-based data assimilation; the card lesson sits under a GraphCast label while its second leg is sourced only for ECMWF's model; Facebook drops 'plus observations'."
+    }
+  }
+}

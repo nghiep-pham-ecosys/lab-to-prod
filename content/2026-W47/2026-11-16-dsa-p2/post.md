@@ -7,7 +7,7 @@ channels: [linkedin, facebook, telegram, x_manual, youtube]
 short_publish_at: 2026-11-17T19:00:00+07:00
 sources: []
 image_alt: "Java code: two Integer variables holding 127 compare true with ==, two holding 128 compare false, and equals returns true."
-status: draft
+status: approved
 card:
   layout: code
   theme: paper
@@ -23,7 +23,7 @@ card:
 
 ## linkedin
 
-128 == 128 is false in Java. 127 == 127 is true. Same code, same types, one number apart.
+128 == 128 can be false in Java. 127 == 127 is always true. Same code, same types, one number apart.
 
 I hit this in week 2 of my data structures course and it took me longer than I want to admit.
 
@@ -31,11 +31,11 @@ Integer a = 127, b = 127;
 a == b is true.
 
 Integer c = 128, d = 128;
-c == d is false.
+c == d is false on a default JVM.
 
 Here is what is going on. Integer is an object, not a primitive. On objects, == does not compare values. It asks: are these two variables pointing at the same object in memory?
 
-Java keeps a cache of Integer objects for -128 to 127. When you write Integer a = 127, Java hands you the cached object, so a and b point at the same one and == says true. At 128 the cache ends. Java creates two separate objects with the same value, and == says false.
+The language guarantees a cache of Integer objects for -128 to 127. When you write Integer a = 127, Java hands you the cached object, so a and b point at the same one and == says true. Above 127 nothing is guaranteed. A default JVM creates two separate objects with the same value, and == says false.
 
 The same trap exists for String. Two strings built at runtime with the same characters are usually two different objects.
 
@@ -51,17 +51,17 @@ Part 2 of my DSA in Java notes.
 
 ## x
 
-128 == 128 is false in Java. 127 == 127 is true.
+128 == 128 can be false in Java. 127 == 127 is always true.
 
-Integer is an object, and == compares references, not values. Java caches Integer objects from -128 to 127, so small numbers share one object and "work" by accident.
+Integer is an object, and == compares references, not values. Java only guarantees shared Integer objects from -128 to 127, so small numbers "work" by accident.
 
 Use equals() for objects.
 
 ## facebook
 
-128 == 128 is false in Java, but 127 == 127 is true.
+128 == 128 can be false in Java, but 127 == 127 is always true.
 
-The reason: Integer is an object, and on objects == asks "is this the same object in memory?", not "is this the same value?". Java keeps a cache of Integer objects from -128 to 127, so small numbers share one object and the comparison works by accident. At 128 the cache ends and you get two different objects with the same value.
+The reason: Integer is an object, and on objects == asks "is this the same object in memory?", not "is this the same value?". Java keeps a cache of Integer objects from -128 to 127, so small numbers share one object and the comparison works by accident. Above 127 a default JVM gives you two different objects with the same value.
 
 The fix is one habit: use == for primitives like int, and equals() for objects like Integer and String.
 
@@ -69,9 +69,9 @@ Part 2 of my DSA in Java notes.
 
 ## telegram
 
-128 == 128 is false in Java. 127 == 127 is true.
+128 == 128 can be false in Java. 127 == 127 is always true.
 
-Integer is an object, and == compares references. Java caches Integer objects from -128 to 127, so small numbers share one object and work by accident.
+Integer is an object, and == compares references. Java only guarantees shared Integer objects from -128 to 127, so small numbers work by accident.
 
 Rule: == for primitives, equals() for objects.
 
@@ -79,6 +79,6 @@ Part 2 of my DSA in Java notes.
 
 ## youtube
 
-Java == vs equals: Why 128 == 128 Is False #Shorts
-Why two Integer variables holding 128 are not == in Java, while 127 works: == compares references, and Java caches Integer objects from -128 to 127.
+Java == vs equals: Why 128 == 128 Can Be False #Shorts
+Why two Integer variables holding 128 are not == on a default JVM, while 127 always works: == compares references, and Java caches Integer objects from -128 to 127.
 Use equals() to compare objects. Part 2 of my DSA in Java notes. Code and full note on the blog.
