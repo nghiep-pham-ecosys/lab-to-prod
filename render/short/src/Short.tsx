@@ -63,9 +63,38 @@ const SceneView = ({ scene, p }: { scene: Scene; p: ShortProps }) => {
   }
   return (
     <div style={{ ...enter, textAlign: 'center' }}>
-      <div style={{ ...display, fontSize: 96 }}>{p.brandKey === 'a' ? <>Lab <span style={{ color: t.accent }}>→</span> Prod</> : <>lab<span style={{ color: t.accent }}>-to-</span>prod</>}</div>
+      <div style={{ ...display, fontSize: 96, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {p.style.lockup && p.style.mark === 'hexagon' && <Benzene t={t} size={96} />}
+        {p.style.wordmark === 'arrow' ? <span>Lab <span style={{ color: t.accent }}>→</span> Prod</span> : <span style={{ fontFamily: fonts.mono, fontWeight: 700, display: 'flex', alignItems: 'center' }}>lab<span style={{ color: t.accent }}>-to-</span>prod<span style={{ display: 'inline-block', width: '0.4em', height: '0.84em', marginLeft: '0.1em', background: t.accent }} /></span>}
+      </div>
       <div style={{ marginTop: 40, fontFamily: fonts.body, fontSize: 48, color: t.muted }}>Full note on the blog</div>
     </div>
+  );
+};
+
+// The brand mark: a benzene ring whose vertices are nodes, one lit (brand/build.py mark_hexagon,
+// drawn with the lockup weight). Sized like the logo lockup: about 1.6x the wordmark's cap height.
+const Benzene = ({ t, size }: { t: Theme; size: number }) => {
+  const pt = (r: number, i: number) => [r * Math.cos(((30 + 60 * i) * Math.PI) / 180), r * Math.sin(((30 + 60 * i) * Math.PI) / 180)];
+  const outer = [0, 1, 2, 3, 4, 5].map((i) => pt(36, i));
+  const inner = [0, 1, 2, 3, 4, 5].map((i) => pt(36 * 0.6, i));
+  const foil = t.foil ?? [t.accent, t.accent, t.accent];
+  return (
+    <svg viewBox="-50 -50 100 100" width={size * 1.45} height={size * 1.45} style={{ marginRight: size * 0.22, flex: 'none' }} aria-hidden="true">
+      <defs>
+        <linearGradient id="foil" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor={foil[0]} />
+          <stop offset="0.5" stopColor={foil[1]} />
+          <stop offset="1" stopColor={foil[2]} />
+        </linearGradient>
+      </defs>
+      <polygon points={outer.map((q) => q.join(',')).join(' ')} fill="none" stroke={t.fg} strokeWidth={6} strokeLinejoin="round" />
+      {[0, 2, 4].map((i) => (
+        <line key={i} x1={inner[i][0]} y1={inner[i][1]} x2={inner[(i + 1) % 6][0]} y2={inner[(i + 1) % 6][1]} stroke={t.fg} strokeWidth={5} />
+      ))}
+      {outer.slice(0, 5).map((q, i) => <circle key={i} cx={q[0]} cy={q[1]} r={6.2} fill={t.fg} />)}
+      <circle cx={outer[5][0]} cy={outer[5][1]} r={9.6} fill="url(#foil)" />
+    </svg>
   );
 };
 
@@ -86,7 +115,7 @@ export const Short = (p: ShortProps) => {
   const t = p.theme;
   let from = 0;
   return (
-    <AbsoluteFill style={{ background: t.bg }}>
+    <AbsoluteFill style={{ background: t.bg2 ? `linear-gradient(180deg, ${t.bg} 0%, ${t.bg2} 100%)` : t.bg }}>
       <div style={{ position: 'absolute', top: SAFE.top, left: SAFE.side, right: SAFE.side, fontFamily: p.fonts.mono, fontSize: 34, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: t.accent, borderBottom: `2px solid ${t.line}`, paddingBottom: 28 }}>
         {p.kicker}
       </div>

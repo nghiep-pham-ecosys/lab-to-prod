@@ -75,3 +75,10 @@ def test_calibration_recovers_the_valve_coefficient():
     k = tank.calibrate(t_obs, h_obs)
     assert k == pytest.approx(tank.K_TRUE, abs=2e-4)
     assert tank.rmse(k, t_obs, h_obs) < 0.03 < tank.rmse(tank.K_GUESS, t_obs, h_obs)
+
+
+def test_theme_names_of_another_option_map_to_the_same_role():
+    opt = image_render.brand.CFG["options"]["e"]
+    assert [image_render.resolve_theme(opt, n) for n in ("paper", "ink", "copper")] == ["light", "dark", "amber"]
+    assert [image_render.resolve_theme(opt, n) for n in ("night", "day", "signal")] == ["dark", "light", "amber"]
+    assert image_render.resolve_theme(opt, "dark") == "dark"

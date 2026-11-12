@@ -7,7 +7,8 @@
 
 card:
   layout: code | stat | table
-  theme: paper            # optional; any theme of the selected brand option
+  theme: light            # optional; a theme of the selected brand option (a name from another
+                          # option maps to the same role: light, dark or the accent third theme)
   headline: "Same value, different object"
   code: ["Integer a = 127;", "> c == d   // false"]      # layout code; "> " marks the highlighted line
   stat: {value: "0.62", label: "recall", note: "8 of 13 bad answers caught"}   # layout stat
@@ -63,6 +64,25 @@ def fit(c, text, font_name, weight, sizes, max_w, max_lines):
     raise ValueError(f"text does not fit in {max_lines} lines even at {sizes[-1]}px: {text!r}")
 
 
+def theme_role(opt: dict, name: str) -> str:
+    """'light' or 'dark' for the option's two main themes, 'third' for its accent theme."""
+    if name not in (opt["primary"], opt["alt"]):
+        return "third"
+    return "dark" if brand.is_dark(opt["themes"][name]) else "light"
+
+
+def resolve_theme(opt: dict, name: str) -> str:
+    """A theme of the selected option. A name from another option (a card written before the
+    brand changed) maps to the theme with the same role, so switching `selected` needs no edits."""
+    if name in opt["themes"]:
+        return name
+    for other in brand.CFG["options"].values():
+        if name in other["themes"]:
+            role = theme_role(other, name)
+            return next(t for t in opt["themes"] if theme_role(opt, t) == role)
+    raise ValueError(f"theme {name!r} is not one of {list(opt['themes'])}")
+
+
 def render(folder: Path, theme_name: str | None = None) -> Path:
     meta = load_post(folder)
     card = meta.get("card")
@@ -70,9 +90,7 @@ def render(folder: Path, theme_name: str | None = None) -> Path:
         raise ValueError(f"{folder}/post.md has no card: block")
     key = brand.CFG["selected"]
     opt = brand.CFG["options"][key]
-    theme_name = theme_name or card.get("theme") or opt["primary"]
-    if theme_name not in opt["themes"]:
-        raise ValueError(f"theme {theme_name!r} is not one of {list(opt['themes'])}")
+    theme_name = resolve_theme(opt, theme_name or card.get("theme") or opt["primary"])
     t, o = opt["themes"][theme_name], brand.OPT[key]
     inner = W - 2 * M
 

@@ -63,7 +63,7 @@ if (!theme) {
   console.error(`unknown theme ${spec.theme}`);
   process.exit(1);
 }
-const props = { title: spec.title, kicker: spec.kicker, scenes: spec.scenes, theme, fonts: option.fonts, brandKey: brand.selected, name: brand.name };
+const props = { title: spec.title, kicker: spec.kicker, scenes: spec.scenes, theme, fonts: option.fonts, brandKey: brand.selected, style: option.style, name: brand.name };
 const outDir = path.join(here, 'out');
 fs.mkdirSync(outDir, { recursive: true });
 const propsFile = path.join(outDir, 'props.json');

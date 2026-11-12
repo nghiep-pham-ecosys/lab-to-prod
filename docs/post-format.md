@@ -34,7 +34,8 @@ One post = one folder: `content/<ISO week>/<date>-<slug>/`, for example
 ```yaml
 card:
   layout: code            # code | stat | table
-  theme: paper            # optional, a theme of the selected brand option
+  theme: light            # optional, a theme of the selected brand option; a name from another
+                          # option (paper, ink, copper) maps to the same role: light, dark, accent
   headline: "Same value, different object"
   code: ["Integer c = 128, d = 128;", "> c == d   // false"]   # "> " highlights a line
   # stat: {value: "0.62", label: "recall of the gate", note: "8 of 13 caught"}
