@@ -61,6 +61,8 @@ from a chemist turned AI engineer.* All published text is in English.
 | X | 1 post of at most 280 characters + image, scheduled by hand (no API) |
 | YouTube Shorts | 1080x1920, 30-60 s, SRT subtitles, title contains #Shorts, Tue and Thu 19:00 |
 | Blog | 5 short notes a week + 1 article of 1,000-1,500 words on Saturday |
+| DEV | the Saturday article, republished through the API with a canonical link |
+| Hashnode | the Saturday article, pasted by hand (its API is paid) |
 
 Exact file layout and limits: `docs/post-format.md`. Calendar: `content/calendar.yaml`.
 
@@ -77,10 +79,12 @@ brand/                           brand.yaml (palettes, fonts, themes), build.py,
 render/image/render.py           image.png from the card: block of a post (Pillow)
 render/short/render.mjs          short.mp4 + short.srt from short.json (Remotion)
 sim/                             small simulations and notebooks for the simulation series
+publish/                         one publisher per channel + run.py; see publish/README.md
+published.json                   what was posted where (written by publish/run.py, never by hand)
 blog/                            Astro site; articles in blog/src/content/posts/, see blog/README.md
 ```
 
-Later steps add `publish/`, `metrics/`, `reports/`.
+Later steps add `metrics/`, `reports/`.
 
 ## Commands
 
