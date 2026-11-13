@@ -32,6 +32,22 @@ uv run --with-requirements tools/requirements.txt python -m publish.run export -
 Add `--only telegram` to limit a run to one channel. Add `--live` to really post; never do
 that without the author's go-ahead for that channel.
 
+## Manual posts
+
+X and Hashnode are posted by hand, and any channel can be. Record every manual post so `published.json`
+stays the single answer to "is it live?":
+
+```bash
+uv run --with-requirements tools/requirements.txt python -m publish.record_manual check --key 2026-11-16 --channel x
+```
+
+```bash
+uv run --with-requirements tools/requirements.txt python -m publish.record_manual record --key 2026-11-16 --channel x --url https://x.com/<handle>/status/<id> --via chrome
+```
+
+`check` exits 1 when the post is already recorded. `record` refuses a second entry for the same key and channel.
+Posts made outside the weekly folders use a stable slug key, for example `notes:en-4-agent-loop`.
+
 ## Guarantees
 
 - **Approved only.** Posts with `status: draft` are ignored.

@@ -80,7 +80,7 @@ render/image/render.py           image.png from the card: block of a post (Pillo
 render/short/render.mjs          short.mp4 + short.srt from short.json (Remotion)
 sim/                             small simulations and notebooks for the simulation series
 publish/                         one publisher per channel + run.py; see publish/README.md
-published.json                   what was posted where (written by publish/run.py, never by hand)
+published.json                   what was posted where (written by publish/run.py and publish/record_manual.py, never by hand)
 metrics/collect.py                daily numbers into metrics/metrics.csv; token health check
 tools/automerge_gate.py          reads content/<week>/judge.json; holds failing posts
 scripts/tokens/                  local scripts that fetch tokens and store them with gh; never print them
@@ -118,5 +118,9 @@ of every video, before committing them. A red `validate` check blocks the merge.
 - One pull request per unit of work. Commit subject: `feat|fix|chore|docs|refactor: description`.
 - The weekly content pull request is titled "Week NN" and contains only that week's folders.
 - Do not edit a post whose `status` is `published`, except to add a correction note.
+- **Manual posts are recorded too.** Before posting by hand (Chrome, Typefully, phone), run
+  `python -m publish.record_manual check --key KEY --channel CHANNEL` and open the live profile to confirm the
+  post is not already there. Right after posting, run `record` with the live URL. A report or draft list reads
+  `published.json` before it calls anything "waiting for approval".
 - When a rule here turns out to be wrong, propose the change in the weekly report; the author
   decides.
