@@ -128,3 +128,26 @@ def test_callback_server_returns_the_code_and_rejects_a_wrong_state():
     threading.Thread(target=hit, args=(8792, "code=abc&state=evil"), daemon=True).start()
     with pytest.raises(common.TokenError):
         common.wait_for_code(8792, "good")
+
+
+def test_http_json_sends_its_own_user_agent(monkeypatch):
+    seen = {}
+
+    class Resp:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read(self):
+            return b"{}"
+
+    def fake_urlopen(req, timeout=None):
+        seen.update({k.lower(): v for k, v in req.header_items()})
+        return Resp()
+
+    monkeypatch.setattr(common.urllib.request, "urlopen", fake_urlopen)
+    common.http_json("https://dev.to/api/users/me", headers={"api-key": "k"})
+    assert seen["user-agent"].startswith("lab-to-prod-token-scripts/")
+    assert seen["api-key"] == "k"
