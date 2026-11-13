@@ -5,6 +5,7 @@
 | Switch | Where | Effect |
 | --- | --- | --- |
 | `PUBLISH_LIVE` = `true` | repository variable | `publish.yml` really posts. Anything else, or unset: dry run |
+| `PUBLISH_LIVE_CHANNELS` = `facebook` | repository variable, comma list | only these channels really post; the others stay a dry run (used while the other channels have no tokens) |
 | `AUTOMERGE_ENABLED` = `true` | repository variable | `automerge.yml` may merge the weekly pull request on Sunday 22:00. Unset: it does nothing |
 | `PAUSE` file | repository root | every publishing run exits without posting; silent approval stops too |
 | label `hold` | on the weekly pull request | silent approval skips it |
@@ -15,14 +16,18 @@
 Repository variables: Settings → Secrets and variables → Actions → Variables.
 To pause from a phone: GitHub app → repository → "+" → create a file named `PAUSE` on `main`.
 
+`main` only accepts pull requests, so bot runs never push there. `tools/state_sync.py pull` merges the
+`publish-state` branch into the checkout before a run, and `push` saves `published.json` and `metrics.csv`
+back to that branch. The full record of what is live: `published.json` on `publish-state`.
+
 ## The workflows
 
 | Workflow | Runs | Does |
 | --- | --- | --- |
 | `validate` | every pull request, pushes to main | tests, validation, Java samples |
 | `blog` | merge to main, daily 08:20, pull requests (build only) | builds and deploys the blog |
-| `publish` | merge to main, Mon-Sat 08:15, pull requests (dry run only), manual | posts or schedules; commits `published.json` |
-| `metrics` | daily 22:00, manual | writes `metrics/metrics.csv`; red when a token needs attention |
+| `publish` | merge to main, Mon-Sat 08:15, pull requests (dry run only), manual | posts or schedules; keeps `published.json` on the `publish-state` branch |
+| `metrics` | daily 22:00, manual | writes `metrics/metrics.csv` to the `publish-state` branch; red when a token needs attention |
 | `automerge` | Sunday 22:00, manual; only when enabled | holds failing posts, merges the rest, starts `publish` and `blog` |
 
 All times are Asia/Ho_Chi_Minh. GitHub's scheduler can run several minutes late.

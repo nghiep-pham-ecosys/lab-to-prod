@@ -152,6 +152,19 @@ def test_daily_posts_only_today_to_linkedin_and_telegram(repo):
     assert "http" not in ugc["json"]["specificContent"]["com.linkedin.ugc.ShareContent"]["shareCommentary"]["text"]
 
 
+def test_live_channels_limit_posting_to_listed_channels(repo):
+    env = {"FB_PAGE_ID": "42", "FB_PAGE_TOKEN": "fb-token"}       # only the Facebook secrets exist
+    merge = ctx_for(repo, SUNDAY, env=env)
+    assert runner.run(merge, "merge", live_channels={"facebook"}) == 0
+    state = json.loads((repo / "published.json").read_text())
+    assert {ch for rec in state.values() for ch in rec} == {"facebook"}
+    assert not any("youtube" in u or "googleapis" in u for u in merge.http.urls())
+    assert any("youtube 2026-11-16: DRY RUN" in line for line in merge.log)
+    daily = ctx_for(repo, MONDAY, env=env)
+    assert runner.run(daily, "daily", live_channels={"facebook"}) == 0   # no FAILED for missing secrets
+    assert daily.http.calls == []
+
+
 def test_second_run_is_idempotent(repo):
     runner.run(ctx_for(repo, MONDAY), "daily")
     again = ctx_for(repo, MONDAY)
