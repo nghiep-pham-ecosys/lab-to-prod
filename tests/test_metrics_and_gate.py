@@ -86,6 +86,16 @@ def test_one_failing_source_keeps_the_others(mrepo):
     assert not any("111:tg-token" in line for line in ctx.log)
 
 
+def test_unconnected_channels_are_skipped_not_failed(mrepo):
+    env = {"FB_PAGE_ID": "42", "FB_PAGE_TOKEN": "fb-token"}
+    ctx = ctx_for(mrepo, MONDAY, http=MetricsHTTP(), env=env)
+    assert collect.collect(ctx) == 0
+    assert ("_account", "facebook") in rows(mrepo)
+    assert any("telegram: not connected" in line for line in ctx.log)
+    partial = ctx_for(mrepo, MONDAY, http=MetricsHTTP(), env={**env, "TELEGRAM_BOT_TOKEN": "111:tg-token"})
+    assert collect.collect(partial) == 1   # half-configured is still an error
+
+
 def test_token_health(mrepo):
     ok = ctx_for(mrepo, MONDAY, http=MetricsHTTP(), env={**ENV, "LINKEDIN_TOKEN_ISSUED": "2026-11-14"})
     assert collect.check_tokens(ok) == 0
