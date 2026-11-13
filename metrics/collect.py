@@ -129,6 +129,12 @@ def linkedin_inbox(root: Path) -> list[dict]:
 
 
 SOURCES = {"facebook": facebook, "youtube": youtube, "telegram": telegram, "devto": devto}
+# A channel with none of its secrets set is not connected yet: skip it instead of failing every night.
+# A channel with only some of them set is a broken setup and still fails.
+SECRETS = {"facebook": ("FB_PAGE_ID", "FB_PAGE_TOKEN"),
+           "youtube": ("YT_CLIENT_ID", "YT_CLIENT_SECRET", "YT_REFRESH_TOKEN"),
+           "telegram": ("TELEGRAM_BOT_TOKEN", "TELEGRAM_CHANNEL"),
+           "devto": ("DEVTO_API_KEY",)}
 
 
 def merge_rows(path: Path, new: list[dict]) -> int:
@@ -155,6 +161,9 @@ def collect(ctx: Context) -> int:
     rows, failed = linkedin_inbox(ctx.root), 0
     for name, source in SOURCES.items():
         if ctx.cfg["channels"].get(name) != "api":
+            continue
+        if not any(ctx.env.get(s, "").strip() for s in SECRETS.get(name, ())):
+            ctx.say(f"{name}: not connected (no secrets), skipped")
             continue
         try:
             got = source(ctx, state, day)
