@@ -1,0 +1,33 @@
+name: facebook-list
+
+# Manual only: print the newest Facebook Page posts (time, id, permalink, first words) into the run
+# summary, so manual posts can be recorded in published.json with publish/record_manual.py.
+# Read-only: it writes nothing and never prints the token.
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "How many posts"
+        required: false
+        default: "10"
+
+permissions:
+  contents: read
+
+jobs:
+  list:
+    runs-on: ubuntu-latest
+    env:
+      FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+      FB_PAGE_TOKEN: ${{ secrets.FB_PAGE_TOKEN }}
+      LIMIT: ${{ inputs.limit }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/requirements.txt
+      - run: pip install -r tools/requirements.txt
+      - name: List posts
+        run: python -m publish.facebook_list --limit "${LIMIT:-10}" | tee -a "$GITHUB_STEP_SUMMARY"
