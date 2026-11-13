@@ -1,0 +1,38 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Privacy" description="Privacy policy of Lab to Prod and of the lab-to-prod publishing app.">
+  <div class="prose">
+    <p class="kicker">Privacy</p>
+    <h1>Privacy policy</h1>
+    <p class="lede">Last updated 13 November 2026.</p>
+
+    <h2>This blog</h2>
+    <p>
+      This site is a static blog hosted on GitHub Pages. It sets no cookies, runs no analytics script
+      and has no forms or accounts. GitHub, as the host, may keep standard server logs; see the GitHub
+      privacy statement.
+    </p>
+
+    <h2>The lab-to-prod publishing app</h2>
+    <p>
+      The author runs a small open-source app, lab-to-prod, that posts his own notes to his own
+      accounts (Facebook Page, LinkedIn, YouTube and DEV). It signs in only to the author's accounts,
+      with the permissions those posts need: uploading and scheduling videos and captions, publishing
+      posts, and reading the view and reaction counts of those posts.
+    </p>
+    <ul>
+      <li>It does not collect, sell or share data about anyone else.</li>
+      <li>Access tokens are stored as encrypted GitHub Actions secrets and are never published.</li>
+      <li>The only data it keeps is a public record of what was posted where and daily post counts,
+        in the open-source repository.</li>
+    </ul>
+    <p>
+      To revoke access, remove the app from the connected-apps settings of the account concerned
+      (for Google: myaccount.google.com/permissions).
+    </p>
+
+    <h2>Contact</h2>
+    <p>Questions about this policy: open an issue in the lab-to-prod repository on GitHub.</p>
+  </div>
+</Base>
