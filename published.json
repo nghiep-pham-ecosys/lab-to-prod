@@ -1,5 +1,12 @@
 {
   "notes:en-4-agent-loop": {
+    "facebook": {
+      "at": "2026-11-13T10:43:00+00:00",
+      "id": "122094395583556480",
+      "manual": true,
+      "url": "https://www.facebook.com/122094398511556480/posts/122094395583556480",
+      "via": "chrome"
+    },
     "linkedin": {
       "at": "2026-11-12T01:31:00+00:00",
       "id": "urn:li:activity:7526456528233631744",
@@ -16,6 +23,13 @@
     }
   },
   "notes:en-5-dora": {
+    "facebook": {
+      "at": "2026-11-13T10:44:00+00:00",
+      "id": "122094396057556480",
+      "manual": true,
+      "url": "https://www.facebook.com/122094398511556480/posts/122094396057556480",
+      "via": "chrome"
+    },
     "linkedin": {
       "at": "2026-11-13T01:30:00+00:00",
       "id": "urn:li:activity:7526818843122577408",
