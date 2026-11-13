@@ -70,9 +70,10 @@ trong `publish/config.yaml`.
 
 ## 4. Facebook Page (25 phút)
 
-1. Tạo Page: facebook.com/pages/create → tên `Nghiep Pham · Lab to Prod` → hạng mục
-   **Digital creator**. Ảnh đại diện `brand/option-a/avatar.png`, ảnh bìa
-   `brand/option-a/banner-facebook.png`.
+1. Page "Lab to Prod" **đã tạo ngày 13/11/2026** (hạng mục Science, technology and engineering, website là
+   blog). Còn lại: tải ảnh đại diện `brand/option-d/avatar.png` (800×800, hình tròn) và ảnh bìa
+   `brand/option-d/banner-facebook.png` (1640×624, chữ nằm ở vùng giữa nên điện thoại cắt hai bên
+   vẫn đọc được). Hai file sinh lại bằng `uv run --with pillow --with pyyaml python brand/build.py d`.
 2. developers.facebook.com → **My Apps → Create App** → use case **Other** → loại **Business**
    → đặt tên `lab-to-prod`.
 3. Trong app: **Add product → Facebook Login for Business** (hoặc Facebook Login) → **Settings**
@@ -87,6 +88,10 @@ trong `publish/config.yaml`.
 
    Nhập App ID và App Secret. Trình duyệt mở ra: chọn đúng Page, đồng ý các quyền. Script đổi
    sang token dài hạn rồi lưu `FB_PAGE_ID` và `FB_PAGE_TOKEN`.
+
+Kênh `facebook` trong `publish/config.yaml` chính là Page này. Nó chỉ chạy thử (dry run) cho tới khi
+biến repository `PUBLISH_LIVE` là `true`. Mỗi bài đăng thành công được ghi vào `published.json` dưới
+khoá `facebook`. Bài chia sẻ lại về trang cá nhân là đăng tay: không cần ghi.
 
 Lưu ý: Page token dài hạn không có ngày hết hạn, nhưng quyền truy cập dữ liệu của app hết sau
 khoảng 90 ngày không dùng. Workflow `metrics` sẽ báo trước 7 ngày; khi đó chạy lại lệnh trên.
