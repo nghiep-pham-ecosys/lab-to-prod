@@ -80,7 +80,8 @@ render/image/render.py           image.png from the card: block of a post (Pillo
 render/short/render.mjs          short.mp4 + short.srt from short.json (Remotion)
 sim/                             small simulations and notebooks for the simulation series
 publish/                         one publisher per channel + run.py; see publish/README.md
-published.json                   what was posted where (written by publish/run.py and publish/record_manual.py, never by hand)
+published.json                   what was posted where (run.py, record_manual.py; never by hand). Bot runs keep the
+                                 full record on the publish-state branch (tools/state_sync.py)
 metrics/collect.py                daily numbers into metrics/metrics.csv; token health check
 tools/automerge_gate.py          reads content/<week>/judge.json; holds failing posts
 scripts/tokens/                  local scripts that fetch tokens and store them with gh; never print them

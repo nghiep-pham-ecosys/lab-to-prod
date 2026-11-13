@@ -12,6 +12,7 @@ Rules:
 - A file named PAUSE at the repository root stops everything.
 - A failing channel does not stop the others. The exit code is 1 if any channel failed.
 - --dry-run is accepted for clarity; it is the default. --live is the only way to post.
+- --live-channels facebook,linkedin limits --live to those channels; the others stay a dry run.
 """
 from __future__ import annotations
 
@@ -43,7 +44,8 @@ def due_items(ctx: Context, event: str, channel: str, date: dt.date | None):
     return [p for p in posts if p.date == today]
 
 
-def run(ctx: Context, event: str, only: list[str] | None = None, date: dt.date | None = None) -> int:
+def run(ctx: Context, event: str, only: list[str] | None = None, date: dt.date | None = None,
+        live_channels: set[str] | None = None) -> int:
     if paused(ctx.root):
         ctx.say("PAUSE file present: nothing is published.")
         return 0
@@ -56,13 +58,14 @@ def run(ctx: Context, event: str, only: list[str] | None = None, date: dt.date |
             ctx.say(f"{channel}: {mode}, skipped")
             continue
         module = {**POST_CHANNELS, **ARTICLE_CHANNELS}[channel]
+        live = ctx.live and (live_channels is None or channel in live_channels)
         for item in due_items(ctx, event, channel, date):
             label = f"{channel} {item.key}"
             if state.done(item.key, channel):
                 ctx.say(f"{label}: already published, skipped")
                 continue
             try:
-                if not ctx.live:
+                if not live:
                     ctx.say(f"{label}: DRY RUN would {module.describe(ctx, item)}")
                     continue
                 result = module.publish(ctx, item)
@@ -104,6 +107,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--event", choices=["merge", "daily"], help="which trigger to act as")
     ap.add_argument("--live", action="store_true", help="really post; without it nothing leaves this machine")
     ap.add_argument("--dry-run", action="store_true", help="the default; wins over --live")
+    ap.add_argument("--live-channels", help="comma list: post live only on these channels (needs --live)")
     ap.add_argument("--only", action="append", help="limit to one channel (repeatable)")
     ap.add_argument("--date", type=dt.date.fromisoformat, help="act as if today were this date")
     ap.add_argument("--week", help="for export: ISO week, e.g. 2026-W47")
@@ -126,7 +130,10 @@ def main(argv: list[str] | None = None) -> int:
         ap.error("publish needs --event merge or --event daily")
     if not ctx.live:
         print("DRY RUN: nothing will be posted. Add --live to post.")
-    return run(ctx, args.event, args.only, args.date)
+    live_channels = {c.strip() for c in args.live_channels.split(",") if c.strip()} if args.live_channels else None
+    if ctx.live and live_channels is not None:
+        print(f"LIVE only for: {', '.join(sorted(live_channels))}; other channels are a dry run.")
+    return run(ctx, args.event, args.only, args.date, live_channels)
 
 
 def _with_timeout(request):

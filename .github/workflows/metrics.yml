@@ -37,6 +37,8 @@ jobs:
           cache: pip
           cache-dependency-path: tools/requirements.txt
       - run: pip install -r tools/requirements.txt
+      - name: Load publish state
+        run: python tools/state_sync.py pull
       - name: Collect
         id: collect
         if: env.HAS_SECRETS == 'true'
@@ -44,17 +46,7 @@ jobs:
         shell: bash -o pipefail {0}
       - name: Commit metrics
         if: always() && env.HAS_SECRETS == 'true'
-        run: |
-          if [ -n "$(git status --porcelain metrics/metrics.csv)" ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add metrics/metrics.csv
-            git commit -m "chore: daily metrics"
-            for attempt in 1 2 3; do
-              git pull --rebase origin main && git push origin HEAD:main && break
-              sleep 5
-            done
-          fi
+        run: python tools/state_sync.py push metrics/metrics.csv
       - name: Token health
         if: always()
         run: python -m metrics.collect --tokens | tee -a "$GITHUB_STEP_SUMMARY"
