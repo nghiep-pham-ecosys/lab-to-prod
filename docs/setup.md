@@ -104,8 +104,8 @@ khoảng 90 ngày không dùng. Workflow `metrics` sẽ báo trước 7 ngày; k
 ## 5. YouTube (25 phút)
 
 1. Tạo kênh YouTube (hoặc dùng kênh sẵn có), handle gợi ý `@nghiep-labtoprod`. Xác minh số
-   điện thoại tại youtube.com/verify. Ảnh kênh `brand/option-a/avatar.png`, banner
-   `brand/option-a/banner-youtube.png`.
+   điện thoại tại youtube.com/verify. Ảnh kênh `brand/option-d/avatar.png`, banner
+   `brand/option-d/banner-youtube.png` (2560×1440, chữ nằm trong vùng an toàn giữa ảnh).
 2. console.cloud.google.com → tạo project `lab-to-prod`.
 3. **APIs & Services → Library** → bật **YouTube Data API v3** và **YouTube Analytics API**.
 4. **OAuth consent screen**: User type **External** → điền tên app và email → thêm 3 scope:

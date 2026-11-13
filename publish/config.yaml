@@ -5,7 +5,7 @@ channels:
   linkedin: api
   facebook: api
   youtube: api
-  telegram: api
+  telegram: off      # no audience yet (Nghiep, 13 Nov 2026); switch back to api when a channel exists
   devto: api
   hashnode: manual   # API needs a paid Pro plan since 13 May 2026 (hashnode.com/announcements/graphql-api)
   x: manual          # API is pay-per-use
