@@ -74,12 +74,17 @@ trong `publish/config.yaml`.
    blog). Còn lại: tải ảnh đại diện `brand/option-d/avatar.png` (800×800, hình tròn) và ảnh bìa
    `brand/option-d/banner-facebook.png` (1640×624, chữ nằm ở vùng giữa nên điện thoại cắt hai bên
    vẫn đọc được). Hai file sinh lại bằng `uv run --with pillow --with pyyaml python brand/build.py d`.
-2. developers.facebook.com → **My Apps → Create App** → use case **Other** → loại **Business**
-   → đặt tên `lab-to-prod`.
-3. Trong app: **Add product → Facebook Login for Business** (hoặc Facebook Login) → **Settings**
-   → mục **Valid OAuth Redirect URIs** thêm `http://localhost:8766/callback`.
-4. **App settings → Basic**: ghi lại **App ID**, bấm **Show** để lấy **App Secret**.
-5. Giữ app ở chế độ **Development**: anh là admin của app nên vẫn đăng được lên Page của mình.
+2. developers.facebook.com → **My Apps → Create App** → tên `lab-to-prod`, email liên hệ → use case
+   **Manage everything on your Page** → business: chưa gắn → **Create app**. (App `lab-to-prod` đã tạo
+   ngày 13/11/2026.)
+3. **Use cases → Manage everything on your Page → Customize → Permissions and features**: bấm **Add**
+   cho `pages_manage_posts`, `pages_read_engagement` và `read_insights` (`pages_show_list` có sẵn). Thiếu
+   bước này thì hộp đăng nhập báo "Invalid Scopes".
+4. **App settings → Basic**: App ID ở đầu trang; bấm **Show** để lấy **App Secret** (chỉ dán vào script,
+   không gửi qua chat).
+5. Giữ app ở chế độ **Development**: anh là admin của app nên vẫn đăng được lên Page của mình. Ở chế độ
+   này Facebook tự cho phép redirect về `http://localhost`, không cần khai trong Facebook Login settings
+   và không cần thêm App Domain.
 6. Chạy:
 
    ```bash
