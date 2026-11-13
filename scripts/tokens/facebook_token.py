@@ -5,8 +5,9 @@
 
 Flow: Facebook Login in the browser -> short-lived user token -> long-lived user token ->
 Page token. A Page token made from a long-lived user token has no expiry date.
-Before running: in the Meta app, Facebook Login -> Settings, add the redirect URI
-http://localhost:8766/callback (apps in development mode accept localhost).
+Before running: in the Meta app, Use cases -> Manage everything on your Page -> Customize, add the
+permissions in SCOPES ("Invalid Scopes" otherwise). Apps in development mode accept the
+http://localhost:8766/callback redirect without listing it.
 """
 from _common import DEFAULT_REPO, TokenError, ask, authorize, http_json, main_guard, store_secret
 
