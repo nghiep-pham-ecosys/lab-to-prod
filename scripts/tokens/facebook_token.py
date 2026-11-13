@@ -9,6 +9,8 @@ Before running: in the Meta app, Use cases -> Manage everything on your Page -> 
 permissions in SCOPES ("Invalid Scopes" otherwise). Apps in development mode accept the
 http://localhost:8766/callback redirect without listing it.
 """
+import urllib.parse
+
 from _common import DEFAULT_REPO, TokenError, ask, authorize, http_json, main_guard, store_secret
 
 PORT = 8766
@@ -27,7 +29,10 @@ def run(repo: str = DEFAULT_REPO, ask=ask, authorize=authorize, http_json=http_j
     user_token = long_lived.get("access_token")
     if not user_token:
         raise TokenError("Facebook returned no long-lived token")
-    pages = http_json(f"{GRAPH}/me/accounts", {"access_token": user_token, "fields": "id,name,access_token,tasks"}).get("data", [])
+    # GET with a query string: http_json POSTs whenever it gets a form, and POST /me/accounts means
+    # "create a Page" (Graph answers "(#100) The parameter name is required").
+    query = urllib.parse.urlencode({"access_token": user_token, "fields": "id,name,access_token,tasks"})
+    pages = http_json(f"{GRAPH}/me/accounts?{query}").get("data", [])
     if not pages:
         raise TokenError("this account manages no Page, or the Page was not ticked in the sign-in dialog")
     for i, page in enumerate(pages, 1):

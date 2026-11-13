@@ -62,6 +62,22 @@ def test_facebook_exchanges_for_a_long_lived_page_token():
     assert stored == {"FB_PAGE_ID": ("42", "secret"), "FB_PAGE_TOKEN": ("PAGE-TOKEN-789", "secret")}
 
 
+def test_facebook_lists_pages_with_get_not_post():
+    calls = []
+    def http(url, data=None, headers=None):
+        calls.append((url.split("?")[0], data))
+        if "oauth/access_token" in url:
+            return {"access_token": "USER-LONG-TOKEN"}
+        return {"data": [{"id": "42", "name": "P", "access_token": "PAGE-TOKEN-789", "tasks": ["CREATE_CONTENT"]}]}
+    answers = iter(["app", "client-secret-XYZ"])
+    with redirect_stdout(io.StringIO()):
+        facebook_token.run("o/r", ask=lambda label, secret=False: next(answers), http_json=http,
+                           store=Recorder().store,
+                           authorize=lambda url, params, port, path="/callback": ("c", "http://localhost:8766/callback"))
+    accounts = [c for c in calls if c[0].endswith("/me/accounts")]
+    assert accounts == [(accounts[0][0], None)], "POST /me/accounts would try to create a Page"
+
+
 def test_facebook_refuses_a_page_without_content_rights():
     with pytest.raises(common.TokenError):
         run_flow(facebook_token.run, ["app", "client-secret-XYZ"], [
