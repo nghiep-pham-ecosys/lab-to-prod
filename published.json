@@ -1,0 +1,93 @@
+{
+  "2026-11-16": {
+    "facebook": {
+      "at": "2026-11-13T11:10:20+00:00",
+      "id": "122094407895556480",
+      "photo_id": "122094407895556480",
+      "scheduled_for": "2026-11-16T08:30:00+07:00",
+      "url": "https://www.facebook.com/122094407895556480"
+    }
+  },
+  "2026-11-17": {
+    "facebook": {
+      "at": "2026-11-13T11:10:20+00:00",
+      "id": "122094407979556480",
+      "photo_id": "122094407979556480",
+      "scheduled_for": "2026-11-17T08:30:00+07:00",
+      "url": "https://www.facebook.com/122094407979556480"
+    }
+  },
+  "2026-11-18": {
+    "facebook": {
+      "at": "2026-11-13T11:10:20+00:00",
+      "id": "122094408087556480",
+      "photo_id": "122094408087556480",
+      "scheduled_for": "2026-11-18T08:30:00+07:00",
+      "url": "https://www.facebook.com/122094408087556480"
+    }
+  },
+  "2026-11-19": {
+    "facebook": {
+      "at": "2026-11-13T11:10:20+00:00",
+      "id": "122094408141556480",
+      "photo_id": "122094408141556480",
+      "scheduled_for": "2026-11-19T08:30:00+07:00",
+      "url": "https://www.facebook.com/122094408141556480"
+    }
+  },
+  "2026-11-20": {
+    "facebook": {
+      "at": "2026-11-13T11:10:20+00:00",
+      "id": "122094408219556480",
+      "photo_id": "122094408219556480",
+      "scheduled_for": "2026-11-20T08:30:00+07:00",
+      "url": "https://www.facebook.com/122094408219556480"
+    }
+  },
+  "notes:en-4-agent-loop": {
+    "facebook": {
+      "at": "2026-11-13T10:43:00+00:00",
+      "id": "122094395583556480",
+      "manual": true,
+      "url": "https://www.facebook.com/122094398511556480/posts/122094395583556480",
+      "via": "chrome"
+    },
+    "linkedin": {
+      "at": "2026-11-12T01:31:00+00:00",
+      "id": "urn:li:activity:7526456528233631744",
+      "manual": true,
+      "url": "https://www.linkedin.com/feed/update/urn:li:activity:7526456528233631744/",
+      "via": "chrome"
+    },
+    "x": {
+      "at": "2026-11-12T01:30:00+00:00",
+      "id": "2120690542912880677",
+      "manual": true,
+      "url": "https://x.com/pqnghiep1354/status/2120690542912880677",
+      "via": "chrome"
+    }
+  },
+  "notes:en-5-dora": {
+    "facebook": {
+      "at": "2026-11-13T10:44:00+00:00",
+      "id": "122094396057556480",
+      "manual": true,
+      "url": "https://www.facebook.com/122094398511556480/posts/122094396057556480",
+      "via": "chrome"
+    },
+    "linkedin": {
+      "at": "2026-11-13T01:30:00+00:00",
+      "id": "urn:li:activity:7526818843122577408",
+      "manual": true,
+      "url": "https://www.linkedin.com/feed/update/urn:li:activity:7526818843122577408/",
+      "via": "chrome"
+    },
+    "x": {
+      "at": "2026-11-13T01:30:00+00:00",
+      "id": "2121052929025335373",
+      "manual": true,
+      "url": "https://x.com/pqnghiep1354/status/2121052929025335373",
+      "via": "chrome"
+    }
+  }
+}
