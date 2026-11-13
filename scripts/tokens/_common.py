@@ -33,10 +33,14 @@ def ask(label: str, secret: bool = False) -> str:
     return value
 
 
+USER_AGENT = "lab-to-prod-token-scripts/1.0 (+https://github.com/nghiep-pham-ecosys/lab-to-prod)"
+
+
 def http_json(url: str, data: dict | None = None, headers: dict | None = None) -> dict:
     """GET, or POST a form when data is given. Errors never include the request body or URL query."""
     body = urllib.parse.urlencode(data).encode() if data is not None else None
-    req = urllib.request.Request(url, data=body, headers=headers or {})
+    # Some APIs (dev.to) answer 403 to the default "Python-urllib" user agent.
+    req = urllib.request.Request(url, data=body, headers={"User-Agent": USER_AGENT, **(headers or {})})
     try:
         with urllib.request.urlopen(req, timeout=60) as resp:
             return json.loads(resp.read().decode())
