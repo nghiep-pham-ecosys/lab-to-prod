@@ -1,4 +1,5 @@
 import datetime as dt
+import re
 import json
 import sys
 from pathlib import Path
@@ -96,7 +97,9 @@ def write_post(root, date, slug, series, part, status="approved", channels=None,
 @pytest.fixture
 def repo(tmp_path):
     (tmp_path / "publish").mkdir()
-    (tmp_path / "publish" / "config.yaml").write_text((ROOT / "publish" / "config.yaml").read_text())
+    # The tests cover the Telegram code even while the real config switches it off.
+    cfg = re.sub(r"(?m)^  telegram: \S+.*$", "  telegram: api", (ROOT / "publish" / "config.yaml").read_text())
+    (tmp_path / "publish" / "config.yaml").write_text(cfg)
     posts = tmp_path / "blog" / "src" / "content" / "posts"
     posts.mkdir(parents=True)
     (posts / "why.md").write_text("---\ntitle: Why\ndescription: Because.\ndate: 2026-11-21\nseries: build-log\ntags: [build-in-public, llmops]\n---\n\nSee the [feed](/lab-to-prod/rss.xml).\n")
