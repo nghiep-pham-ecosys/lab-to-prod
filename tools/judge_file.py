@@ -4,7 +4,8 @@
     python tools/judge_file.py --week 2026-W47 --scores scores.json
     python tools/judge_file.py --week 2026-W47 --scores one.json --merge   # re-judged posts only
 
-It adds the sha256 of each post.md, so the gate can tell if a post changed after judging.
+It adds the sha256 of each post.md, so the gate can tell if a post changed after judging, and the
+per-channel format check of tools/format_check.py (informational, the gate does not read it).
 It refuses scores that are not integers 1-5 on exactly the five rubric keys.
 """
 from __future__ import annotations
@@ -17,6 +18,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import automerge_gate as gate  # noqa: E402
+import format_check as fc  # noqa: E402
 import validate as v  # noqa: E402
 
 
@@ -32,6 +34,8 @@ def build(root: Path, week: str, scores: dict, merge: bool = False) -> dict:
             raise ValueError(f"{name}: scores must be integers 1-5 for exactly {gate.RUBRIC}")
         posts[name] = {"sha256": gate.post_hash(folders[name]), "scores": {k: s[k] for k in gate.RUBRIC},
                        "mean": round(sum(s.values()) / len(s), 2), "notes": str(entry.get("notes", "")).strip()}
+    for name, entry in posts.items():
+        entry["format"] = fc.check_folder(folders[name])
     return {"week": week, "judged_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
             "judge": "subagent that did not see the drafting session", "rubric": gate.RUBRIC,
             "pass_rule": f"mean >= {gate.MIN_MEAN:.0f} and no score below {gate.MIN_SCORE}",

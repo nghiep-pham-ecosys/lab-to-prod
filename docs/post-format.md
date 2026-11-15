@@ -74,6 +74,11 @@ Every scene needs a `say` line: it is the burned-in caption and the subtitle.
 | `## telegram` | 1,024 characters (photo caption limit) | |
 | `## youtube` | first line is the title: at most 100 characters, contains `#Shorts` | keyword first |
 
+Channel norms checked by `tools/format_check.py` (warnings only, recorded in `judge.json` under
+`format` for the weekly review): LinkedIn 150-300 words, a hook of 1-2 lines, paragraphs of at most
+3 lines or 60 words, an open question in the last two paragraphs before the sign-off; Facebook
+80-120 words; X at most 280 characters with a number in the hook; Short 30-60 s.
+
 Saturday long articles are not post folders: they live in `blog/src/content/posts/`.
 
 ## Checking

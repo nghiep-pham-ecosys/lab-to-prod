@@ -43,6 +43,11 @@ yourself, and do not adjust the scores it returns.
    python tools/judge_file.py --week <week> --scores <that file>
    ```
 
+   It also writes a `format` entry per post from `tools/format_check.py`: words, hook lines, long
+   paragraphs, an open question at the end (LinkedIn), words (Facebook), characters and a number
+   in the hook (X), seconds (Short). It is informational: list its warnings in the pull request
+   so the weekly review sees them. The gate does not use it.
+
 3. Run `python tools/automerge_gate.py --week <week>`. A post passes with a mean of at least 4
    and no score below 3.
 4. For a post that fails: fix what the notes say, then judge **that post again with a new
