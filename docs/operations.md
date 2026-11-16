@@ -25,12 +25,12 @@ back to that branch. The full record of what is live: `published.json` on `publi
 | Workflow | Runs | Does |
 | --- | --- | --- |
 | `validate` | every pull request, pushes to main | tests, validation, Java samples |
-| `blog` | merge to main, daily 08:20, pull requests (build only) | builds and deploys the blog |
-| `publish` | merge to main, Mon-Sat 08:15, pull requests (dry run only), manual | posts or schedules; keeps `published.json` on the `publish-state` branch |
+| `blog` | merge to main, daily 08:20 and a backup build at 09:05, pull requests (build only) | builds and deploys the blog |
+| `publish` | merge to main, Mon-Sat 08:15 and a backup run at 09:00, pull requests (dry run only), manual | posts or schedules; keeps `published.json` on the `publish-state` branch |
 | `metrics` | daily 22:00, manual | writes `metrics/metrics.csv` to the `publish-state` branch; red when a token needs attention |
 | `automerge` | Sunday 22:00, manual; only when enabled | holds failing posts, merges the rest, starts `publish` and `blog` |
 
-All times are Asia/Ho_Chi_Minh. GitHub's scheduler can run several minutes late.
+All times are Asia/Ho_Chi_Minh. GitHub's scheduler can run late or skip a run (2026-11-16: both morning runs skipped), so `publish` and `blog` have a backup run 45 min later.
 
 ## Going live, one channel at a time
 
