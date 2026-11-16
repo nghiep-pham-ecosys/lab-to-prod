@@ -12,6 +12,8 @@ on:
     paths: ["blog/**", "content/**", "brand/**", ".github/workflows/blog.yml"]
   schedule:
     - cron: "20 1 * * *"
+    # Backup build 09:05 in case GitHub skips the first one.
+    - cron: "5 2 * * *"
   workflow_dispatch:
 
 permissions:

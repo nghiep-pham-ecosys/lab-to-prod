@@ -13,6 +13,8 @@ on:
     paths: ["content/**", "blog/src/content/posts/**"]
   schedule:
     - cron: "15 1 * * 1-6"
+    # Backup run 09:00: GitHub can skip a scheduled run; posts already in published.json are skipped.
+    - cron: "0 2 * * 1-6"
   pull_request:
     paths: ["content/**", "blog/src/content/posts/**", "publish/**", ".github/workflows/publish.yml"]
   workflow_dispatch:
