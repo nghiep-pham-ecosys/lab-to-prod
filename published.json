@@ -7,6 +7,12 @@
       "scheduled_for": "2026-11-16T08:30:00+07:00",
       "url": "https://www.facebook.com/122094407895556480"
     },
+    "linkedin": {
+      "at": "2026-11-16T02:28:58+00:00",
+      "comment": true,
+      "id": "urn:li:share:7527920627224170496",
+      "url": "https://www.linkedin.com/feed/update/urn:li:share:7527920627224170496/"
+    },
     "youtube": {
       "at": "2026-11-13T15:45:07+00:00",
       "captions": true,
