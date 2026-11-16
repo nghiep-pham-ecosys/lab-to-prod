@@ -44,6 +44,8 @@ What I do now: report both numbers, with the counts behind them. 8/10 and 8/13 t
 
 The script that computes these numbers is in the repository.
 
+For your own quality gates, which mistake costs more: a bad answer slipping through, or a false alarm?
+
 Part 2 of my AI Engineering notes.
 
 #LLMOps #AIEngineering #LLMEvaluation #MachineLearning

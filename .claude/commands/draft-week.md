@@ -12,11 +12,26 @@ agreed change, and the calendar's `experiment` for this week).
 Stop at once, and say why, if: a `PAUSE` file exists; the week is not in the calendar; a pull
 request for this week is already open.
 
+## Idea source: Research notes
+
+If the Notion connector is available, query the Notion database **Research notes** for pages with
+Type = paper, Area = content and Status inbox, reading or done. Use them as ideas for this week's
+items when they fit the calendar topic. A post built on a paper:
+
+- links the original paper (arXiv, DOI or the publisher page) in `sources`, never a newsletter;
+- is written in your own words: never copy the abstract or a newsletter summary;
+- checks every number against the paper itself, in the fact-check step;
+- after the weekly pull request is opened, set that page's Status to `promoted`.
+
+No connector: say so in the pull request and draft from the calendar alone.
+
 ## Steps
 
 1. **Branch.** `git switch main && git pull`, then `git switch -c week-<week>`.
 2. **Posts.** For each weekday item, use the `write-post` skill to create
    `content/<week>/<date>-<slug>/post.md` with `status: approved` (merging is the approval).
+   Every LinkedIn section ends with one open question before the "Part N" line (see
+   `write-post`); `tools/format_check.py --week <week>` must show no LinkedIn warning.
 3. **Article.** For the Saturday item, use `write-blog`.
 4. **Facts.** Run the `fact-check` skill on every post and the article. Fix or cut what fails.
 5. **Images.** `render-image` for all five posts. Look at every image.

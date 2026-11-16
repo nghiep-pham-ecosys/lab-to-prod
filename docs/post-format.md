@@ -68,7 +68,7 @@ Every scene needs a `say` line: it is the burned-in caption and the subtitle.
 
 | Section | Hard limit (fails the PR) | Target (warning only) |
 | --- | --- | --- |
-| `## linkedin` | 3,000 characters, no links | 180-280 words, 3-5 hashtags, ends with "Part N of my ... notes" |
+| `## linkedin` | 3,000 characters, no links | 180-280 words, 3-5 hashtags, an open question, then "Part N of my ... notes" |
 | `## x` | 280 characters per post (X weighting), no links | one post |
 | `## facebook` | none | 80-120 words |
 | `## telegram` | 1,024 characters (photo caption limit) | |

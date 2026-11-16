@@ -39,6 +39,8 @@ So the common answer is both: Direct Connect for steady, heavy traffic, and a VP
 
 The lesson: private is not the same as encrypted. Check which one the requirement actually asks for.
 
+In your hybrid setups, did you pick VPN, Direct Connect or both, and what decided it?
+
 Part 2 of my Cloud & DevOps notes.
 
 #AWS #CloudArchitecture #Networking #LearningInPublic
