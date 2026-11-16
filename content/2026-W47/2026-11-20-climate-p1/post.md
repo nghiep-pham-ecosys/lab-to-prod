@@ -37,6 +37,8 @@ Here is the part that is easy to miss. The ML model still stands on physics twic
 
 The lesson: ML did not replace the physics here. It learned a fast shortcut from it, which is how I now look at ML surrogates in any simulation field.
 
+In your field, where would you trust an ML surrogate over the full simulation, and where not yet?
+
 Part 1 of my Climate x AI notes.
 
 #ClimateAI #WeatherForecasting #MachineLearning #ClimateTech

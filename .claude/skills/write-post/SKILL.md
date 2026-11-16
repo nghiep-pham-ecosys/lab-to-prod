@@ -27,10 +27,13 @@ Output: `content/<week>/<date>-<slug>/post.md`, following `content/_template/pos
    code blocks), at most 6 short lines of code.
 4. **Why it matters** in real work (1 short paragraph).
 5. **The lesson** the reader can use today (1-2 lines).
-6. `Part N of my <series name> notes.`
-7. Last line: 3 to 5 hashtags.
+6. **One open question** (its own paragraph) that asks the reader about their own experience with
+   this exact topic, for example "In your hybrid setups, did you pick VPN, Direct Connect or both,
+   and what decided it?". Never a yes/no or bait line ("Agree?", "Thoughts?").
+7. `Part N of my <series name> notes.`
+8. Last line: 3 to 5 hashtags.
 
-No link anywhere in the LinkedIn or X text. No emoji. No question at the end to bait comments.
+No link anywhere in the LinkedIn or X text. No emoji.
 
 ## The other sections
 

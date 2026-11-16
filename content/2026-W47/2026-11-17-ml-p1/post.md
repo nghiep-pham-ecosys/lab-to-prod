@@ -45,6 +45,8 @@ The lesson: when a layer confuses you, write its matrix shape down. Rows are out
 
 The script is in the repository.
 
+Which ML idea only clicked for you once you wrote down the matrix shapes?
+
 Part 1 of my ML Foundations notes.
 
 #MachineLearning #LinearAlgebra #DeepLearning #LearningInPublic
