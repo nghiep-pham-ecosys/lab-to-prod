@@ -4,7 +4,8 @@ name: publish
 # PUBLISH_LIVE_CHANNELS lists channels (comma list, e.g. "facebook") that post live while the rest stay a dry run.
 # What was posted is kept on the publish-state branch (tools/state_sync.py), because main only takes PRs.
 # - push to main (the weekly pull request was merged): Facebook schedules, YouTube uploads
-# - weekdays and Saturday 08:15 Asia/Ho_Chi_Minh: LinkedIn, Telegram, DEV for today's items
+# - weekdays and Saturday 08:15 Asia/Ho_Chi_Minh: LinkedIn, Telegram, DEV for today's items. GitHub starts scheduled
+#   runs hours late (lab-to-prod#32), so early crons start a run that waits until 08:15 (tools/wait_until.py)
 # - pull requests: always a dry run, so the plan is visible before merging
 # - a file named PAUSE at the repository root stops everything
 on:
@@ -12,8 +13,11 @@ on:
     branches: [main]
     paths: ["content/**", "blog/src/content/posts/**"]
   schedule:
+    # Early runs 00:30 and 03:30 (Mon-Sat local): they start late, then wait until 08:15. One waiter at a time.
+    - cron: "30 17 * * 0-5"
+    - cron: "30 20 * * 0-5"
+    # Fallbacks 08:15 and 09:00: they go at once when they start; posts already in published.json are skipped.
     - cron: "15 1 * * 1-6"
-    # Backup run 09:00: GitHub can skip a scheduled run; posts already in published.json are skipped.
     - cron: "0 2 * * 1-6"
   pull_request:
     paths: ["content/**", "blog/src/content/posts/**", "publish/**", ".github/workflows/publish.yml"]
@@ -34,12 +38,29 @@ on:
 permissions:
   contents: write
 
-concurrency:
-  group: publish
-  cancel-in-progress: false
-
 jobs:
+  # Holds a scheduled run until 08:15 without taking the publish lock; any other event goes at once.
+  wait:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      go: ${{ steps.wait.outputs.go }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: wait
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/wait_until.py --at 08:15 --workflow publish.yml
+
   publish:
+    needs: wait
+    if: needs.wait.outputs.go == 'true'
+    concurrency:
+      group: publish
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     env:
       LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
