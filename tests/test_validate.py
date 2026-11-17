@@ -203,11 +203,136 @@ def test_calendar_rejects_wrong_week_and_weekend_post(repo):
     assert any("belongs to 2026-W48" in e for e in errs) and any("must fall on a weekday" in e for e in errs)
 
 
-def test_real_calendar_is_valid_and_near_pillar_targets():
+def test_real_calendar_and_ledger_are_valid():
     rep = v.Report()
+    ledger = v.check_work(v.load_work(ROOT), rep, ROOT / "content" / "work.yaml")
     cal = v.load_calendar(ROOT)
-    by_date = v.check_calendar(cal, rep, ROOT / "content" / "calendar.yaml")
+    by_date = v.check_calendar(cal, rep, ROOT / "content" / "calendar.yaml", ledger)
     assert rep.errors == []
-    assert len(by_date) == 72 and len(cal["weeks"]) == 12
-    for pillar, share in v.pillar_shares(cal).items():
-        assert abs(share - cal["pillars"][pillar]["target"]) <= 0.10, (pillar, share)
+    assert len(ledger) >= 5
+    for d, item in by_date.items():
+        if v.needs_work(d):
+            assert item["work"] and set(item["work"]) <= set(ledger), d
+
+
+# ---------------------------------------------------------------- work ledger
+
+W48 = dt.date(2026, 11, 25)
+LEDGER = {
+    "repos": {"public": ["demo-lab"], "private": ["course-vi"]},
+    "entries": [
+        {"id": "demo-unit", "repo": "demo-lab", "ref": "https://github.com/nghiep-pham-ecosys/demo-lab/pull/3",
+         "merged": dt.date(2026, 11, 17), "what": "A toy unit with tests."},
+        {"id": "course-rag", "repo": "course-vi", "ref": "private@abc1234",
+         "merged": dt.date(2026, 11, 16), "what": "A course module on retrieval."},
+    ],
+}
+
+
+def plan_w48(repo, work="demo-unit", ledger=None, **item_over):
+    cal = yaml.safe_load(yaml.safe_dump(CAL))
+    item = {"date": W48, "series": "climate-ai", "part": 2, "slug": "climate-p2", "topic": "t", **item_over}
+    if work is not None:
+        item["work"] = work
+    cal["weeks"].append({"week": "2026-W48", "items": [item]})
+    (repo / "content" / "calendar.yaml").write_text(yaml.safe_dump(cal))
+    (repo / "content" / "work.yaml").write_text(yaml.safe_dump(ledger or LEDGER))
+
+
+def add_w48_post(repo, **over):
+    folder = repo / "content" / "2026-W48" / "2026-11-25-climate-p2"
+    folder.mkdir(parents=True)
+    (folder / "post.md").write_text(post_text(date=W48, part=2, linkedin=f"3 things. {BODY}\n\n"
+                                              "Part 2 of my Climate x AI notes.\n\n#a #b #c", **over))
+    Image.new("RGB", (1200, 1200)).save(folder / "image.png")
+    return folder
+
+
+def test_item_with_ledger_work_passes(repo):
+    plan_w48(repo)
+    add_w48_post(repo, work="demo-unit")
+    assert errors(repo) == []
+
+
+def test_item_from_w48_without_work_fails(repo):
+    plan_w48(repo, work=None)
+    assert any("every item needs work" in e for e in errors(repo))
+
+
+def test_items_before_w48_need_no_work(repo):
+    (repo / "content" / "work.yaml").write_text(yaml.safe_dump(LEDGER))
+    add_post(repo)
+    assert errors(repo) == []
+
+
+def test_unknown_work_and_work_merged_after_the_post_fail(repo):
+    plan_w48(repo, work=["demo-unit", "nope"])
+    assert any("'nope' is not in content/work.yaml" in e for e in errors(repo))
+    late = yaml.safe_load(yaml.safe_dump(LEDGER))
+    late["entries"][0]["merged"] = dt.date(2026, 11, 26)
+    plan_w48(repo, ledger=late)
+    assert any("merged on 2026-11-26, after 2026-11-25" in e for e in errors(repo))
+
+
+def test_post_from_w48_needs_the_calendar_work(repo):
+    plan_w48(repo)
+    folder = add_w48_post(repo)
+    assert any("post: from 2026-W48 every item needs work" in e for e in errors(repo))
+    (folder / "post.md").write_text(post_text(date=W48, part=2, work="course-rag"))
+    assert any("but the calendar says ['demo-unit']" in e for e in errors(repo))
+
+
+def test_ledger_rejects_an_unlisted_repo_without_naming_it(repo):
+    bad = yaml.safe_load(yaml.safe_dump(LEDGER))
+    bad["entries"][0]["repo"] = "secret-side-thing"
+    plan_w48(repo, ledger=bad)
+    errs = errors(repo)
+    assert any("repo is not listed under repos" in e for e in errs)
+    assert not any("secret-side-thing" in e for e in errs)
+
+
+@pytest.mark.parametrize("field, value, message", [
+    ("ref", "https://github.com/nghiep-pham-ecosys/demo-lab/commit/abc", "merged pull request URL"),
+    ("ref", "https://github.com/someone-else/demo-lab/pull/3", "merged pull request URL"),
+    ("merged", "soon", "merged must be a date"),
+    ("merged", dt.date(2099, 1, 1), "is in the future"),
+    ("what", "", "what is empty"),
+    ("id", "Demo_Unit", "lowercase words"),
+])
+def test_ledger_entry_rules(repo, field, value, message):
+    bad = yaml.safe_load(yaml.safe_dump(LEDGER))
+    bad["entries"][0][field] = value
+    plan_w48(repo, work="course-rag", ledger=bad)
+    assert any(message in e for e in errors(repo))
+
+
+def test_private_repo_is_named_by_sha_never_linked(repo):
+    bad = yaml.safe_load(yaml.safe_dump(LEDGER))
+    bad["entries"][1]["ref"] = "https://github.com/nghiep-pham-ecosys/course-vi/pull/1"
+    plan_w48(repo, ledger=bad)
+    errs = errors(repo)
+    assert any("private@<commit sha>" in e for e in errs) and any("named, never linked" in e for e in errs)
+
+
+def test_post_linking_a_private_repo_fails(repo):
+    plan_w48(repo)
+    add_w48_post(repo, work="demo-unit", telegram="code: github.com/nghiep-pham-ecosys/course-vi/tree/main")
+    assert any("links a private repo" in e for e in errors(repo))
+
+
+def test_duplicate_ids_fail(repo):
+    dup = yaml.safe_load(yaml.safe_dump(LEDGER))
+    dup["entries"].append(dict(dup["entries"][0]))
+    plan_w48(repo, ledger=dup)
+    assert any("id appears twice" in e for e in errors(repo))
+
+
+def test_parked_items_have_a_series_and_no_date(repo):
+    cal = yaml.safe_load(yaml.safe_dump(CAL))
+    cal["parked"] = [{"series": "dsa-in-java", "topic": "ok"}, {"series": "nope", "topic": "x"},
+                     {"series": "dsa-in-java", "topic": "y", "date": dt.date(2026, 12, 1)}]
+    (repo / "content" / "calendar.yaml").write_text(yaml.safe_dump(cal))
+    errs = errors(repo)
+    assert any("parked item 2" in e for e in errs) and any("parked item 3: a parked item has no date" in e
+                                                             for e in errs)
+    assert not any("parked item 1" in e for e in errs)

@@ -69,7 +69,8 @@ Exact file layout and limits: `docs/post-format.md`. Calendar: `content/calendar
 ## Layout
 
 ```
-content/calendar.yaml            what is posted when (4 trial weeks + 8 backlog weeks)
+content/calendar.yaml            what is posted when; items without merged work wait in parked:
+content/work.yaml                merged project work, the only source of posts from 2026-W48
 content/<week>/<date>-<slug>/    post.md, image.png, short.mp4, short.srt
 content/_template/post.md        copy this to start a post
 claude/lesson-log.md             what the author studied; ground posts in it

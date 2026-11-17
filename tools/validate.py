@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validate the calendar and every post folder under content/.
+"""Validate the calendar, the work ledger and every post folder under content/.
 
 Usage:
     python tools/validate.py                # whole repo
-    python tools/validate.py --check-links  # also require sources to answer HTTP 200
+    python tools/validate.py --check-links  # also require sources and work-ledger PRs to answer HTTP 200
     python tools/validate.py --week 2026-W47
 
 Exit code 1 when there is at least one error. Warnings never fail the run.
@@ -45,6 +45,12 @@ SHORT_SECONDS = (30.0, 60.0)
 TEXT_SUFFIXES = {".md", ".mdx", ".yaml", ".yml", ".json", ".srt", ".txt", ".csv", ".py", ".ts", ".tsx", ".js", ".mjs", ".astro", ".html", ".css", ".sh", ".java", ".expected", ".ipynb"}
 URL_RE = re.compile(r"https?://\S+")
 PRIVATE_LINK_RE = re.compile(r"(?i)claude\.ai/")  # links to private chat sessions
+# From this ISO week on, every calendar item and post points to merged work in content/work.yaml.
+WORK_FROM_WEEK = "2026-W48"
+ORG = "nghiep-pham-ecosys"
+WORK_ID_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+PRIVATE_REF_RE = re.compile(r"^private@[0-9a-f]{7,40}$")
+LOCAL_TZ = dt.timezone(dt.timedelta(hours=7))  # Asia/Ho_Chi_Minh, no DST
 SECRET_PATTERNS = [
     ("GitHub token", re.compile(r"\bgh[opsur]_[A-Za-z0-9]{30,}")),
     ("Google API key", re.compile(r"\bAIza[0-9A-Za-z_-]{35}")),
@@ -185,8 +191,42 @@ def iso_week(d: dt.date) -> str:
     return f"{y}-W{w:02d}"
 
 
-def check_calendar(cal: dict, rep: Report, where: Path) -> dict[dt.date, dict]:
-    """Validate calendar.yaml and return {date: item}."""
+def needs_work(d: dt.date) -> bool:
+    return iso_week(d) >= WORK_FROM_WEEK
+
+
+def work_ids(value) -> list[str] | None:
+    """`work:` holds one ledger id or a list of ids. None when absent or malformed."""
+    if isinstance(value, str) and value.strip():
+        return [value.strip()]
+    if isinstance(value, list) and value and all(isinstance(v, str) and v.strip() for v in value):
+        return [v.strip() for v in value]
+    return None
+
+
+def check_work_refs(value, d: dt.date, ledger: dict[str, dict], rep: Report, where: Path | str,
+                    what: str) -> list[str]:
+    """Check the `work:` of one calendar item or post and return its ids."""
+    ids = work_ids(value)
+    if ids is None:
+        if value is not None:
+            rep.error(where, f"{what}: work must be a ledger id or a list of ids")
+        elif needs_work(d):
+            rep.error(where, f"{what}: from {WORK_FROM_WEEK} every item needs work: <id> from content/work.yaml")
+        return []
+    for wid in ids:
+        entry = ledger.get(wid)
+        if entry is None:
+            rep.error(where, f"{what}: work {wid!r} is not in content/work.yaml")
+        elif isinstance(entry.get("merged"), dt.date) and entry["merged"] > d:
+            rep.error(where, f"{what}: work {wid!r} was merged on {entry['merged']}, after {d}")
+    return ids
+
+
+def check_calendar(cal: dict, rep: Report, where: Path,
+                   ledger: dict[str, dict] | None = None) -> dict[dt.date, dict]:
+    """Validate calendar.yaml (with the work ledger {id: entry}) and return {date: item}."""
+    ledger = ledger or {}
     series = cal.get("series") or {}
     pillars = cal.get("pillars") or {}
     by_date: dict[dt.date, dict] = {}
@@ -235,8 +275,14 @@ def check_calendar(cal: dict, rep: Report, where: Path) -> dict[dt.date, dict]:
                         rep.error(where, f"{d}: short publish_at is before the post date")
                 except ValueError as exc:
                     rep.error(where, f"{d}: short.publish_at is not an ISO datetime with offset ({exc})")
-            by_date[d] = {**item, "week": name, "kind": kind,
+            ids = check_work_refs(item.get("work"), d, ledger, rep, where, str(d))
+            by_date[d] = {**item, "week": name, "kind": kind, "work": ids,
                           "sources_required": bool(series[s].get("sources_required"))}
+    for i, item in enumerate(cal.get("parked") or [], 1):
+        if not isinstance(item, dict) or item.get("series") not in series or not item.get("topic"):
+            rep.error(where, f"parked item {i}: needs a known series and a topic")
+        elif "date" in item:
+            rep.error(where, f"parked item {i}: a parked item has no date; move it into a week to plan it")
     total = sum(counts.values())
     if total:
         for p, n in counts.items():
@@ -255,6 +301,69 @@ def pillar_shares(cal: dict) -> dict[str, float]:
             counts[p] = counts.get(p, 0) + 1
     total = sum(counts.values()) or 1
     return {p: n / total for p, n in counts.items()}
+
+
+# ---------------------------------------------------------------- work ledger
+
+def load_work(root: Path) -> dict:
+    path = root / "content" / "work.yaml"
+    if not path.exists():
+        return {}
+    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+
+
+def check_work(work: dict, rep: Report, where: Path, today: dt.date | None = None) -> dict[str, dict]:
+    """Validate content/work.yaml and return {id: entry}.
+
+    Error messages never echo a repo name that is not listed: an unlisted repo must stay unnamed,
+    and CI logs of this repository are public.
+    """
+    today = today or dt.datetime.now(LOCAL_TZ).date()
+    repos = work.get("repos") or {}
+    public, private = set(repos.get("public") or []), set(repos.get("private") or [])
+    if public & private:
+        rep.error(where, "a repo is listed as both public and private")
+    out: dict[str, dict] = {}
+    for i, entry in enumerate(work.get("entries") or [], 1):
+        if not isinstance(entry, dict):
+            rep.error(where, f"entry {i} is not a mapping")
+            continue
+        wid = entry.get("id")
+        label = f"entry {wid!r}" if isinstance(wid, str) else f"entry {i}"
+        if not isinstance(wid, str) or not WORK_ID_RE.match(wid):
+            rep.error(where, f"{label}: id must be lowercase words joined by hyphens")
+            continue
+        if wid in out:
+            rep.error(where, f"{label}: id appears twice")
+        out[wid] = entry
+        repo, ref = entry.get("repo"), str(entry.get("ref") or "")
+        if repo in public:
+            if not re.fullmatch(rf"https://github\.com/{ORG}/{re.escape(repo)}/pull/\d+", ref):
+                rep.error(where, f"{label}: ref must be the merged pull request URL in {ORG}/{repo}")
+        elif repo in private:
+            if not PRIVATE_REF_RE.match(ref):
+                rep.error(where, f"{label}: ref of a private repo must be private@<commit sha>")
+            if URL_RE.search(yaml.safe_dump(entry)):
+                rep.error(where, f"{label}: a private repo is named, never linked")
+        else:
+            rep.error(where, f"{label}: repo is not listed under repos; an unlisted repo is never a post source")
+        merged = entry.get("merged")
+        if not isinstance(merged, dt.date):
+            rep.error(where, f"{label}: merged must be a date YYYY-MM-DD")
+        elif merged > today:
+            rep.error(where, f"{label}: merged {merged} is in the future")
+        if not str(entry.get("what") or "").strip():
+            rep.error(where, f"{label}: what is empty")
+    return out
+
+
+def private_link_re(work: dict) -> re.Pattern | None:
+    """Links to the private repos of the ledger: they are named in posts, never linked."""
+    names = (work.get("repos") or {}).get("private") or []
+    if not names:
+        return None
+    alt = "|".join(re.escape(n) for n in names)
+    return re.compile(rf"(?i)github\.com/{ORG}/(?:{alt})(?![\w.-])")
 
 
 # ---------------------------------------------------------------- banned terms and secrets
@@ -302,7 +411,7 @@ def tracked_files(root: Path) -> list[Path]:
         return [p for p in root.rglob("*") if p.is_file() and ".git" not in p.parts and "node_modules" not in p.parts]
 
 
-def check_repo_text(root: Path, rep: Report) -> None:
+def check_repo_text(root: Path, rep: Report, private_links: re.Pattern | None = None) -> None:
     patterns, hashes = load_banned(root)
     pub = published_dirs(root)
     for path in tracked_files(root):
@@ -319,11 +428,14 @@ def check_repo_text(root: Path, rep: Report) -> None:
             hits = find_banned(text, patterns, hashes)
             if hits:
                 rep.error(path, "banned term: " + ", ".join(sorted(set(hits))))
+            if private_links and private_links.search(text):
+                rep.error(path, "links a private repo; private repos are named, never linked")
 
 
 # ---------------------------------------------------------------- posts
 
-def check_post(folder: Path, by_date: dict[dt.date, dict], rep: Report, check_links: bool = False) -> None:
+def check_post(folder: Path, by_date: dict[dt.date, dict], rep: Report, check_links: bool = False,
+               ledger: dict[str, dict] | None = None) -> None:
     post = folder / "post.md"
     if not post.exists():
         rep.error(folder, "post.md is missing")
@@ -348,6 +460,9 @@ def check_post(folder: Path, by_date: dict[dt.date, dict], rep: Report, check_li
         rep.error(post, "date must be YYYY-MM-DD")
         return
     item = by_date.get(d)
+    ids = check_work_refs(meta.get("work"), d, ledger or {}, rep, post, "post")
+    if item is not None and (ids or item.get("work")) and set(ids) != set(item.get("work") or []):
+        rep.error(post, f"work is {ids} but the calendar says {item.get('work')}")
     if item is None:
         rep.error(post, f"{d} is not in content/calendar.yaml")
     else:
@@ -494,10 +609,24 @@ def validate(root: Path = ROOT, week: str | None = None, check_links: bool = Fal
     except (OSError, yaml.YAMLError) as exc:
         rep.error(cal_path, f"cannot read calendar: {exc}")
         return rep
-    by_date = check_calendar(cal, rep, cal_path)
+    work_path = root / "content" / "work.yaml"
+    try:
+        work = load_work(root)
+    except (OSError, yaml.YAMLError) as exc:
+        rep.error(work_path, f"cannot read the work ledger: {exc}")
+        work = {}
+    ledger = check_work(work, rep, work_path)
+    if check_links:
+        for wid, entry in ledger.items():
+            ref = str(entry.get("ref") or "")
+            if ref.startswith("https://"):
+                code = http_status(ref)
+                if code != 200:
+                    rep.error(work_path, f"entry {wid!r}: {ref} answered {code}, expected 200")
+    by_date = check_calendar(cal, rep, cal_path, ledger)
     for folder in post_folders(root, week):
-        check_post(folder, by_date, rep, check_links)
-    check_repo_text(root, rep)
+        check_post(folder, by_date, rep, check_links, ledger)
+    check_repo_text(root, rep, private_link_re(work))
     return rep
 
 
