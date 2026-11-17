@@ -8,16 +8,26 @@ description: Write the Saturday long article (1,000-1,500 words) in blog/src/con
 Output: `blog/src/content/posts/<slug>.md`. The slug is lowercase words from the title joined by
 hyphens; it never changes after publishing.
 
+## The work behind the article
+
+From 2026-W48 on, the calendar item of the Saturday has `work:` (ids in `content/work.yaml`).
+Copy it into the article's front matter. Before writing, read each entry and its merged change,
+as the `write-post` skill says: the pull request text and diff, or `git show <sha>` for
+`private@<sha>`. The article is about that work. Link each public pull request it discusses;
+name a private repo, never link it, and never paste its code or text.
+
 ## Two kinds
 
-**Build log** (`series: build-log`): what the pipeline did this week. Required content:
+**Build log** (`series: build-log`): what the pipeline did this week; its `work:` points to the
+merged pull requests of this repository that it discusses. Required content:
 the numbers from `metrics/metrics.csv` and `published.json` (use the `weekly-report` skill's
 table, do not retype numbers), what broke and how it was fixed (link the commit or pull request),
 one thing that surprised the author, and what changes next week. Failures are the interesting
 part; do not hide them. If there are no numbers yet, say so plainly.
 
-**Deep dive** (`series: deep-dive`): a longer version of the week's best note. It must add
-something the note did not have: a derivation, a runnable experiment, a counter-example.
+**Deep dive** (`series: deep-dive`): a longer version of the week's best note, about the same
+merged work. It must add something the note did not have: a derivation, a runnable experiment,
+a counter-example.
 
 ## Front matter
 
@@ -28,6 +38,7 @@ date: 2026-11-21          # the Saturday in the calendar
 series: build-log         # or deep-dive
 part: 1                   # the calendar's part number
 tags: [llmops, ai-engineering]   # 2-4 lowercase tags; DEV accepts at most 4
+work: [l2p-wait-for-slot]        # from 2026-W48: the calendar item's work ids
 ```
 
 ## Writing

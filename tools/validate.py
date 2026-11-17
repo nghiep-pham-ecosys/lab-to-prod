@@ -581,6 +581,36 @@ def check_post(folder: Path, by_date: dict[dt.date, dict], rep: Report, check_li
                 rep.error(post, f"source {url} answered {code}, expected 200")
 
 
+def check_article(path: Path, by_date: dict[dt.date, dict], rep: Report, ledger: dict[str, dict]) -> None:
+    """A Saturday article from WORK_FROM_WEEK on carries the work of its calendar item."""
+    try:
+        meta, _ = parse_post(path)
+    except (ValueError, yaml.YAMLError) as exc:
+        rep.error(path, str(exc))
+        return
+    d = meta.get("date")
+    if isinstance(d, dt.datetime):
+        d = d.date()
+    if not isinstance(d, dt.date):
+        return  # the blog build checks its own front matter
+    ids = check_work_refs(meta.get("work"), d, ledger, rep, path, "article")
+    item = by_date.get(d)
+    if item is not None and item.get("kind") == "blog" and (ids or item.get("work")) \
+            and set(ids) != set(item.get("work") or []):
+        rep.error(path, f"work is {ids} but the calendar says {item.get('work')}")
+
+
+def article_files(root: Path, week: str | None = None) -> list[Path]:
+    out = []
+    for path in sorted((root / "blog" / "src" / "content" / "posts").glob("*.md")):
+        if week:
+            m = re.search(r"(?m)^date:\s*(\d{4}-\d{2}-\d{2})", path.read_text(encoding="utf-8"))
+            if not m or iso_week(dt.date.fromisoformat(m.group(1))) != week:
+                continue
+        out.append(path)
+    return out
+
+
 def http_status(url: str, timeout: float = 20.0) -> int | str:
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (link check)"})
     try:
@@ -626,6 +656,8 @@ def validate(root: Path = ROOT, week: str | None = None, check_links: bool = Fal
     by_date = check_calendar(cal, rep, cal_path, ledger)
     for folder in post_folders(root, week):
         check_post(folder, by_date, rep, check_links, ledger)
+    for article in article_files(root, week):
+        check_article(article, by_date, rep, ledger)
     check_repo_text(root, rep, private_link_re(work))
     return rep
 

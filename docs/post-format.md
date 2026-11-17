@@ -91,6 +91,7 @@ Channel norms checked by `tools/format_check.py` (warnings only, recorded in `ju
 80-120 words; X at most 280 characters with a number in the hook; Short 30-60 s.
 
 Saturday long articles are not post folders: they live in `blog/src/content/posts/`.
+From 2026-W48 on, an article's front matter also has `work:`, the same ids as its calendar item.
 
 ## Checking
 
