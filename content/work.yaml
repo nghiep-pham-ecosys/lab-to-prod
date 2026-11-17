@@ -1,0 +1,99 @@
+# Work ledger: project work that is merged and may become a post.
+#
+# From 2026-W48 on, every calendar item and every post carries `work:`, one id or a list of ids
+# from this file (tools/validate.py checks it). A post is about the work it points to and nothing
+# else. No merged work, no post: an empty week is better than a post about work that was not done.
+#
+# Each entry:
+#   id      lowercase words joined by hyphens, never changed once a post uses it
+#   repo    a repo listed under `repos` below
+#   ref     public repo: the merged pull request URL
+#           private repo: private@<commit sha on main>; the repo is named, never linked
+#   merged  merge date in Asia/Ho_Chi_Minh; a post may not be dated before it
+#   what    one or two sentences on what the work does, in public-safe words
+#
+# Only the repos below may be a post source. A repo that is not listed is never a post source
+# and is never named in this repository.
+repos:
+  public: [lab-to-prod, process-sim-lab, nghiep-motion-studio, ecosys]
+  private: [claude-for-everyone-vi, physic-ai-for-everyone]
+
+entries:
+  - id: psl-cstr-skeleton
+    repo: process-sim-lab
+    ref: https://github.com/nghiep-pham-ecosys/process-sim-lab/pull/2
+    merged: 2026-11-13
+    what: >-
+      Week 1 skeleton: a Stream type and an isothermal CSTR for a first-order reaction A to B,
+      tested against the analytic conversion X = k tau / (1 + k tau) and a mole balance (8 tests).
+  - id: psl-pfr-mixer-splitter
+    repo: process-sim-lab
+    ref: https://github.com/nghiep-pham-ecosys/process-sim-lab/pull/6
+    merged: 2026-11-17
+    what: >-
+      An isothermal first-order PFR (X = 1 - exp(-k tau)), a mixer and a splitter, with 17 tests
+      on hand-derived values; 2000 CSTRs in series come within 2e-4 of the PFR.
+  - id: psl-flash-rachford-rice
+    repo: process-sim-lab
+    ref: https://github.com/nghiep-pham-ecosys/process-sim-lab/pull/7
+    merged: 2026-11-17
+    what: >-
+      An isothermal flash drum with given K-values: bubble and dew checks first, then bisection of
+      the Rachford-Rice equation on [0, 1], tested on cases with a known exact answer.
+  - id: psl-antoine-lmtd
+    repo: process-sim-lab
+    ref: https://github.com/nghiep-pham-ecosys/process-sim-lab/pull/8
+    merged: 2026-11-17
+    what: >-
+      Antoine vapour pressure for 3 components with NIST WebBook constants and valid ranges, and a
+      counter-current heat exchanger sized from the LMTD (A = Q / (U LMTD)).
+  - id: l2p-format-checks
+    repo: lab-to-prod
+    ref: https://github.com/nghiep-pham-ecosys/lab-to-prod/pull/27
+    merged: 2026-11-16
+    what: >-
+      A rule-based check of each post against channel norms (word counts, hook length, paragraph
+      size, an open question, X length), recorded in judge.json next to the LLM judge scores.
+  - id: l2p-backup-cron
+    repo: lab-to-prod
+    ref: https://github.com/nghiep-pham-ecosys/lab-to-prod/pull/29
+    merged: 2026-11-16
+    what: >-
+      A backup cron for the publish and blog workflows after GitHub skipped both morning runs;
+      safe because the publisher skips posts already recorded in published.json.
+  - id: l2p-open-question
+    repo: lab-to-prod
+    ref: https://github.com/nghiep-pham-ecosys/lab-to-prod/pull/31
+    merged: 2026-11-16
+    what: >-
+      Every LinkedIn post ends with one open question about the reader's own experience, required
+      by the write-post skill and checked by the format check.
+  - id: l2p-wait-for-slot
+    repo: lab-to-prod
+    ref: https://github.com/nghiep-pham-ecosys/lab-to-prod/pull/33
+    merged: 2026-11-17
+    what: >-
+      Scheduled runs start hours late in this repo (4.5-8.5 h measured on 12-17 Nov), so early
+      crons start a job that sleeps until the target time, skips when another run already waits,
+      and gives up when the wait would pass the 6 h job limit.
+  - id: cfe-rag-bm25
+    repo: claude-for-everyone-vi
+    ref: private@e40a896
+    merged: 2026-11-16
+    what: >-
+      A course module on retrieval-augmented generation: BM25 retrieval that runs locally, chunking
+      and result-fusion exercises, search results passed to the model with citations, and a quiz.
+  - id: cfe-ci-guard
+    repo: claude-for-everyone-vi
+    ref: private@fb18777
+    merged: 2026-11-17
+    what: >-
+      A pre-push hook plus ci-result and pr-title checks, so a private repo on the free plan gets
+      the same merge guard as the public ones.
+  - id: pai-tf2-frames
+    repo: physic-ai-for-everyone
+    ref: private@481515f
+    merged: 2026-11-16
+    what: >-
+      A ROS 2 lesson on coordinate frames and tf2: a frame broadcaster, a 2D rigid transform helper
+      with tests, exercises and an English and Vietnamese lesson page.

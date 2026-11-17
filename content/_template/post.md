@@ -8,6 +8,7 @@ short_publish_at: null              # e.g. 2026-11-17T19:00:00+07:00, must match
 sources: []                         # required for climate-ai, simulation, physical-ai
 image_alt: "One sentence describing image.png for screen readers"
 status: draft                       # draft -> approved (in the weekly PR) -> published
+work: psl-cstr-skeleton             # from 2026-W48: id(s) in content/work.yaml, same as the calendar item
 ---
 
 ## linkedin

@@ -26,6 +26,17 @@ One post = one folder: `content/<ISO week>/<date>-<slug>/`, for example
 | `sources` | list of links; at least one for climate, simulation and physical AI posts |
 | `image_alt` | alt text for `image.png` |
 | `status` | `draft`, `approved` or `published` |
+| `work` | from 2026-W48: the id (or list of ids) of the merged work in `content/work.yaml` the post is about; must match the calendar item |
+
+## The work ledger: `content/work.yaml`
+
+Posts take their content only from project work that is already merged. Each ledger entry has
+an `id`, a `repo`, a `ref`, the `merged` date and one or two sentences of `what`. A public repo's
+`ref` is the merged pull request URL; a private repo's `ref` is `private@<sha>` and the repo is
+named, never linked. Only the repos listed under `repos:` in the ledger can be a source. From
+2026-W48 on, `tools/validate.py` fails a calendar item or a post without a `work:` ref, a ref
+that is not in the ledger, and work merged after the post date. Calendar items with no merged
+work behind them wait in the calendar's `parked:` list, without a date.
 
 ## The image: `card:` in the front matter
 
@@ -87,5 +98,5 @@ Saturday long articles are not post folders: they live in `blog/src/content/post
 uv run --with-requirements tools/requirements.txt python tools/validate.py
 ```
 
-`--week 2026-W47` limits the run to one week. `--check-links` also requires every source to
-answer HTTP 200 (used by the silent-approval gate).
+`--week 2026-W47` limits the run to one week. `--check-links` also requires every source, and
+every pull request URL in the work ledger, to answer HTTP 200 (used by the silent-approval gate).
