@@ -25,7 +25,7 @@ def decide(now: dt.datetime, at: dt.time, tz: ZoneInfo, max_wait: dt.timedelta) 
     """Return (go, seconds to wait, reason) for a run that started at `now` (timezone-aware)."""
     local = now.astimezone(tz)
     target = dt.datetime.combine(local.date(), at, tzinfo=tz)
-    wait = target - local
+    wait = dt.timedelta(seconds=round((target - local).total_seconds()))
     if wait <= dt.timedelta(0):
         return True, 0.0, f"started {local:%H:%M} after {at:%H:%M}: go now"
     if wait > max_wait:
@@ -34,17 +34,25 @@ def decide(now: dt.datetime, at: dt.time, tz: ZoneInfo, max_wait: dt.timedelta) 
 
 
 def other_waiters(runs: list[dict], self_id: str) -> list[int]:
-    """Ids of in-progress scheduled runs other than this one."""
-    return [r["databaseId"] for r in runs if str(r.get("databaseId")) != str(self_id)]
+    """Ids of in-progress scheduled runs older than this one. Only the older run waits, so two late crons that GitHub
+    starts in the same second do not both skip."""
+    me = int(self_id) if str(self_id).isdigit() else None
+    return [r["databaseId"] for r in runs if me is None or int(r["databaseId"]) < me]
 
 
 def in_progress_schedule_runs(workflow: str) -> list[dict]:
-    out = subprocess.run(
-        ["gh", "run", "list", "--workflow", workflow, "--event", "schedule", "--status", "in_progress",
-         "--json", "databaseId", "--limit", "20"],
-        check=True, capture_output=True, text=True,
-    ).stdout
-    return json.loads(out or "[]")
+    """In-progress scheduled runs of `workflow`. On an API error, assume none: published.json and the publish lock
+    already make a second run safe, and failing here would skip the post."""
+    try:
+        out = subprocess.run(
+            ["gh", "run", "list", "--workflow", workflow, "--event", "schedule", "--status", "in_progress",
+             "--json", "databaseId", "--limit", "20"],
+            check=True, capture_output=True, text=True,
+        ).stdout
+        return json.loads(out or "[]")
+    except (subprocess.CalledProcessError, json.JSONDecodeError, FileNotFoundError) as e:
+        print(f"warning: could not list scheduled runs ({e}); assuming no other waiter", flush=True)
+        return []
 
 
 def emit(go: bool, reason: str) -> None:

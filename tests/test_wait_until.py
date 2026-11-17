@@ -46,10 +46,24 @@ def test_target_uses_local_date_not_utc_date():
     assert go and seconds == 105 * 60
 
 
-def test_other_waiters_excludes_self():
+def test_other_waiters_only_counts_older_runs():
     runs = [{"databaseId": 11}, {"databaseId": 12}]
-    assert wu.other_waiters(runs, "11") == [12]
-    assert wu.other_waiters([{"databaseId": 11}], "11") == []
+    # two runs started in the same second: the older one waits, the newer one skips
+    assert wu.other_waiters(runs, "11") == []
+    assert wu.other_waiters(runs, "12") == [11]
+
+
+def test_reason_has_no_microseconds():
+    now = dt.datetime(2026, 11, 17, 22, 0, 0, 873421, tzinfo=dt.timezone.utc)
+    go, seconds, reason = wu.decide(now, AT, TZ, MAX)
+    assert go and seconds == 3 * 3600 + 15 * 60 - 1 and "." not in reason.split("wait ")[1]
+
+
+def test_gh_error_assumes_no_other_waiter(monkeypatch):
+    def boom(*a, **k):
+        raise wu.subprocess.CalledProcessError(1, "gh")
+    monkeypatch.setattr(wu.subprocess, "run", boom)
+    assert wu.in_progress_schedule_runs("publish.yml") == []
 
 
 def test_non_schedule_event_goes_without_gh(monkeypatch, tmp_path):

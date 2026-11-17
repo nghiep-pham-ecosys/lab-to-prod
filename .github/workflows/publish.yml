@@ -81,6 +81,10 @@ jobs:
       INPUT_ONLY: ${{ inputs.only }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          # A scheduled run may have waited hours: take the branch head, not the commit the run was created on,
+          # so a PAUSE file or a fix merged meanwhile counts. Empty = the default ref for other events.
+          ref: ${{ github.event_name == 'schedule' && github.event.repository.default_branch || '' }}
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
