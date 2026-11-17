@@ -2,7 +2,8 @@ name: blog
 
 # Builds the Astro site and deploys it to GitHub Pages.
 # - on merge to main when the blog, the content or the brand changed
-# - every day at 08:20 Asia/Ho_Chi_Minh, so a note appears on its own date
+# - every day at 08:10 Asia/Ho_Chi_Minh, before publish (08:15), so a note appears on its own date. GitHub starts
+#   scheduled runs hours late (lab-to-prod#32), so early crons start a run that waits until 08:10 (tools/wait_until.py)
 # - on pull requests: build and smoke test only, no deploy
 on:
   push:
@@ -11,23 +12,47 @@ on:
   pull_request:
     paths: ["blog/**", "content/**", "brand/**", ".github/workflows/blog.yml"]
   schedule:
+    # Early runs 00:30 and 03:30 local: they start late, then wait until 08:10. One waiter at a time.
+    - cron: "30 17 * * *"
+    - cron: "30 20 * * *"
+    # Fallbacks 08:20 and 09:05: they build at once when they start.
     - cron: "20 1 * * *"
-    # Backup build 09:05 in case GitHub skips the first one.
     - cron: "5 2 * * *"
   workflow_dispatch:
 
 permissions:
   contents: read
 
-concurrency:
-  group: blog-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
+  # Holds a scheduled run until 08:10 outside the build's cancel-in-progress group; any other event goes at once.
+  wait:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      go: ${{ steps.wait.outputs.go }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: wait
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/wait_until.py --at 08:10 --workflow blog.yml
+
   build:
+    needs: wait
+    if: needs.wait.outputs.go == 'true'
+    concurrency:
+      group: blog-${{ github.ref }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          # A scheduled run may have waited hours: take the branch head, not the commit the run was created on,
+          # so a PAUSE file or a fix merged meanwhile counts. Empty = the default ref for other events.
+          ref: ${{ github.event_name == 'schedule' && github.event.repository.default_branch || '' }}
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -54,6 +79,9 @@ jobs:
   deploy:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: build
+    concurrency:
+      group: blog-deploy
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     permissions:
       pages: write

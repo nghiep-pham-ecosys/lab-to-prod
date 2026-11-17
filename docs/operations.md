@@ -25,12 +25,18 @@ back to that branch. The full record of what is live: `published.json` on `publi
 | Workflow | Runs | Does |
 | --- | --- | --- |
 | `validate` | every pull request, pushes to main | tests, validation, Java samples |
-| `blog` | merge to main, daily 08:20 and a backup build at 09:05, pull requests (build only) | builds and deploys the blog |
-| `publish` | merge to main, Mon-Sat 08:15 and a backup run at 09:00, pull requests (dry run only), manual | posts or schedules; keeps `published.json` on the `publish-state` branch |
+| `blog` | merge to main, daily 08:10 (early runs that wait, plus fallbacks at 08:20 and 09:05), pull requests (build only) | builds and deploys the blog |
+| `publish` | merge to main, Mon-Sat 08:15 (early runs that wait, plus fallbacks at 08:15 and 09:00), pull requests (dry run only), manual | posts or schedules; keeps `published.json` on the `publish-state` branch |
 | `metrics` | daily 22:00, manual | writes `metrics/metrics.csv` to the `publish-state` branch; red when a token needs attention |
 | `automerge` | Sunday 22:00, manual; only when enabled | holds failing posts, merges the rest, starts `publish` and `blog` |
 
-All times are Asia/Ho_Chi_Minh. GitHub's scheduler can run late or skip a run (2026-11-16: both morning runs skipped), so `publish` and `blog` have a backup run 45 min later.
+All times are Asia/Ho_Chi_Minh. GitHub starts scheduled runs hours late in this repository: every run measured on
+12-17 Nov 2026 started 4.5-8.5 h after its cron, and a backup cron 45 min later was just as late (lab-to-prod#32).
+So `publish` and `blog` also have early crons at 00:30 and 03:30. Their first job, `wait`, runs
+`tools/wait_until.py`: it sleeps until the target time (blog 08:10, publish 08:15), skips when another scheduled run
+of the same workflow is already waiting, and skips when the wait would be longer than 5.5 h (a job may run at most
+6 h). The fallback crons go at once when they start; `published.json` keeps them from posting twice. A run's
+`wait` step summary says what it decided. If a morning post is still missing at 09:30, run the workflow by hand.
 
 ## Going live, one channel at a time
 
