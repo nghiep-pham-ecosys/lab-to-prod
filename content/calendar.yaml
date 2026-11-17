@@ -68,17 +68,93 @@ weeks:
         part: 1
         slug: build-log-p1
         topic: "Build log #1: why I am building Lab to Prod in public and how it runs"
+  # W48 and W49 were replanned on 2026-11-17 from merged work only (content/work.yaml).
   - week: 2026-W48
     stage: trial
     experiment: "hook opens with a measured number"
-    items: []
+    items:
+      - date: 2026-11-23
+        series: simulation
+        part: 1
+        slug: sim-p1
+        topic: "A CSTR checked against algebra: X = k tau / (1 + k tau) as the test oracle"
+        work: psl-cstr-skeleton
+        short:
+          publish_at: "2026-11-24T19:00:00+07:00"
+          topic: "Test a reactor model against its closed form"
+      - date: 2026-11-24
+        series: cloud-devops
+        part: 3
+        slug: cloud-p3
+        topic: "A merge guard for a private repo on the free plan: a pre-push hook plus two CI checks"
+        work: cfe-ci-guard
+      - date: 2026-11-25
+        series: simulation
+        part: 2
+        slug: sim-p2
+        topic: "A flash drum in one equation: check the ends of Rachford-Rice, then bisect"
+        work: psl-flash-rachford-rice
+      - date: 2026-11-26
+        series: ai-engineering
+        part: 3
+        slug: ai-eng-p3
+        topic: "A rule-based format check next to the LLM judge: what each one catches"
+        work: l2p-format-checks
+        short:
+          publish_at: "2026-11-26T19:00:00+07:00"
+          topic: "Rules check the format, the judge checks the content"
+      - date: 2026-11-27
+        series: ai-engineering
+        part: 4
+        slug: ai-eng-p4
+        topic: "RAG without a vector database: BM25 retrieval that runs locally"
+        work: cfe-rag-bm25
+      - date: 2026-11-28
+        series: build-log
+        part: 2
+        slug: build-log-p2
+        topic: "Build log #2: the first trial week and a scheduler that ran hours late"
+        work: [l2p-backup-cron, l2p-wait-for-slot, l2p-open-question]
+  # 3 and 4 Dec have no merged work yet: they stay empty unless new work is merged before the
+  # W49 draft. Fewer posts is the rule, not a gap to fill.
   - week: 2026-W49
     stage: trial
     experiment: "LinkedIn multi-page PDF document instead of one image, on two posts"
-    items: []
+    items:
+      - date: 2026-11-30
+        series: simulation
+        part: 3
+        slug: sim-p3
+        topic: "2000 CSTRs in series come within 2e-4 of a PFR"
+        work: psl-pfr-mixer-splitter
+        short:
+          publish_at: "2026-12-01T19:00:00+07:00"
+          topic: "Many small tanks become a pipe"
+      - date: 2026-12-01
+        series: physical-ai
+        part: 1
+        slug: physical-ai-p1
+        topic: "Coordinate frames and tf2: where is the sensor in the robot's frame"
+        work: pai-tf2-frames
+      - date: 2026-12-02
+        series: simulation
+        part: 4
+        slug: sim-p4
+        topic: "Antoine constants have a valid range: why water is left out of my NIST table"
+        work: psl-antoine-lmtd
+        short:
+          publish_at: "2026-12-03T19:00:00+07:00"
+          topic: "A vapour pressure fit outside its range"
+      - date: 2026-12-05
+        series: deep-dive
+        part: 1
+        slug: deep-dive-p1
+        topic: "Three reactor and separator models, each tested against a closed-form answer"
+        work: [psl-cstr-skeleton, psl-pfr-mixer-splitter, psl-flash-rachford-rice]
+        pillar: simulation-physical-ai
   - week: 2026-W50
     stage: trial
-    experiment: "post at 12:00 instead of 08:30"
+    experiment: "hook opens with a common mistake instead of a number (compare with W48)"
     items: []
 
 # Items without merged work behind them (rule of 2026-11-17: posts come only from merged project
