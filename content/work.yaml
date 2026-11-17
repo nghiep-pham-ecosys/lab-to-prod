@@ -97,3 +97,72 @@ entries:
     what: >-
       A ROS 2 lesson on coordinate frames and tf2: a frame broadcaster, a 2D rigid transform helper
       with tests, exercises and an English and Vietnamese lesson page.
+  - id: psl-recycle-flowsheet
+    repo: process-sim-lab
+    ref: https://github.com/nghiep-pham-ecosys/process-sim-lab/pull/11
+    merged: 2026-11-17
+    what: >-
+      A sequential-modular flowsheet read from JSON: the solver tears the recycle stream and
+      converges it by direct substitution or Wegstein to 1e-10. On a mixer, CSTR and flash loop
+      with a purge, every unit balance and the overall balance close within 1e-6.
+  - id: cfe-cost-basics
+    repo: claude-for-everyone-vi
+    ref: private@b471008
+    merged: 2026-11-17
+    what: >-
+      A course module on LLM API cost in mock mode: what the usage fields bill, an output cost
+      ceiling from max_tokens before the call and a per-part breakdown after it, with 18 tests
+      and no real API call.
+  - id: pai-ci-guard
+    repo: physic-ai-for-everyone
+    ref: private@9fd7b93
+    merged: 2026-11-17
+    what: >-
+      The same merge guard as cfe-ci-guard for a second private repo: a pre-push gitleaks hook,
+      a ci-result gate and a pr-title check, with the contributing docs brought in line with the
+      branch and title format the check now enforces.
+  - id: l2p-work-ledger
+    repo: lab-to-prod
+    ref: https://github.com/nghiep-pham-ecosys/lab-to-prod/pull/41
+    merged: 2026-11-17
+    what: >-
+      This work ledger, and validate.py checks that fail a post from 2026-W48 with no merged work
+      behind it, work merged after the post date, an unlisted source repo or a linked private repo.
+  - id: l2p-drafting-reads-ledger
+    repo: lab-to-prod
+    ref: https://github.com/nghiep-pham-ecosys/lab-to-prod/pull/42
+    merged: 2026-11-17
+    what: >-
+      The weekly drafting command and the write-post skill take ideas only from the work ledger,
+      read the merged change before writing, and stop when an item has no work ref.
+  - id: l2p-work-link-checks
+    repo: lab-to-prod
+    ref: https://github.com/nghiep-pham-ecosys/lab-to-prod/pull/43
+    merged: 2026-11-17
+    what: >-
+      Fact-check cuts any claim about built work that the diff, a test or the PR text does not
+      show, the judging subagent scores how well a post matches its work, and Saturday articles
+      need a work ref too.
+  - id: l2p-replan-from-work
+    repo: lab-to-prod
+    ref: https://github.com/nghiep-pham-ecosys/lab-to-prod/pull/44
+    merged: 2026-11-17
+    what: >-
+      The 2026-W48 and W49 calendar rebuilt from merged work only: 5 posts and a build log in
+      W48, 3 posts and a deep dive in W49, and empty days where no work was merged.
+  - id: ecosys-adr-template-first
+    repo: ecosys
+    ref: https://github.com/nghiep-pham-ecosys/ecosys/pull/45
+    merged: 2026-11-17
+    what: >-
+      ADR 0005: every new project repo is generated from a template repo first (licences, CI with
+      gitleaks, ci-result and pr-title, a pre-push hook for private repos), and lab projects get
+      statuses and a WIP limit that grows step by step.
+  - id: ecosys-adr-roles
+    repo: ecosys
+    ref: https://github.com/nghiep-pham-ecosys/ecosys/pull/46
+    merged: 2026-11-17
+    what: >-
+      ADR 0006: Claude Code plans and drives each working session, a chat assistant only reports,
+      approval is only the author's own message, at most two cloud routines run, and a routine may
+      push to a private repo only behind a gitleaks check.
