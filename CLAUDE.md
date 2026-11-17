@@ -36,6 +36,14 @@ from a chemist turned AI engineer.* All published text is in English.
 
 ## Content rules
 
+- **Posts come only from merged project work.** From 2026-W48 every calendar item, post and
+  Saturday article has `work:`, pointing to entries in `content/work.yaml`. An entry is a merged
+  pull request, or `private@<sha>` for a private repo. No merged work, no post: a week posts fewer
+  times rather than fill a day with a topic nobody built. Items without work wait in `parked:`.
+- Only the repos listed under `repos:` in `content/work.yaml` can be a source. A private repo
+  there is named, never linked, and its code or text is never pasted. Repos that the author keeps
+  only in the private overlay of his workspace manifest are never a post source and are never
+  named in this repository. Graded coursework is never a post source.
 - One post, one idea.
 - Open with a sentence that makes the reader curious and contains a specific number, or with a
   common mistake. The first word of a LinkedIn or X post is a number or the mistake.
