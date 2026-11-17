@@ -336,3 +336,37 @@ def test_parked_items_have_a_series_and_no_date(repo):
     assert any("parked item 2" in e for e in errs) and any("parked item 3: a parked item has no date" in e
                                                              for e in errs)
     assert not any("parked item 1" in e for e in errs)
+
+
+def write_article(repo, d, work=None):
+    posts = repo / "blog" / "src" / "content" / "posts"
+    posts.mkdir(parents=True, exist_ok=True)
+    meta = {"title": "T", "description": "d", "date": d, "series": "build-log", "part": 2, "tags": ["a"]}
+    if work is not None:
+        meta["work"] = work
+    (posts / "article.md").write_text("---\n" + yaml.safe_dump(meta) + "---\n\nBody.\n")
+
+
+def plan_saturday(repo, work="demo-unit"):
+    cal = yaml.safe_load(yaml.safe_dump(CAL))
+    cal["series"]["build-log"] = {"pillar": "learning-in-public", "kind": "blog"}
+    cal["weeks"].append({"week": "2026-W48", "items": [
+        {"date": dt.date(2026, 11, 28), "series": "build-log", "part": 2, "slug": "build-log-p2", "topic": "t",
+         "work": work}]})
+    (repo / "content" / "calendar.yaml").write_text(yaml.safe_dump(cal))
+    (repo / "content" / "work.yaml").write_text(yaml.safe_dump(LEDGER))
+
+
+def test_article_from_w48_carries_the_calendar_work(repo):
+    plan_saturday(repo)
+    write_article(repo, dt.date(2026, 11, 28), work=["demo-unit"])
+    assert errors(repo) == []
+    write_article(repo, dt.date(2026, 11, 28))
+    assert any("article: from 2026-W48 every item needs work" in e for e in errors(repo))
+    write_article(repo, dt.date(2026, 11, 28), work="course-rag")
+    assert any("but the calendar says ['demo-unit']" in e for e in errors(repo))
+
+
+def test_article_before_w48_needs_no_work(repo):
+    write_article(repo, dt.date(2026, 11, 21))
+    assert errors(repo) == []

@@ -15,24 +15,35 @@ yourself, and do not adjust the scores it returns.
 > You are reviewing technical posts before publication. Be strict: a wrong post damages the
 > author's reputation, a held post costs nothing.
 >
-> Read `CLAUDE.md` (hard rules, voice, content rules) and `docs/post-format.md`. Then, for each
-> folder in `content/<week>/` that has a `post.md`: read `post.md`, look at `image.png`, read
-> any code sample and its expected output, and read `content/<week>/fact-check.md`.
+> Read `CLAUDE.md` (hard rules, voice, content rules), `docs/post-format.md` and
+> `content/work.yaml`. Then, for each folder in `content/<week>/` that has a `post.md`: read
+> `post.md`, look at `image.png`, read any code sample and its expected output, and read
+> `content/<week>/fact-check.md`.
 > Check technical claims yourself: run the samples where you can, open the sources, and search
 > for anything you doubt. Do not trust the fact-check file blindly.
+>
+> Check the work link. Posts are only allowed to be about merged project work. Each post's
+> `work:` names entries in `content/work.yaml`. Open the merged change of each entry: for a
+> pull request URL, `gh pr view` and `gh pr diff`; for `private@<sha>`, `gh api
+> repos/nghiep-pham-ecosys/<repo>/commits/<sha>` if you can read it, otherwise judge against
+> the entry's `what` and say so in the notes. Is the post's idea in that change? Is every claim
+> about what the author built, measured or fixed visible there? A private repo may be named but
+> never linked.
 >
 > Score each post from 1 to 5 (integers) on:
 > - `technical_accuracy`: every claim, number and code line is correct. 5 = you checked and
 >   found nothing wrong. 3 = one imprecise statement. 1-2 = a wrong claim.
 > - `sources`: numbers are sourced or reproduced by a script in the folder; sources are primary
 >   and say what the post says. Posts that need no source get 5 only if every number is reproduced.
+>   The work link counts here: a post that is not about the work its `work:` points to, or that
+>   claims work the merged change does not show, gets 1-2.
 > - `one_clear_idea`: one idea, a hook with a specific number or mistake, a usable lesson.
 > - `voice`: first person, short sentences, no hype, no emoji, matches the rules.
 > - `no_banned_info`: nothing from an employer or client, no names of colleagues or customers,
 >   no private links, no secrets. Any doubt at all is a 1.
 >
 > Return only JSON:
-> `{"<folder name>": {"scores": {"technical_accuracy": n, "sources": n, "one_clear_idea": n, "voice": n, "no_banned_info": n}, "notes": "what you checked, what is wrong, what would raise the score"}, ...}`
+> `{"<folder name>": {"scores": {"technical_accuracy": n, "sources": n, "one_clear_idea": n, "voice": n, "no_banned_info": n}, "notes": "the work change you opened, what you checked, what is wrong, what would raise the score"}, ...}`
 
 ## After the subagent answers
 
