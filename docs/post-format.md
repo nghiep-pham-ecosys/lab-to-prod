@@ -12,6 +12,7 @@ One post = one folder: `content/<ISO week>/<date>-<slug>/`, for example
 | `short.srt` | when `youtube` is in `channels` | subtitles for the whole video |
 | `short.json` | when there is a Short | scenes for `render/short`, see below |
 | `*.java` + `*.expected`, `*.py` | when the post quotes code output | the sample and its expected output; CI runs the Java ones |
+| `linkedin.pdf` | optional | LinkedIn only: when present, LinkedIn gets a document post with this PDF instead of `image.png` (at most 100 MB and 300 pages); other channels still use `image.png`. See "LinkedIn document posts" below |
 | `x.md` | generated | the X post, written out by `publish/run.py` for manual scheduling |
 
 ## Front matter
@@ -25,6 +26,7 @@ One post = one folder: `content/<ISO week>/<date>-<slug>/`, for example
 | `short_publish_at` | ISO datetime with offset, or `null` when there is no Short |
 | `sources` | list of links; at least one for climate, simulation and physical AI posts |
 | `image_alt` | alt text for `image.png` |
+| `document_title` | optional; title shown on the LinkedIn document when `linkedin.pdf` exists (defaults to `title`) |
 | `status` | `draft`, `approved` or `published` |
 | `work` | from 2026-W48: the id (or list of ids) of the merged work in `content/work.yaml` the post is about; must match the calendar item |
 
@@ -37,6 +39,16 @@ named, never linked. Only the repos listed under `repos:` in the ledger can be a
 2026-W48 on, `tools/validate.py` fails a calendar item or a post without a `work:` ref, a ref
 that is not in the ledger, and work merged after the post date. Calendar items with no merged
 work behind them wait in the calendar's `parked:` list, without a date.
+
+## LinkedIn document posts: `linkedin.pdf`
+
+A post folder with `linkedin.pdf` next to `image.png` goes to LinkedIn as a document post: the
+publisher uploads the PDF with the Documents API and creates the post with the Posts API, the
+`## linkedin` section is the commentary, and the blog link still goes in the first comment. Without
+the file, LinkedIn gets today's image post. The dry run (`describe`) names the path that will run.
+This is a document post, not a carousel: the API does not support organic carousels. Person-authored
+document posts are not yet verified live; if LinkedIn refuses one, remove `linkedin.pdf` and the image
+post runs. `image.png` stays required for the other channels.
 
 ## The image: `card:` in the front matter
 

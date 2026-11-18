@@ -7,7 +7,7 @@ success in `published.json` at the repository root. It is a dry run unless `--li
 | --- | --- | --- | --- | --- |
 | Facebook Page | api | merge | photo post, scheduled by Facebook for 08:30 on the post's day | `FB_PAGE_ID`, `FB_PAGE_TOKEN` |
 | YouTube | api | merge | Short uploaded as private with `publishAt`, then the SRT as captions | `YT_CLIENT_ID`, `YT_CLIENT_SECRET`, `YT_REFRESH_TOKEN` |
-| LinkedIn | api | daily | post with image, then the blog link as first comment (best effort) | `LINKEDIN_ACCESS_TOKEN`, `LINKEDIN_PERSON_URN` |
+| LinkedIn | api | daily | post with image, or a document post when the folder has `linkedin.pdf`; then the blog link as first comment (best effort) | `LINKEDIN_ACCESS_TOKEN`, `LINKEDIN_PERSON_URN` |
 | Telegram | api | daily | image with caption and blog link | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHANNEL` |
 | DEV | api | daily | Saturday article with `canonical_url` to the blog | `DEVTO_API_KEY` |
 | Hashnode | manual | export | `hashnode-<slug>.md` to paste; the API needs a paid plan since 13 May 2026 | none |
@@ -63,7 +63,7 @@ Posts made outside the weekly folders use a stable slug key, for example `notes:
 
 | Platform | Finding that shaped the code |
 | --- | --- |
-| LinkedIn | The self-serve "Share on LinkedIn" product documents `/v2/ugcPosts` + `/v2/assets?action=registerUpload` with scope `w_member_social`. Tokens last 60 days; refresh tokens are for selected partners only. The comments documentation lists a different scope, so the first comment may be refused: the post is kept and the link is added by hand. |
+| LinkedIn | The self-serve "Share on LinkedIn" product documents `/v2/ugcPosts` + `/v2/assets?action=registerUpload` with scope `w_member_social`. Tokens last 60 days; refresh tokens are for selected partners only. The comments documentation lists a different scope, so the first comment may be refused: the post is kept and the link is added by hand. A folder with `linkedin.pdf` uses `/rest/documents?action=initializeUpload` + `/rest/posts` instead (same scope, `LinkedIn-Version` header; person-authored document posts not yet verified live). |
 | Facebook | Graph API v27.0. `/{page-id}/photos` with `published=false` and `scheduled_publish_time`, between 10 minutes and 30 days ahead. PNG uploads are capped at 1 MB, so images go up as JPEG. Long-lived Page tokens do not expire by date. |
 | YouTube | `publishAt` needs `privacyStatus: private`. `videos.insert` has its own quota of 100 calls a day; `captions.insert` costs 400 units. The 2 Nov 2026 revision says uploads from unverified projects are no longer locked to private. There is no Shorts flag. |
 | Telegram | `sendPhoto`, caption up to 1,024 characters, photo up to 10 MB. No method returns channel view counts. |
