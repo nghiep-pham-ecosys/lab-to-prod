@@ -40,6 +40,13 @@ named, never linked. Only the repos listed under `repos:` in the ledger can be a
 that is not in the ledger, and work merged after the post date. Calendar items with no merged
 work behind them wait in the calendar's `parked:` list, without a date.
 
+## Paper notes as work: `notes/papers/`
+
+A paper the author has read becomes post material only through a merged note in `notes/papers/`
+(format and template: `notes/papers/README.md`). After the merge, the note gets a work entry
+(`id: paper-<slug>`, `repo: lab-to-prod`, `ref` = the merged pull request URL). Unmerged reading,
+the lesson log and Notion pages are never a post source.
+
 ## LinkedIn document posts: `linkedin.pdf`
 
 A post folder with `linkedin.pdf` next to `image.png` goes to LinkedIn as a document post: the
