@@ -82,12 +82,28 @@
       "id": "urn:li:share:7528626847606112256",
       "url": "https://www.linkedin.com/feed/update/urn:li:share:7528626847606112256/"
     },
+    "x": {
+      "at": "2026-11-18T01:30:00+00:00",
+      "id": "2122864868940300320",
+      "manual": true,
+      "url": "https://x.com/pqnghiep1354/status/2122864868940300320",
+      "via": "chrome"
+    },
     "youtube": {
       "at": "2026-11-13T15:45:07+00:00",
       "captions": true,
       "id": "WQHcKx43fZc",
       "scheduled_for": "2026-11-19T12:00:00.000Z",
       "url": "https://www.youtube.com/shorts/WQHcKx43fZc"
+    }
+  },
+  "2026-11-18:reply": {
+    "x": {
+      "at": "2026-11-18T07:05:17+00:00",
+      "id": "2122949245192044791",
+      "manual": true,
+      "url": "https://x.com/pqnghiep1354/status/2122949245192044791",
+      "via": "chrome"
     }
   },
   "2026-11-19": {
