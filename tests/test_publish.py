@@ -10,7 +10,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from publish import devto, facebook, run as runner, telegram, youtube  # noqa: E402
+from publish import devto, facebook, linkedin, run as runner, telegram, youtube  # noqa: E402
 from publish.common import Context, State, load_articles, load_config, load_posts  # noqa: E402
 
 TZ = dt.timezone(dt.timedelta(hours=7))
@@ -45,6 +45,13 @@ class FakeHTTP:
             return Resp(201)
         if url.endswith("/ugcPosts"):
             return Resp(201, {}, {"X-RestLi-Id": "urn:li:share:999"})
+        if url.endswith("/rest/documents?action=initializeUpload"):
+            return Resp(200, {"value": {"uploadUrl": "https://dms-upload.linkedin.test/doc1",
+                                        "document": "urn:li:document:D1"}})
+        if "dms-upload.linkedin.test" in url:
+            return Resp(201)
+        if url.endswith("/rest/posts"):
+            return Resp(201, {}, {"x-restli-id": "urn:li:share:555"})
         if "/comments" in url:
             return Resp(201, {})
         if "graph.facebook.com" in url:
@@ -189,6 +196,58 @@ def test_linkedin_comment_refusal_keeps_the_post(repo):
     ctx = ctx_for(repo, MONDAY, http=FakeHTTP(fail=("/comments",)))
     assert runner.run(ctx, "daily", only=["linkedin"]) == 0
     assert json.loads((repo / "published.json").read_text())["2026-11-16"]["linkedin"]["comment"] is False
+
+
+def _add_pdf(repo, date="2026-11-16", slug="dsa-p2"):
+    pdf = repo / "content" / "2026-W47" / f"{date}-{slug}" / "linkedin.pdf"
+    pdf.write_bytes(b"%PDF-1.7\n% toy document\n%%EOF\n")
+    return pdf
+
+
+def test_linkedin_pdf_goes_through_documents_and_posts_api(repo):
+    pdf = _add_pdf(repo)
+    ctx = ctx_for(repo, MONDAY)
+    assert runner.run(ctx, "daily", only=["linkedin"]) == 0
+    li = [(m, u, kw) for m, u, kw in ctx.http.calls if "linkedin" in u]
+    assert [(m, u) for m, u, _ in li] == [
+        ("POST", "https://api.linkedin.com/rest/documents?action=initializeUpload"),
+        ("PUT", "https://dms-upload.linkedin.test/doc1"),
+        ("POST", "https://api.linkedin.com/rest/posts"),
+        ("POST", "https://api.linkedin.com/v2/socialActions/urn%3Ali%3Ashare%3A555/comments"),
+    ]
+    init, put, created = li[0][2], li[1][2], li[2][2]
+    assert init["json"] == {"initializeUploadRequest": {"owner": "urn:li:person:abc123"}}
+    for kw in (init, created):
+        assert kw["headers"]["LinkedIn-Version"] == linkedin.LINKEDIN_VERSION
+        assert kw["headers"]["X-Restli-Protocol-Version"] == "2.0.0"
+    assert put["data"] == pdf.read_bytes()
+    body = created["json"]
+    assert body["author"] == "urn:li:person:abc123" and body["visibility"] == "PUBLIC"
+    assert body["content"] == {"media": {"title": "Title dsa-p2", "id": "urn:li:document:D1"}}
+    assert body["distribution"] == {"feedDistribution": "MAIN_FEED", "targetEntities": [],
+                                    "thirdPartyDistributionChannels": []}
+    assert body["lifecycleState"] == "PUBLISHED" and body["isReshareDisabledByAuthor"] is False
+    assert body["commentary"] == "5 things about it.\n\n#a #b #c"
+    assert not any("registerUpload" in u or "ugcPosts" in u for _, u, _ in li)
+    rec = json.loads((repo / "published.json").read_text())["2026-11-16"]["linkedin"]
+    assert rec["id"] == "urn:li:share:555" and rec["comment"] is True and rec["media"] == "document"
+
+
+def test_linkedin_describe_names_the_path(repo):
+    post = next(p for p in load_posts(repo) if p.key == "2026-11-16")
+    ctx = ctx_for(repo, MONDAY, live=False)
+    assert "image.png (v2/ugcPosts)" in linkedin.describe(ctx, post)
+    _add_pdf(repo)
+    assert "linkedin.pdf as a document post" in linkedin.describe(ctx, post)
+    assert ctx.http.calls == []
+
+
+def test_linkedin_document_too_large_fails_before_any_call(repo, monkeypatch):
+    _add_pdf(repo)
+    monkeypatch.setattr(linkedin, "DOCUMENT_MAX_BYTES", 4)
+    ctx = ctx_for(repo, MONDAY)
+    assert runner.run(ctx, "daily", only=["linkedin"]) == 1
+    assert not any("linkedin" in u for u in ctx.http.urls())
 
 
 def test_pause_file_stops_everything(repo):
