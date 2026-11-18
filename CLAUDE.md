@@ -81,6 +81,7 @@ content/calendar.yaml            what is posted when; items without merged work 
 content/work.yaml                merged project work, the only source of posts from 2026-W48
 content/<week>/<date>-<slug>/    post.md, image.png, short.mp4, short.srt
 content/_template/post.md        copy this to start a post
+notes/papers/                    the author's own paper notes; a merged note becomes a work entry (paper-<slug>)
 claude/lesson-log.md             what the author studied; background only, posts come from work.yaml
 tools/validate.py                the checks that gate every pull request
 tools/banned_terms.yaml          hashed terms that fail the build
