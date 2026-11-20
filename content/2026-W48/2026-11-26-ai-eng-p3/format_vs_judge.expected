@@ -1,0 +1,10 @@
+2026-11-16-dsa-p2      words=236  open question=False  judge mean=4.4  voice=5  notes mention a question=False
+2026-11-17-ml-p1       words=245  open question=False  judge mean=5.0  voice=5  notes mention a question=False
+2026-11-18-ai-eng-p2   words=243  open question=False  judge mean=4.8  voice=4  notes mention a question=False
+2026-11-19-cloud-p2    words=236  open question=False  judge mean=4.4  voice=4  notes mention a question=False
+2026-11-20-climate-p1  words=249  open question=False  judge mean=4.6  voice=5  notes mention a question=False
+format check: 5 of 5 LinkedIn posts with no open question at the end
+judge: 5 of 5 passed (mean >= 4 and no score below 3); rubric: technical_accuracy, sources, one_clear_idea, voice, no_banned_info
+write-post rule at merge: ['No link anywhere in the LinkedIn or X text. No emoji. No question at the end to bait comments.']
+toy ending 'Agree?'          -> open question = True
+toy ending with no question  -> open question = False

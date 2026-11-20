@@ -1,0 +1,35 @@
+1
+00:00:00,000 --> 00:00:04,950
+4 of my 5 reactor tests passed a wrong reactor model.
+
+2
+00:00:05,000 --> 00:00:10,950
+My stirred tank reactor has an exact answer at steady state.
+
+3
+00:00:11,000 --> 00:00:17,950
+One test checks the algebra: tau = 500 s and X = 5/6, to 12 decimal places.
+
+4
+00:00:18,000 --> 00:00:24,950
+Then I swapped in the wrong formula on purpose: X = 1 - exp(-k tau), the plug-flow one.
+
+5
+00:00:25,000 --> 00:00:29,950
+Same tank, same flow. Conversion went from 0.8333 to 0.9933.
+
+6
+00:00:30,000 --> 00:00:34,950
+Moles were still conserved. Conversion still rose with volume. Those tests passed.
+
+7
+00:00:35,000 --> 00:00:39,950
+Only one test failed: the one against the closed form.
+
+8
+00:00:40,000 --> 00:00:45,950
+Property checks fit any reactor. Give every model one case with an exact answer.
+
+9
+00:00:46,000 --> 00:00:48,950
+Part 1 of my Simulation notes.

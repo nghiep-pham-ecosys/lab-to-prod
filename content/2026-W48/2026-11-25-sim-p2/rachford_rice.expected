@@ -1,0 +1,8 @@
+binary 1    f(0) = +0.250  f(1) = -0.250  two-phase  psi = 0.500000  steps = 40  error = 4.5e-13
+binary 2    f(0) = +0.320  f(1) = -2.133  two-phase  psi = 0.200000  steps = 40  error = 2.7e-13
+ternary     f(0) = +0.467  f(1) = -0.840  two-phase  psi = 0.250000  steps = 40  error = 4.5e-13
+all liquid  f(0) = -0.450  f(1) = -1.292  liquid     psi = 0.000000  steps = 0
+all vapour  f(0) = +2.000  f(1) = +0.625  vapour     psi = 1.000000  steps = 0
+
+bracket width after 39 steps: 1.82e-12  after 40 steps: 9.09e-13  (tol = 1e-12)
+all-liquid feed, root of f without the end checks: psi = 3.2143  f(psi) = -5.6e-17

@@ -1,0 +1,14 @@
+{
+  "title": "Rules check the format, the judge checks the content",
+  "kicker": "AI Engineering · Part 3",
+  "scenes": [
+    {"type": "title", "text": "5 of 5 posts.\nNo question.\nJudge: pass.", "say": "5 of 5 posts: no open question. The LLM judge passed all 5.", "seconds": 5},
+    {"type": "code", "code": ["judge:", "> 5 of 5 passed", "format check:", "> 5 of 5 no open question"], "say": "Run on the five posts: the judge passed 5 of 5, the format check flagged 5 of 5.", "seconds": 7},
+    {"type": "text", "text": "The judge was\nnever asked", "note": "endings are not in its rubric", "say": "The judge was never asked: endings are not in its rubric, and my own rule said no question.", "seconds": 7},
+    {"type": "code", "code": ["question = any(", "    \"?\" in p", "    for p in paras[-2:])"], "say": "The format check calls no model. One line looks for a question mark in the last two paragraphs.", "seconds": 7},
+    {"type": "code", "code": ["toy ending: \"Agree?\"", "> open question = True"], "say": "Its limit, in a toy example: Agree? passes. It sees a question mark, not an open question.", "seconds": 7},
+    {"type": "text", "text": "The judge\nreads meaning", "note": "a stale Short, an overstated claim", "say": "The judge caught what the rules skip: a Short not re-rendered after a fix, and an overstated claim.", "seconds": 7},
+    {"type": "text", "text": "Count it\nin code", "note": "ask the model only about meaning", "say": "If it can be counted, check it in code. Ask the model only about meaning.", "seconds": 6},
+    {"type": "outro", "say": "Part 3 of my AI Engineering notes.", "seconds": 3}
+  ]
+}
