@@ -166,3 +166,82 @@ entries:
       ADR 0006: Claude Code plans and drives each working session, a chat assistant only reports,
       approval is only the author's own message, at most two cloud routines run, and a routine may
       push to a private repo only behind a gitleaks check.
+  - id: ecosys-cv-from-facts
+    repo: ecosys
+    ref: https://github.com/nghiep-pham-ecosys/ecosys/pull/53
+    merged: 2026-11-18
+    what: >-
+      A CV builder that checks profile facts before it builds: unique ids, variants that point
+      only at live facts, and every number inside a fact with an id. It then compiles a
+      one-column, ATS-safe PDF with typst and prints ids and paths only, never profile text.
+  - id: l2p-linkedin-document
+    repo: lab-to-prod
+    ref: https://github.com/nghiep-pham-ecosys/lab-to-prod/pull/48
+    merged: 2026-11-18
+    what: >-
+      A post folder with a linkedin.pdf becomes a LinkedIn document post: upload the file, then
+      a post that carries it; a PDF over 100 MB fails before any call. Tested with a fake HTTP
+      client only, not yet verified live.
+  - id: l2p-paper-notes
+    repo: lab-to-prod
+    ref: https://github.com/nghiep-pham-ecosys/lab-to-prod/pull/50
+    merged: 2026-11-18
+    what: >-
+      Paper reading notes get a folder and a template; a merged note becomes a work entry and
+      only then a post source, so posts about papers follow the same no-work-no-post rule.
+  - id: psl-source-convention-test
+    repo: process-sim-lab
+    ref: https://github.com/nghiep-pham-ecosys/process-sim-lab/pull/18
+    merged: 2026-11-18
+    what: >-
+      A convention test that fails when a model module has no Source line in its docstring or no
+      matching test file; checked by misspelling one Source line and watching the test fail.
+  - id: l2p-draft-week-routine
+    repo: lab-to-prod
+    ref: https://github.com/nghiep-pham-ecosys/lab-to-prod/pull/51
+    merged: 2026-11-18
+    what: >-
+      Instructions for a Saturday cloud routine that drafts the week: stop checks first (a pause
+      file, wrong day, an open week PR, missing ledger entries), ideas only from this ledger, one
+      pull request, and never a merge or a post.
+  - id: psl-tool-schemas
+    repo: process-sim-lab
+    ref: https://github.com/nghiep-pham-ecosys/process-sim-lab/pull/20
+    merged: 2026-11-18
+    what: >-
+      One JSON Schema per operation (9 tools, an SI unit on every property, an example input
+      taken from the hand-checked tests) and a small stdlib validator whose errors name the
+      field path, such as "$.volume: must be > 0".
+  - id: psl-tool-runner-evals
+    repo: process-sim-lab
+    ref: https://github.com/nghiep-pham-ecosys/process-sim-lab/pull/22
+    merged: 2026-11-18
+    what: >-
+      A tool runner that validates a call, runs the operation and returns plain JSON or a typed
+      error (unknown tool, invalid input, model error, convergence error), plus 10 fixed
+      evaluation cases, each tied to its source test and tolerance: 10/10 pass, with no LLM call.
+  - id: cfe-multistep-mock
+    repo: claude-for-everyone-vi
+    ref: private@10cb8a6
+    merged: 2026-11-18
+    what: >-
+      The course's offline mock of the model API gains a multi-step mode that calls one pending
+      tool per turn, so an agent loop runs without the API, and a lock so threads can share one
+      mock, tested with 8 worker threads.
+  - id: cfe-agents-workflows
+    repo: claude-for-everyone-vi
+    ref: private@1608d6a
+    merged: 2026-11-18
+    what: >-
+      A course module on agents and workflows in mock mode: prompt chaining with a gate, routing,
+      parallel runs, orchestrator-workers and evaluator-optimizer, then an agent loop with three
+      stop conditions (stop_reason, a turn limit, a cost cap), an approval step for tools with
+      side effects and a JSON trace, graded by 31 tests.
+  - id: cfe-course-cost-estimate
+    repo: claude-for-everyone-vi
+    ref: private@1135966
+    merged: 2026-11-18
+    what: >-
+      A worst-case cost for running every course script against the real API, summed module by
+      module: about $0.072 with Haiku 5.5 and MAX_TOKENS=1024. It is an estimate from list prices,
+      not a measured bill.
