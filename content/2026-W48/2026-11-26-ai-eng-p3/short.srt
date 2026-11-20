@@ -1,0 +1,31 @@
+1
+00:00:00,000 --> 00:00:04,950
+5 of 5 posts: no open question. The LLM judge passed all 5.
+
+2
+00:00:05,000 --> 00:00:11,950
+Run on the five posts: the judge passed 5 of 5, the format check flagged 5 of 5.
+
+3
+00:00:12,000 --> 00:00:18,950
+The judge was never asked: endings are not in its rubric, and my own rule said no question.
+
+4
+00:00:19,000 --> 00:00:25,950
+The format check calls no model. One line looks for a question mark in the last two paragraphs.
+
+5
+00:00:26,000 --> 00:00:32,950
+Its limit, in a toy example: Agree? passes. It sees a question mark, not an open question.
+
+6
+00:00:33,000 --> 00:00:39,950
+The judge caught what the rules skip: a Short not re-rendered after a fix, and an overstated claim.
+
+7
+00:00:40,000 --> 00:00:45,950
+If it can be counted, check it in code. Ask the model only about meaning.
+
+8
+00:00:46,000 --> 00:00:48,950
+Part 3 of my AI Engineering notes.

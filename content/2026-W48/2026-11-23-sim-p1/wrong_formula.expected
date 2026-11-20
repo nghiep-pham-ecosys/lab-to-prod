@@ -1,0 +1,2 @@
+right: X = 0.8333, tests passed 8/8 (reactor tests 5/5), failed: none
+wrong: X = 0.9933, tests passed 7/8 (reactor tests 4/5), failed: ['test_matches_analytic_conversion']

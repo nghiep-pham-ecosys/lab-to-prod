@@ -1,0 +1,193 @@
+{
+  "week": "2026-W48",
+  "judged_at": "2026-11-20T04:30:56+00:00",
+  "judge": "subagent that did not see the drafting session",
+  "rubric": [
+    "technical_accuracy",
+    "sources",
+    "one_clear_idea",
+    "voice",
+    "no_banned_info"
+  ],
+  "pass_rule": "mean >= 4 and no score below 3",
+  "posts": {
+    "2026-11-23-sim-p1": {
+      "sha256": "01decd52c69e2eb90c14fd3e502fe93dbf65bb125d692f14991cb91812398f9f",
+      "scores": {
+        "technical_accuracy": 4,
+        "sources": 5,
+        "one_clear_idea": 5,
+        "voice": 5,
+        "no_banned_info": 5
+      },
+      "mean": 4.8,
+      "notes": "Work psl-cstr-skeleton: opened process-sim-lab PR #2 (merged 2026-11-13, merge 7940187) with gh pr view and the tests at that commit. The PR shows 8 tests (3 Stream, 5 CSTR), the four property tests the post lists, and the closed-form test with k = 0.01, V = 2, Q = 0.004, tau = 500 s, X = 5/6, places=12. Ran wrong_formula.py on a fresh clone at 7940187: output equals wrong_formula.expected (0.8333 -> 0.9933, reactor tests 4/5, only test_matches_analytic_conversion fails). The swap is an experiment run in the post folder against the merged code, not part of the PR; the post's main idea (test against the closed form) is in the PR. Rawlings slides are a primary source for X = k tau / (1 + k tau). Image and Short match the text; the Short is 49 s, 1080x1920. Imprecise: the Short scene 'reactor tests 4/5 / failed: test_matches_analytic_conversion' can be read as '4/5 failed'; 'property checks describe any reactor' also covers the bad-input test, which is not a reactor property. To raise: write '4 of 5 passed' and 'only this one failed' on that scene.",
+      "format": {
+        "linkedin": {
+          "words": 268,
+          "hook_lines": 1,
+          "long_paragraphs": 0,
+          "ends_with_question": true,
+          "warnings": []
+        },
+        "facebook": {
+          "words": 108,
+          "warnings": []
+        },
+        "x": {
+          "posts": 1,
+          "chars": [
+            277
+          ],
+          "hook_has_number": true,
+          "warnings": []
+        },
+        "short": {
+          "seconds": 49.0,
+          "warnings": []
+        },
+        "warnings": []
+      }
+    },
+    "2026-11-24-cloud-p3": {
+      "sha256": "0fda0569dc080e394ab3877c5ede73e9f79ea90a9a3d90f57df8a4074198d9d1",
+      "scores": {
+        "technical_accuracy": 5,
+        "sources": 5,
+        "one_clear_idea": 5,
+        "voice": 5,
+        "no_banned_info": 5
+      },
+      "mean": 5.0,
+      "notes": "Work cfe-ci-guard: read private commit fb18777 and its PR (#15) with gh; the repo is not named or linked in the post. The diff shows the pre-push gitleaks hook (blocks on a finding and when gitleaks is missing), pr-title.yml (comment: title becomes the squash subject) and ci-result with if: always(), needs on all four CI jobs, test and gitleaks must be success, every job success or skipped. The PR checks were 6: test, pr-title, gitleaks, ci-result success; live-smoke and model-sync skipped, as the hook says. Ran ci_result.py: output equals ci_result.expected (naive 2 of 3, ci-result 0 of 3), labelled toy example in text and card. Both GitHub docs pages say protected branches and rulesets are for public repos on Free; the protected-branches page says required checks accept success, skipped or neutral, which backs the 'skipped required check' line. Nothing wrong found.",
+      "format": {
+        "linkedin": {
+          "words": 259,
+          "hook_lines": 1,
+          "long_paragraphs": 0,
+          "ends_with_question": true,
+          "warnings": []
+        },
+        "facebook": {
+          "words": 113,
+          "warnings": []
+        },
+        "x": {
+          "posts": 1,
+          "chars": [
+            274
+          ],
+          "hook_has_number": true,
+          "warnings": []
+        },
+        "warnings": []
+      }
+    },
+    "2026-11-25-sim-p2": {
+      "sha256": "97ed3b430243a018d32e847eb6232e8d04a0f1fbd9ee4d32ca1479814a96324a",
+      "scores": {
+        "technical_accuracy": 5,
+        "sources": 5,
+        "one_clear_idea": 5,
+        "voice": 5,
+        "no_banned_info": 5
+      },
+      "mean": 5.0,
+      "notes": "Work psl-flash-rachford-rice: opened process-sim-lab PR #7 (merged 2026-11-17, merge 370a2aa) and flash.py/test_flash.py. The end checks, bisection on [0, 1], tol 1e-12 and the exact-answer cases are all in the change. Ran rachford_rice.py: output equals rachford_rice.expected. Also ran the repo's isothermal_flash at 370a2aa on the three exact cases: 40 iterations each, errors 4.5e-13, 2.7e-13, 4.5e-13, so 'my flash drum ... within 5e-13' holds for the merged code. Checked by hand: f(0) and f(1) forms, f' < 0, poles 1/(1-K) outside [0, 1] for K > 0, 2^-40 = 9.1e-13 < 1e-12 < 2^-39, binary root 3.2143 for z = 0.5/0.5, K = 0.8/0.3. DOI 10.2118/952327-G resolves to Rachford and Rice, JPT 1952 (the primary source). 'Last week' fits the 17 Nov merge for a 25 Nov post. Nothing wrong found.",
+      "format": {
+        "linkedin": {
+          "words": 270,
+          "hook_lines": 1,
+          "long_paragraphs": 0,
+          "ends_with_question": true,
+          "warnings": []
+        },
+        "facebook": {
+          "words": 102,
+          "warnings": []
+        },
+        "x": {
+          "posts": 1,
+          "chars": [
+            226
+          ],
+          "hook_has_number": true,
+          "warnings": []
+        },
+        "warnings": []
+      }
+    },
+    "2026-11-26-ai-eng-p3": {
+      "sha256": "b34b965064aa80acef508a337b16c4673674c5b71bcecdf306990ac2c46bb70a",
+      "scores": {
+        "technical_accuracy": 5,
+        "sources": 5,
+        "one_clear_idea": 4,
+        "voice": 5,
+        "no_banned_info": 5
+      },
+      "mean": 4.8,
+      "notes": "Work l2p-format-checks: opened lab-to-prod PR #27 (merged 2026-11-15T23:53Z, merge 20ea834) with gh pr view and the diff file list. The PR body says all 5 W47 LinkedIn posts warn 'no open question' and that the gate does not read the check; automerge_gate.py has no reference to format. Ran format_vs_judge.py from the worktree root: output equals format_vs_judge.expected (5 of 5 no question, judge 5 of 5 passed, means 4.4-5.0, no note mentions a question, write-post rule quoted). The quoted line is format_check.py line 46 at 20ea834. W47 posts were status approved at that commit. The three judge findings (stale Short, bias -2.0 called small, claim true only from 10 Gbps) are in the W47 judge.json notes. Image and Short (49 s) match. Weaker point: the hook presents the missing question as something the judge missed, but the posts followed the writing rule of that week; the post says so, yet the 'what each catches' idea is softer than the hook suggests. To raise: say in the hook that the rule changed, or lead with what the judge caught.",
+      "format": {
+        "linkedin": {
+          "words": 268,
+          "hook_lines": 1,
+          "long_paragraphs": 0,
+          "ends_with_question": true,
+          "warnings": []
+        },
+        "facebook": {
+          "words": 110,
+          "warnings": []
+        },
+        "x": {
+          "posts": 1,
+          "chars": [
+            242
+          ],
+          "hook_has_number": true,
+          "warnings": []
+        },
+        "short": {
+          "seconds": 49.0,
+          "warnings": []
+        },
+        "warnings": []
+      }
+    },
+    "2026-11-27-ai-eng-p4": {
+      "sha256": "2cd63fe8aa49749043cebe726c70fed35b1b2372ca4ed242a52e3d3316070007",
+      "scores": {
+        "technical_accuracy": 4,
+        "sources": 3,
+        "one_clear_idea": 5,
+        "voice": 5,
+        "no_banned_info": 5
+      },
+      "mean": 4.4,
+      "notes": "Work cfe-rag-bm25: read private commit e40a896 (merged 2026-11-16 ICT) in a scratch clone; not named or linked in the post, nothing pasted here. The module ships a made-up 7-page handbook (28 chunks, recounted), stdlib-only BM25 (math, re, unicodedata, collections), and a script that I ran in mock mode: right chunk at rank 14 without title/section, rank 4 with it; the module README states the same 14 -> 4. So the post's claims are in the merged work. Problems: (1) the script next to the post, bm25_title.py, is a different toy (rain gauge, 9 chunks); its output (right chunk scores 0, then rank 4 of 9) equals its .expected but does not reproduce any number in the post, so a reader who runs the published script cannot get 14 of 28 -> 4 and sees different numbers; (2) the corpus, the question and the heading are Vietnamese; the post quotes 'how long' and 'frequency' and an English f-string as if they were the actual text without saying they are translations. Text and card label the corpus as a toy example. To raise: make the public script reproduce the 14 -> 4 result on an English toy corpus (or drop the 9-chunk script and say the numbers come from the course module), and say the corpus is in Vietnamese and the quoted words are translated.",
+      "format": {
+        "linkedin": {
+          "words": 269,
+          "hook_lines": 1,
+          "long_paragraphs": 0,
+          "ends_with_question": true,
+          "warnings": []
+        },
+        "facebook": {
+          "words": 113,
+          "warnings": []
+        },
+        "x": {
+          "posts": 1,
+          "chars": [
+            257
+          ],
+          "hook_has_number": true,
+          "warnings": []
+        },
+        "warnings": []
+      }
+    }
+  }
+}

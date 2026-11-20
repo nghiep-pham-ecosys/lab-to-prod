@@ -1,0 +1,15 @@
+{
+  "title": "Test a reactor model against its closed form",
+  "kicker": "Simulation · Part 1",
+  "scenes": [
+    {"type": "title", "text": "4 of 5 tests\npassed a\nwrong model", "say": "4 of my 5 reactor tests passed a wrong reactor model.", "seconds": 5},
+    {"type": "code", "code": ["# CSTR, first order, A to B", "tau = V / Q", "> X = k * tau / (1 + k * tau)"], "say": "My stirred tank reactor has an exact answer at steady state.", "seconds": 6},
+    {"type": "code", "code": ["k = 0.01, V = 2, Q = 0.004", "> tau = 500 s, X = 5/6"], "say": "One test checks the algebra: tau = 500 s and X = 5/6, to 12 decimal places.", "seconds": 7},
+    {"type": "code", "code": ["# swapped in on purpose:", "# the plug-flow formula", "> x = 1.0 - exp(-Da)"], "say": "Then I swapped in the wrong formula on purpose: X = 1 - exp(-k tau), the plug-flow one.", "seconds": 7},
+    {"type": "code", "code": ["right: X = 0.8333", "> wrong: X = 0.9933"], "say": "Same tank, same flow. Conversion went from 0.8333 to 0.9933.", "seconds": 5},
+    {"type": "text", "text": "4 tests\nstill passed", "note": "they check properties", "say": "Moles were still conserved. Conversion still rose with volume. Those tests passed.", "seconds": 5},
+    {"type": "code", "code": ["reactor tests 4/5", "failed:", "> test_matches_analytic", ">   _conversion"], "say": "Only one test failed: the one against the closed form.", "seconds": 5},
+    {"type": "text", "text": "One exact\nanswer\nper model", "note": "properties fit any reactor", "say": "Property checks fit any reactor. Give every model one case with an exact answer.", "seconds": 6},
+    {"type": "outro", "say": "Part 1 of my Simulation notes.", "seconds": 3}
+  ]
+}

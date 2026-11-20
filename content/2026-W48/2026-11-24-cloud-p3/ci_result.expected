@@ -1,0 +1,6 @@
+normal PR       naive=green  ci_result=green
+tests skipped   naive=green  ci_result=red
+scan cancelled  naive=green  ci_result=red
+test failed     naive=red    ci_result=red
+naive rule lets 2 of 3 broken runs through
+ci_result lets 0 of 3 through

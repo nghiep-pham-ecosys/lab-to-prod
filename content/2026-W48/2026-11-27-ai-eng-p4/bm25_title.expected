@@ -1,0 +1,9 @@
+9 chunks, query: 'how often is rain gauge calibration needed'
+chunk text only        right chunk scores 0: none of the query words is in it
+     3.47  Rain gauge cleaning / Steps
+     2.83  Thermometer calibration / Schedule
+     2.66  Station power / Battery
+title + section first  right chunk at rank 4 of 9
+     3.31  Thermometer calibration / Schedule
+     2.73  Station power / Battery
+     1.33  Rain gauge calibration / Steps
