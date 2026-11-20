@@ -65,5 +65,5 @@ First reply: https://nghiep-pham-ecosys.github.io/lab-to-prod/notes/2026-11-27-a
 ```text
 14 of 28: where BM25 ranked the chunk that answered my RAG test question. The chunk never named the meter. The page title did, and chunking cut it off.
 
-Copying title + section into each chunk moved it to rank 4. Toy corpus, no vector database, no API call.
+Copying title + section into each chunk moved it to rank 4. Toy corpus (in Vietnamese), no vector database, no API call.
 ```

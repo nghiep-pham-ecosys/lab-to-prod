@@ -24,23 +24,23 @@ card:
 
 14 of 28. That is where BM25 ranked the one chunk that answered my test question.
 
-I met this while building a RAG module for a Claude course I am writing in Vietnamese. Retrieval is plain BM25 in the Python standard library. It runs locally: no API key, no embedding model, no vector database. The corpus is a toy example: a made-up lab handbook, 7 pages cut into 28 chunks.
+I met this while building a RAG module for a Claude course I am writing in Vietnamese. Retrieval is plain BM25 in the Python standard library, run locally: no API key, no embedding model, no vector database. The corpus is a toy example: a made-up lab handbook, 7 pages cut into 28 chunks.
 
 The question asked how long until a pH meter needs calibrating again. The right chunk said when to repeat the step, but never named the step or the meter. Those words were in the page title, and chunking cut it off.
 
-The fix costs nothing. Before indexing, copy the title and the section name into each chunk:
+The fix costs nothing. Before indexing, copy the title and section name into each chunk:
 
 f"Document: {title}. Section: {section}.\n{chunk}"
 
 Same question, same BM25: the right chunk moved from rank 14 to rank 4.
 
-Rank 4 still misses a top-3 cut. The question said "how long", the heading said "frequency", and BM25 matches words, not meaning. A top 5 would include it. Embeddings might close the gap too; I have not measured that yet. One question on a small made-up corpus is a demo, not a benchmark.
+I measured this on the course module, in Vietnamese; the quoted question and heading are translated. The public script for this note is a smaller English toy with the same effect.
 
-When a RAG answer is wrong, check first whether the right chunk was retrieved at all. The model cannot cite a chunk it never saw.
+Rank 4 still misses a top-3 cut. The question said "how long", the heading said "frequency", and BM25 matches words, not meaning. A top 5 would include it. Embeddings might close the gap too; I have not measured that yet. One question on a toy corpus is a demo, not a benchmark.
 
 The lesson: before you add a vector database, put the title back in every chunk and measure the rank of the right chunk.
 
-In your own RAG setups, what helped retrieval most: more context in each chunk, a larger top-k, or adding embeddings?
+In your RAG setups, what helped retrieval most: more context per chunk, a larger top-k, or embeddings?
 
 Part 4 of my AI Engineering notes.
 
@@ -50,17 +50,17 @@ Part 4 of my AI Engineering notes.
 
 14 of 28: where BM25 ranked the chunk that answered my RAG test question. The chunk never named the meter. The page title did, and chunking cut it off.
 
-Copying title + section into each chunk moved it to rank 4. Toy corpus, no vector database, no API call.
+Copying title + section into each chunk moved it to rank 4. Toy corpus (in Vietnamese), no vector database, no API call.
 
 ## facebook
 
 My search ranked the right answer 14th out of 28 pieces of text.
 
-I was building a small search step for an AI assistant, using a classic keyword method called BM25. It runs on a laptop, no paid service. The documents: a made-up lab handbook (a toy example), cut into 28 pieces.
+I built a search step for an AI assistant with BM25, a classic keyword method that runs on a laptop, no paid service. The documents: a made-up Vietnamese lab handbook (a toy example), cut into 28 pieces.
 
-The piece with the answer never named the instrument. Only the page title did, and the title was lost when the page was cut up.
+The piece with the answer never named the instrument. Only the page title did, and cutting up the page lost it.
 
-Copying the page title and section name into each piece moved the answer from 14th to 4th place. It cost nothing. 4th is still not 1st: sending only the top 3 pieces would still miss it.
+Copying the page title and section name into each piece moved the answer from 14th to 4th, at no cost. A smaller English toy script shows the same effect. 4th is still not 1st: sending only the top 3 would miss it.
 
 Part 4 of my AI Engineering notes.
 
@@ -70,8 +70,8 @@ Part 4 of my AI Engineering notes.
 
 The chunk never named the instrument. The page title did, and chunking cut it off. BM25 only matches words that are in the chunk.
 
-Fix, at zero cost: copy the document title and section name into every chunk before indexing. The right chunk moved from rank 14 to rank 4. No vector database, no API call: BM25 in the Python standard library, on a toy corpus of 7 made-up pages.
+Fix, at zero cost: copy the document title and section name into every chunk before indexing. The right chunk moved from rank 14 to rank 4. No vector database, no API call: BM25 in the Python standard library, on a toy corpus of 7 made-up pages in Vietnamese. The public script for this note is a smaller English toy that shows the same effect.
 
-Rank 4 still misses a top-3 cut, because "how long" and "frequency" are different words to BM25. Measure the rank of the right chunk before you add embeddings.
+Rank 4 still misses a top-3 cut, because "how long" and "frequency" (translated here) are different words to BM25. Measure the rank of the right chunk before you add embeddings.
 
 Part 4 of my AI Engineering notes.

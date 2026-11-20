@@ -1,6 +1,6 @@
 {
   "week": "2026-W48",
-  "judged_at": "2026-11-20T04:30:56+00:00",
+  "judged_at": "2026-11-20T05:32:34+00:00",
   "judge": "subagent that did not see the drafting session",
   "rubric": [
     "technical_accuracy",
@@ -156,16 +156,16 @@
       }
     },
     "2026-11-27-ai-eng-p4": {
-      "sha256": "2cd63fe8aa49749043cebe726c70fed35b1b2372ca4ed242a52e3d3316070007",
+      "sha256": "a1104d69c11062033c17273c01782cee8a5e72d25668839063c030612d88ed09",
       "scores": {
-        "technical_accuracy": 4,
-        "sources": 3,
+        "technical_accuracy": 5,
+        "sources": 4,
         "one_clear_idea": 5,
         "voice": 5,
         "no_banned_info": 5
       },
-      "mean": 4.4,
-      "notes": "Work cfe-rag-bm25: read private commit e40a896 (merged 2026-11-16 ICT) in a scratch clone; not named or linked in the post, nothing pasted here. The module ships a made-up 7-page handbook (28 chunks, recounted), stdlib-only BM25 (math, re, unicodedata, collections), and a script that I ran in mock mode: right chunk at rank 14 without title/section, rank 4 with it; the module README states the same 14 -> 4. So the post's claims are in the merged work. Problems: (1) the script next to the post, bm25_title.py, is a different toy (rain gauge, 9 chunks); its output (right chunk scores 0, then rank 4 of 9) equals its .expected but does not reproduce any number in the post, so a reader who runs the published script cannot get 14 of 28 -> 4 and sees different numbers; (2) the corpus, the question and the heading are Vietnamese; the post quotes 'how long' and 'frequency' and an English f-string as if they were the actual text without saying they are translations. Text and card label the corpus as a toy example. To raise: make the public script reproduce the 14 -> 4 result on an English toy corpus (or drop the 9-chunk script and say the numbers come from the course module), and say the corpus is in Vietnamese and the quoted words are translated.",
+      "mean": 4.8,
+      "notes": "Re-judge after the wording fix. Work cfe-rag-bm25: read private commit e40a896 (merged 2026-11-16) in a read-only git archive export; the repo is not named or linked in the post and no private text is pasted. Reran the module's own BM25 and chunking solutions at that commit (loaded directly, no API client): 7 handbook files, 28 chunks, right chunk (the frequency section of the pH calibration page) at rank 14 with chunk text only and rank 4 with title and section prepended; the module README states the same 14 -> 4. BM25 there is stdlib only. The right chunk names neither the step nor the meter; the title does; the section heading means frequency and the question says how long, so the post's explanation and the top-3/top-5 claims are correct. The repo's NOTICE marks the handbook as fictional. Ran bm25_title.py: output equals bm25_title.expected (9 chunks; score 0 with chunk text only, rank 4 of 9 with title and section). Both earlier problems are fixed: every channel now says the corpus is Vietnamese, the quoted words are translated, and the public script is a smaller English toy with the same effect; the f-string matches the public script and is a faithful translation of the module's prefix. validate --week 2026-W48: 0 errors. Image checked: card matches the text. Sources stays at 4, not 5: the headline numbers (14 and 4 of 28) are reproduced only by the private module, not by a script in this repo, so a reader cannot rerun them; the post now discloses this. To raise it: make the public toy reproduce a rank number the post quotes.",
       "format": {
         "linkedin": {
           "words": 269,
@@ -181,7 +181,7 @@
         "x": {
           "posts": 1,
           "chars": [
-            257
+            273
           ],
           "hook_has_number": true,
           "warnings": []

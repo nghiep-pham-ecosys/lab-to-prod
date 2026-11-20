@@ -7,7 +7,7 @@
 -->
 
 7 hours 54 minutes. That is how late my LinkedIn post went out on Tuesday 17 November, the
-second day of the trial. The workflow was set for 08:15 in Ho Chi Minh City. The post appeared
+second day of the trial. The workflow was set for 08:15 local time (UTC+7). The post appeared
 at 16:09.
 
 This log covers the first trial week: the scheduler, two fixes, a reversed rule and a few
@@ -63,8 +63,8 @@ schedule:
 
 The 08:15 and 09:00 crons stay as fallbacks.
 
-The day field reads `0-5` because 17:30 UTC on Sunday is already 00:30 on Monday in Ho Chi Minh
-City. The first job of each run is `wait`. It runs `tools/wait_until.py`, whose core is one
+The day field reads `0-5` because 17:30 UTC on Sunday is already 00:30 on Monday local time
+(UTC+7). The first job of each run is `wait`. It runs `tools/wait_until.py`, whose core is one
 function:
 
 ```python
