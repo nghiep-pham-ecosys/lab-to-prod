@@ -128,6 +128,12 @@
       "photo_id": "122094408219556480",
       "scheduled_for": "2026-11-20T08:30:00+07:00",
       "url": "https://www.facebook.com/122094408219556480"
+    },
+    "linkedin": {
+      "at": "2026-11-20T01:15:12+00:00",
+      "comment": true,
+      "id": "urn:li:share:7529351613774405632",
+      "url": "https://www.linkedin.com/feed/update/urn:li:share:7529351613774405632/"
     }
   },
   "article:why-i-am-building-lab-to-prod-in-public": {
