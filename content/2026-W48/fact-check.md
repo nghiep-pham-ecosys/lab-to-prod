@@ -10,19 +10,19 @@ Work: `cfe-ci-guard` (claude-for-everyone-vi, private@fb18777, merged 2026-11-17
 | Claim | Outcome | Evidence |
 | --- | --- | --- |
 | 6 checks reported on the PR that added the guard; 2 skipped; the summary check went green | Done work | `gh pr view 15` status rollup: test SUCCESS, pr-title SUCCESS, gitleaks SUCCESS, live-smoke SKIPPED, model-sync SKIPPED, ci-result SUCCESS |
-| The 2 skips were correct | Done work | `.github/workflows/ci.yml` at fb18777: live-smoke has `if: github.event_name == 'workflow_dispatch'`; model-sync has `if: false` |
-| The repo is private, on GitHub Free | Done work | `gh repo view` visibility PRIVATE; `gh api orgs/<org>` plan.name `free`; issue #14: "a private repo on the Free plan" |
+| The 2 skips were correct | Done work | the CI workflow at fb18777: live-smoke runs only on a manual dispatch; model-sync is disabled by a constant false condition (paraphrased) |
+| The repo is private, on GitHub Free | Done work | `gh repo view` visibility PRIVATE; `gh api orgs/<org>` plan.name `free`; issue #14 says the same (paraphrased) |
 | On Free, branch protection and rulesets only cover public repos | Sourced | docs.github.com .../about-protected-branches: "Protected branches are available in public repositories with GitHub Free and GitHub Free for organizations"; .../about-rulesets: "Rulesets are available in public repositories with GitHub Free and GitHub Free for organizations, and in public and private repositories with GitHub Pro, GitHub Team, and GitHub Enterprise Cloud." |
-| Pre-push hook runs gitleaks on the pushed commits; blocks on a finding or when gitleaks is missing | Done work | `.githooks/pre-push`: "scan the commits being pushed with gitleaks and block the push on any finding"; "Fails closed: no gitleaks, no push" |
-| pr-title exists because the title becomes the squash commit subject | Done work | `.github/workflows/pr-title.yml` header: "PR titles become squash commit subjects" |
-| ci-result waits for every other job in the CI workflow | Done work | ci.yml: `if: always()`, `needs: [test, gitleaks, live-smoke, model-sync]` (pr-title is a separate workflow) |
-| The merge script requires just two checks, ci-result and pr-title | Done work | ecosys `tools/ship/_shiplib.py`: `DEFAULT_REQUIRED = ("ci-result", "pr-title")`; issue #14: "`tools/ship/merge` requires both checks" |
-| Merged rule: test and gitleaks must succeed, every other job success or skipped, cancelled is red | Done work | ci.yml jq: `.test.result == "success" and .gitleaks.result == "success" and all(.[]; .result == "success" or .result == "skipped")` |
-| Toy example: naive rule lets 2 of 3 broken runs through, ci-result 0 of 3 | Ran | `ci_result.py`, output equals `ci_result.expected`; its rule mirrors the jq expression above |
+| Pre-push hook runs gitleaks on the pushed commits; blocks on a finding or when gitleaks is missing | Done work | the repo's pre-push hook at fb18777: scans the pushed commits with gitleaks, blocks on a finding, and blocks when gitleaks is missing (paraphrased) |
+| pr-title exists because the title becomes the squash commit subject | Done work | the pr-title workflow's header comment says the title becomes the squash commit subject (paraphrased) |
+| ci-result waits for every other job in the CI workflow | Done work | the CI workflow: ci-result always runs and needs the four other CI jobs (pr-title is a separate workflow) |
+| The merge script requires just two checks, ci-result and pr-title | Done work | ecosys `tools/ship/_shiplib.py`: `DEFAULT_REQUIRED = ("ci-result", "pr-title")`; issue #14 says the same (paraphrased) |
+| Merged rule: test and gitleaks must succeed, every other job success or skipped, cancelled is red | Done work | the ci-result step of the CI workflow encodes this rule over the job results (paraphrased, not quoted) |
+| Toy example: naive rule lets 2 of 3 broken runs through, ci-result 0 of 3 | Ran | `ci_result.py`, output equals `ci_result.expected`; its rule mirrors the merged rule above |
 | Labelled as a toy example | Checked | LinkedIn, X, Telegram text, card lesson and image_alt say "toy example" (Facebook has no toy numbers) |
 | With branch protection, GitHub accepts a skipped required check | Sourced | .../about-protected-branches: "Required status checks must have a `successful`, `skipped`, or `neutral` status before collaborators can make changes to a protected branch." |
 
-Fixed: "6 checks ran" (2 of them did not run) is now "6 checks reported"; "the guard still went green" is now "the summary check"; "ci-result waits for every other job" and the Facebook and Telegram equivalents now say "in the CI workflow" (pr-title is outside it); "my merge script reads only" is now "requires just two checks"; "GitHub counts a skipped required check as passing" is now "accepts", the source's wording; the quoted phrase "skipped on purpose" (a step name in the private repo) is now "skipped by design". X trimmed to fit ("The rule:" to "Rule:").
+Fixed: "6 checks ran" (2 of them did not run) is now "6 checks reported"; "the guard still went green" is now "the summary check"; "ci-result waits for every other job" and the Facebook and Telegram equivalents now say "in the CI workflow" (pr-title is outside it); "my merge script reads only" is now "requires just two checks"; "GitHub counts a skipped required check as passing" is now "accepts", the source's wording; a phrase copied from a private step name is now "skipped by design". X trimmed to fit ("The rule:" to "Rule:").
 Not used: the PR text says the hook runs "gitleaks and the branch rules", but the diff runs gitleaks only, so the post claims gitleaks only. The repo the PR text names as a model is not in the ledger and is not named.
 
 ## 2026-11-25-sim-p2 (flash drum: check both ends, then bisect)
@@ -75,19 +75,19 @@ Fixed: "at most 3 lines or 60 words" is "3 lines and 60 words" (the code warns w
 
 ## 2026-11-27-ai-eng-p4 (BM25 locally: put the title back in the chunk)
 
-Work: `cfe-rag-bm25` (claude-for-everyone-vi, private@e40a896, merged 2026-11-16; commit "module 04 RAG", PR #10, read in the local clone, not linked). Checked on 20 Nov 2026. Measured numbers come from running the module's scripts at e40a896 (a read-only `git archive` export in scratch, the clone's own venv, then deleted). Evidence below gives paths and numbers only; no text of the private repo is pasted here or in the post.
+Work: `cfe-rag-bm25` (claude-for-everyone-vi, private@e40a896, merged 2026-11-16; PR #10, read in the local clone, not linked). Checked on 20 Nov 2026. Measured numbers come from running the module's scripts at e40a896 (a read-only `git archive` export in scratch, the clone's own venv, then deleted). Evidence below gives paths and numbers only; no text of the private repo is pasted here or in the post.
 
 | Claim | Outcome | Evidence |
 | --- | --- | --- |
-| BM25 ranked the right chunk 14th of 28 with chunk text only (hook, all channels, card) | Ran | `modules/04-rag/python/02_ngu_canh.py` at e40a896: "without title/section ... right chunk at rank 14" (translated); right chunk id `01_hieu_chuan_ph#4` |
+| BM25 ranked the right chunk 14th of 28 with chunk text only (hook, all channels, card) | Ran | the module's context script at e40a896: without title/section the right chunk is at rank 14 (paraphrased) |
 | With the document title and section copied into each chunk, rank 4 (all channels, card) | Ran | same run: "with title/section ... rank 4" (translated) |
-| 28 chunks | Ran | `modules/04-rag/python/01_bm25.py`: first line prints 28 chunks; recount in the same export: 28 chunks from 7 files |
-| Corpus: a made-up lab handbook, 7 pages | Done work | `modules/04-rag/README.md` line 42: 7 handbook pages, stated as fictional, every code and number made up; `data/so_tay/` holds 7 files |
-| Retrieval is BM25 in the Python standard library | Done work | `solutions/bai1_bm25.py` imports only `math`, `re`, `unicodedata`, `collections` |
-| Runs locally: no API key, no embedding model, no vector database | Ran | `02_ngu_canh.py` run again with `ANTHROPIC_API_KEY` and `CLAUDE_MOCK` unset: same rank 14 / rank 4 output, no network call in the BM25 path |
+| 28 chunks | Ran | the module's BM25 script: first line prints 28 chunks; recount in the same export: 28 chunks from 7 files |
+| Corpus: a made-up lab handbook, 7 pages | Done work | the module README: 7 handbook pages, stated as fictional, every code and number made up; the handbook folder holds 7 files |
+| Retrieval is BM25 in the Python standard library | Done work | the module's BM25 solution imports only `math`, `re`, `unicodedata`, `collections` |
+| Runs locally: no API key, no embedding model, no vector database | Ran | the context script run again with `ANTHROPIC_API_KEY` and `CLAUDE_MOCK` unset: same rank 14 / rank 4 output, no network call in the BM25 path |
 | The right chunk never names the step (calibration) or the meter; those words are in the page title | Ran + Done work | chunk text at e40a896 checked in Python: the Vietnamese words for "calibration", "meter" and "pH" are absent; they are in the page's `# ` title; the chunk sits under the section titled "frequency" |
-| The question said "how long", the heading said "frequency"; BM25 matches words, not meaning | Done work | query string in `02_ngu_canh.py` and the section heading of `01_hieu_chuan_ph.md` (approximate English, not quoted); the script's own closing note says BM25 does not know the two phrasings mean the same |
-| Rank 4 misses a top-3 cut | Done work | `python/rag_mau.py`: `tim(..., k: int = 3)`, the module's default search returns 3 chunks |
+| The question said "how long", the heading said "frequency"; BM25 matches words, not meaning | Done work | the query string in the context script and the section heading of the handbook page (approximate English, not quoted); the script's own closing note says BM25 does not know the two phrasings mean the same |
+| Rank 4 misses a top-3 cut | Done work | the module's search helper defaults to k = 3, so the default search returns 3 chunks |
 | A top 5 would include it | Ran | rank 4 <= 5 |
 | `f"Document: {title}. Section: {section}.\n{chunk}"` | Ran | the line is `with_context()` in the post folder's own toy script `bm25_title.py` (public, English); the private module does the same in its own words, not quoted |
 | `bm25_title.py` output | Ran | `python3 -I bm25_title.py` output equals `bm25_title.expected` (diff empty). The post does not quote its numbers (9 chunks, score 0, then rank 4 of 9) |
