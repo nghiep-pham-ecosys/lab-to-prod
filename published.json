@@ -159,6 +159,65 @@
       "via": "chat"
     }
   },
+  "2026-11-23": {
+    "facebook": {
+      "at": "2026-11-20T05:53:32+00:00",
+      "id": "122099147985556480",
+      "photo_id": "122099147985556480",
+      "scheduled_for": "2026-11-23T08:30:00+07:00",
+      "url": "https://www.facebook.com/122099147985556480"
+    },
+    "youtube": {
+      "at": "2026-11-20T05:53:32+00:00",
+      "captions": true,
+      "id": "rLcbaa5_A_o",
+      "scheduled_for": "2026-11-24T12:00:00.000Z",
+      "url": "https://www.youtube.com/shorts/rLcbaa5_A_o"
+    }
+  },
+  "2026-11-24": {
+    "facebook": {
+      "at": "2026-11-20T05:53:32+00:00",
+      "id": "122099148051556480",
+      "photo_id": "122099148051556480",
+      "scheduled_for": "2026-11-24T08:30:00+07:00",
+      "url": "https://www.facebook.com/122099148051556480"
+    }
+  },
+  "2026-11-25": {
+    "facebook": {
+      "at": "2026-11-20T05:53:32+00:00",
+      "id": "122099148129556480",
+      "photo_id": "122099148129556480",
+      "scheduled_for": "2026-11-25T08:30:00+07:00",
+      "url": "https://www.facebook.com/122099148129556480"
+    }
+  },
+  "2026-11-26": {
+    "facebook": {
+      "at": "2026-11-20T05:53:32+00:00",
+      "id": "122099148225556480",
+      "photo_id": "122099148225556480",
+      "scheduled_for": "2026-11-26T08:30:00+07:00",
+      "url": "https://www.facebook.com/122099148225556480"
+    },
+    "youtube": {
+      "at": "2026-11-20T05:53:32+00:00",
+      "captions": true,
+      "id": "jtlZ5rQGFzY",
+      "scheduled_for": "2026-11-26T12:00:00.000Z",
+      "url": "https://www.youtube.com/shorts/jtlZ5rQGFzY"
+    }
+  },
+  "2026-11-27": {
+    "facebook": {
+      "at": "2026-11-20T05:53:32+00:00",
+      "id": "122099148321556480",
+      "photo_id": "122099148321556480",
+      "scheduled_for": "2026-11-27T08:30:00+07:00",
+      "url": "https://www.facebook.com/122099148321556480"
+    }
+  },
   "article:why-i-am-building-lab-to-prod-in-public": {
     "devto": {
       "at": "2026-11-14T07:34:40+00:00",
