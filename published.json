@@ -119,6 +119,13 @@
       "comment": true,
       "id": "urn:li:share:7528989230916841474",
       "url": "https://www.linkedin.com/feed/update/urn:li:share:7528989230916841474/"
+    },
+    "x": {
+      "at": "2026-11-19T01:30:00+00:00",
+      "id": "2123227256722170069",
+      "manual": true,
+      "url": "https://x.com/pqnghiep1354/status/2123227256722170069",
+      "via": "chat"
     }
   },
   "2026-11-20": {
@@ -134,6 +141,22 @@
       "comment": true,
       "id": "urn:li:share:7529351613774405632",
       "url": "https://www.linkedin.com/feed/update/urn:li:share:7529351613774405632/"
+    },
+    "x": {
+      "at": "2026-11-20T01:30:00+00:00",
+      "id": "2123589644113621210",
+      "manual": true,
+      "url": "https://x.com/pqnghiep1354/status/2123589644113621210",
+      "via": "chat"
+    }
+  },
+  "2026-11-20:reply": {
+    "x": {
+      "at": "2026-11-20T01:51:02+00:00",
+      "id": "2123594937610772962",
+      "manual": true,
+      "url": "https://x.com/pqnghiep1354/status/2123594937610772962",
+      "via": "chat"
     }
   },
   "article:why-i-am-building-lab-to-prod-in-public": {
