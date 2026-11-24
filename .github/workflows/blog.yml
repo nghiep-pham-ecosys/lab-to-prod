@@ -34,7 +34,7 @@ jobs:
     outputs:
       go: ${{ steps.wait.outputs.go }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - id: wait
         env:
           GH_TOKEN: ${{ github.token }}
@@ -48,19 +48,19 @@ jobs:
       cancel-in-progress: true
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           # A scheduled run may have waited hours: take the branch head, not the commit the run was created on,
           # so a PAUSE file or a fix merged meanwhile counts. Empty = the default ref for other events.
           ref: ${{ github.event_name == 'schedule' && github.event.repository.default_branch || '' }}
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: "3.12"
       - name: Open Graph images, note images, favicon
         run: |
           pip install -r tools/requirements.txt
           python blog/scripts/prebuild.py
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version-file: blog/.nvmrc
           cache: npm
@@ -71,7 +71,7 @@ jobs:
           npm ci
           npx astro build
           node scripts/check-dist.mjs
-      - uses: actions/upload-pages-artifact@v5
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         if: github.event_name != 'pull_request'
         with:
           path: blog/dist
@@ -91,4 +91,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
