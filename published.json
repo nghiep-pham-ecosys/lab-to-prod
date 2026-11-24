@@ -197,6 +197,12 @@
       "photo_id": "122099148051556480",
       "scheduled_for": "2026-11-24T08:30:00+07:00",
       "url": "https://www.facebook.com/122099148051556480"
+    },
+    "linkedin": {
+      "at": "2026-11-24T02:40:39+00:00",
+      "comment": true,
+      "id": "urn:li:share:7530822671304118272",
+      "url": "https://www.linkedin.com/feed/update/urn:li:share:7530822671304118272/"
     }
   },
   "2026-11-25": {
