@@ -49,7 +49,7 @@ jobs:
     outputs:
       go: ${{ steps.wait.outputs.go }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - id: wait
         env:
           GH_TOKEN: ${{ github.token }}
@@ -80,12 +80,12 @@ jobs:
       INPUT_DATE: ${{ inputs.date }}
       INPUT_ONLY: ${{ inputs.only }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           # A scheduled run may have waited hours: take the branch head, not the commit the run was created on,
           # so a PAUSE file or a fix merged meanwhile counts. Empty = the default ref for other events.
           ref: ${{ github.event_name == 'schedule' && github.event.repository.default_branch || '' }}
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: "3.12"
           cache: pip
