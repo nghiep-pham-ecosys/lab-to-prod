@@ -96,7 +96,8 @@ trong `publish/config.yaml`.
 
 Kênh `facebook` trong `publish/config.yaml` chính là Page này. Nó chỉ chạy thử (dry run) cho tới khi
 biến repository `PUBLISH_LIVE` là `true`. Mỗi bài đăng thành công được ghi vào `published.json` dưới
-khoá `facebook`. Bài chia sẻ lại về trang cá nhân là đăng tay: không cần ghi.
+khoá `facebook`. Mỗi ngày phiên chính của workspace chia sẻ lại bài Page về trang cá nhân qua Claude in Chrome
+(không API, không ghi vào `published.json`); xem skill `daily-start` của repo `ecosys`.
 
 Lưu ý: Page token dài hạn không có ngày hết hạn, nhưng quyền truy cập dữ liệu của app hết sau
 khoảng 90 ngày không dùng. Workflow `metrics` sẽ báo trước 7 ngày; khi đó chạy lại lệnh trên.
