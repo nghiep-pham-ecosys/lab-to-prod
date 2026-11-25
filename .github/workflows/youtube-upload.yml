@@ -1,0 +1,109 @@
+name: youtube-upload
+
+# Uploads one staged video batch to YouTube as PRIVATE videos with publishAt; YouTube makes them public at that time.
+# nghiep-motion-studio (`motion-studio stage-upload`) stages the batch as a DRAFT release of this repository: the mp4s,
+# their SRTs and manifest.json. Draft releases and their assets are visible only to people with push access.
+# Run by hand only, after the author approves the weekly batch:
+#   gh workflow run youtube-upload.yml -f tag=<tag> -f live=true
+# Without live=true it is a dry run: the batch is downloaded and checked, the plan is printed, nothing is called.
+# publish_at moves the whole batch (its earliest item goes public then, the spacing stays).
+# result.json is kept on the draft release after every run, so a re-run skips what is already up. The draft release
+# is deleted only when every item is uploaded. The video ids go to the job summary and to the artifact
+# youtube-upload-<tag> (result.json), which `motion-studio finish-upload` reads.
+# A file named PAUSE at the repository root stops the run before any upload.
+run-name: youtube upload ${{ inputs.live && 'live' || 'dry run' }} ${{ inputs.tag }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag of the draft release staged by motion-studio (letters, digits, . _ -)"
+        required: true
+      publish_at:
+        description: "Optional: move the batch so its earliest item goes public then (ISO 8601 with offset)"
+        required: false
+      live:
+        description: "Really upload (otherwise a dry run)"
+        type: boolean
+        default: false
+
+permissions: {}
+
+concurrency:
+  group: youtube-upload
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: write  # read the draft release, keep result.json on it, delete it after a complete upload
+    env:
+      TAG: ${{ inputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/requirements.txt
+      - run: pip install -r tools/requirements.txt
+
+      - name: Download the staged batch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! printf '%s' "$TAG" | grep -Eqx '[A-Za-z0-9][A-Za-z0-9._-]*'; then
+            echo "::error::tag must be letters, digits, '.', '_' or '-'"
+            exit 1
+          fi
+          draft="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)"
+          if [ "$draft" != "true" ]; then
+            echo "::error::release $TAG is not a draft; refusing (its assets would be public)"
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/batch"
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir "$RUNNER_TEMP/batch"
+          ls -l "$RUNNER_TEMP/batch"
+
+      - name: Upload to YouTube
+        id: upload
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          LIVE: ${{ inputs.live }}
+          PUBLISH_AT: ${{ inputs.publish_at }}
+        run: |
+          args=(--assets "$RUNNER_TEMP/batch" --tag "$TAG" --summary "$GITHUB_STEP_SUMMARY" --github-output "$GITHUB_OUTPUT")
+          if [ -n "$PUBLISH_AT" ]; then args+=(--publish-at "$PUBLISH_AT"); fi
+          if [ "$LIVE" = "true" ]; then args+=(--live); fi
+          python -m publish.youtube_release "${args[@]}"
+        shell: bash
+
+      - name: Keep result.json on the draft release
+        if: always() && inputs.live
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f "$RUNNER_TEMP/batch/result.json" ]; then
+            gh release upload "$TAG" "$RUNNER_TEMP/batch/result.json" --clobber --repo "$GITHUB_REPOSITORY"
+          fi
+
+      - name: Save the video ids
+        if: always() && inputs.live
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: youtube-upload-${{ inputs.tag }}
+          path: ${{ runner.temp }}/batch/result.json
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Delete the draft release
+        if: success() && inputs.live && steps.upload.outputs.complete == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release delete "$TAG" --yes --repo "$GITHUB_REPOSITORY"
