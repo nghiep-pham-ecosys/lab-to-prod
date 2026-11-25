@@ -7,6 +7,7 @@ success in `published.json` at the repository root. It is a dry run unless `--li
 | --- | --- | --- | --- | --- |
 | Facebook Page | api | merge | photo post, scheduled by Facebook for 08:30 on the post's day | `FB_PAGE_ID`, `FB_PAGE_TOKEN` |
 | YouTube | api | merge | Short uploaded as private with `publishAt`, then the SRT as captions | `YT_CLIENT_ID`, `YT_CLIENT_SECRET`, `YT_REFRESH_TOKEN` |
+| YouTube (long videos) | api | by hand | staged batch from a draft release, uploaded as private with `publishAt`, then the SRTs as captions (see below) | the same three |
 | LinkedIn | api | daily | post with image, or a document post when the folder has `linkedin.pdf`; then the blog link as first comment (best effort) | `LINKEDIN_ACCESS_TOKEN`, `LINKEDIN_PERSON_URN` |
 | Telegram | api | daily | image with caption and blog link | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHANNEL` |
 | DEV | api | daily | Saturday article with `canonical_url` to the blog | `DEVTO_API_KEY` |
@@ -31,6 +32,36 @@ uv run --with-requirements tools/requirements.txt python -m publish.run export -
 
 Add `--only telegram` to limit a run to one channel. Add `--live` to really post; never do
 that without the author's go-ahead for that channel.
+
+## Long videos from nghiep-motion-studio
+
+Long videos (10-20 minutes) and their Shorts do not live in this repository. `motion-studio stage-upload` checks
+that the video passed its quality gate, builds the metadata (title, description with chapter timestamps, tags,
+language, publish time, the "made with AI" label) and stages the mp4s, their SRTs and `manifest.json` as assets of a
+**draft** release here. Draft releases are visible only to people with push access, so nothing is public yet.
+
+The `youtube-upload` workflow (`.github/workflows/youtube-upload.yml`) is started by hand only, after the author
+approves the weekly batch:
+
+```bash
+gh workflow run youtube-upload.yml -f tag=<tag>
+```
+
+```bash
+gh workflow run youtube-upload.yml -f tag=<tag> -f live=true
+```
+
+The first is a dry run: it downloads the batch, checks `manifest.json` and prints the plan without calling Google.
+The second runs `python -m publish.youtube_release`, which uploads every item as **private** with `publishAt`
+(YouTube makes it public then), adds the SRT as captions and logs the quota of every call. `-f publish_at=<ISO time>`
+moves the whole batch, keeping the spacing between the video and its Shorts. A publish time in the past is refused.
+
+- `result.json` (video ids, links, quota) is written after every upload and kept on the draft release, so a re-run
+  skips what is already up. It also goes to the job summary and to the artifact `youtube-upload-<tag>`, which
+  `motion-studio finish-upload` reads to write its upload record and free the disk.
+- The draft release is deleted only when every item is uploaded.
+- The YouTube secrets are the same three as for Shorts; they reach only the upload step.
+- The `PAUSE` file stops the run before any call.
 
 ## Manual posts
 

@@ -12,17 +12,24 @@ Official docs (checked 12 Nov 2026):
   locked to private. If a video still stays private after publishAt, set it public in Studio.
 - There is no "Short" flag: YouTube decides from the vertical format and the length.
 Scopes: youtube.upload and youtube.force-ssl (captions).
+The long videos from nghiep-motion-studio reuse upload_video and insert_captions (publish/youtube_release.py).
 """
 from __future__ import annotations
 
 import datetime as dt
 import json
+from pathlib import Path
 
 from .common import Context, Post, PublishError, Skip, check
 
 NEEDS = ["YT_CLIENT_ID", "YT_CLIENT_SECRET", "YT_REFRESH_TOKEN"]
 UPLOAD = "https://www.googleapis.com/upload/youtube/v3"
 AI_NOTE = "Animation rendered from code; script drafted with AI assistance and reviewed by me."
+# Quota (docs checked 12 Nov 2026, see above): every videos.insert takes one of the 100 uploads a day in its own
+# bucket; every captions.insert costs 400 of the 10,000 daily units. The token refresh is OAuth, not the Data API.
+UPLOADS_PER_DAY = 100
+CAPTIONS_UNITS = 400
+DAILY_UNITS = 10_000
 
 
 def access_token(ctx: Context) -> str:
@@ -52,12 +59,8 @@ def metadata(ctx: Context, post: Post) -> dict:
     }
 
 
-def publish(ctx: Context, post: Post) -> dict:
-    video, srt = post.folder / "short.mp4", post.folder / "short.srt"
-    if not video.exists():
-        raise PublishError("short.mp4 is missing")
-    body = metadata(ctx, post)
-    auth = {"Authorization": f"Bearer {access_token(ctx)}"}
+def upload_video(ctx: Context, video: Path, body: dict, auth: dict) -> str:
+    """Resumable upload of one mp4 with its snippet and status; returns the new video id (one videos.insert)."""
     size = video.stat().st_size
     start = check(ctx.http.post(f"{UPLOAD}/videos?uploadType=resumable&part=snippet,status", headers={
         **auth, "Content-Type": "application/json; charset=UTF-8",
@@ -66,15 +69,29 @@ def publish(ctx: Context, post: Post) -> dict:
     with video.open("rb") as fh:
         done = check(ctx.http.put(start.headers["Location"], headers={**auth, "Content-Length": str(size), "Content-Type": "video/mp4"},
                                   data=fh), "YouTube upload")
-    video_id = done.json()["id"]
+    return done.json()["id"]
+
+
+def insert_captions(ctx: Context, video_id: str, srt: Path, language: str, name: str, auth: dict) -> None:
+    """Add an SRT as a caption track (one captions.insert, 400 units). Raises PublishError when refused."""
+    meta = {"snippet": {"videoId": video_id, "language": language, "name": name}}
+    check(ctx.http.post(f"{UPLOAD}/captions?uploadType=multipart&part=snippet", headers=auth, files={
+        "snippet": (None, json.dumps(meta), "application/json; charset=UTF-8"),
+        "file": (srt.name, srt.read_bytes(), "application/octet-stream")}), "YouTube captions")
+
+
+def publish(ctx: Context, post: Post) -> dict:
+    video, srt = post.folder / "short.mp4", post.folder / "short.srt"
+    if not video.exists():
+        raise PublishError("short.mp4 is missing")
+    body = metadata(ctx, post)
+    auth = {"Authorization": f"Bearer {access_token(ctx)}"}
+    video_id = upload_video(ctx, video, body, auth)
     result = {"id": video_id, "url": f"https://www.youtube.com/shorts/{video_id}",
               "scheduled_for": body["status"]["publishAt"], "captions": False}
     if srt.exists():
         try:
-            meta = {"snippet": {"videoId": video_id, "language": "en", "name": "English"}}
-            check(ctx.http.post(f"{UPLOAD}/captions?uploadType=multipart&part=snippet", headers=auth, files={
-                "snippet": (None, json.dumps(meta), "application/json; charset=UTF-8"),
-                "file": ("short.srt", srt.read_bytes(), "application/octet-stream")}), "YouTube captions")
+            insert_captions(ctx, video_id, srt, "en", "English", auth)
             result["captions"] = True
         except Exception as exc:  # noqa: BLE001 - the video is uploaded; captions can be added in Studio
             ctx.say(f"  youtube: video uploaded, captions were refused ({str(exc)[:120]}); upload short.srt in Studio")
