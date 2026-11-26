@@ -32,12 +32,48 @@ class Resp:
 class FakeHTTP:
     """Answers like Google does; counts uploads so each video gets its own id."""
 
-    def __init__(self, fail_upload_of=None, fail_captions=False):
+    def __init__(self, fail_upload_of=None, fail_captions=False, playlists=None, page_size=50, fail_playlist_add=False):
         self.calls, self.uploads = [], 0
         self.fail_upload_of, self.fail_captions = fail_upload_of, fail_captions
+        # the channel's playlists: [{"id", "title", "videos": [...]}], served page_size at a time
+        self.playlists = playlists if playlists is not None else []
+        self.page_size, self.fail_playlist_add = page_size, fail_playlist_add
+
+    def _playlists(self, method, kw):
+        params = kw.get("params") or {}
+        if method == "GET":
+            assert params["mine"] == "true" and params["part"] == "snippet" and params["maxResults"] == 50
+            start = int(params.get("pageToken") or 0)
+            page = self.playlists[start:start + self.page_size]
+            body = {"items": [{"id": p["id"], "snippet": {"title": p["title"]}} for p in page]}
+            if start + self.page_size < len(self.playlists):
+                body["nextPageToken"] = str(start + self.page_size)
+            return Resp(200, body)
+        body = json.loads(kw["data"])
+        new = {"id": f"PL{len(self.playlists) + 1:04d}", "title": body["snippet"]["title"], "videos": [], "body": body}
+        self.playlists.append(new)
+        return Resp(200, {"id": new["id"]})
+
+    def _playlist_items(self, method, kw):
+        if method == "GET":
+            params = kw["params"]
+            pl = next((p for p in self.playlists if p["id"] == params["playlistId"]), None)
+            if pl is None:
+                return Resp(404, {"error": "playlistNotFound"})
+            return Resp(200, {"items": [{"id": "item"}] if params["videoId"] in pl["videos"] else []})
+        if self.fail_playlist_add:
+            return Resp(403, {"error": "quotaExceeded"})
+        snippet = json.loads(kw["data"])["snippet"]
+        assert snippet["resourceId"]["kind"] == "youtube#video"
+        next(p for p in self.playlists if p["id"] == snippet["playlistId"])["videos"].append(snippet["resourceId"]["videoId"])
+        return Resp(200, {"id": "item-new"})
 
     def _handle(self, method, url, **kw):
         self.calls.append((method, url, kw))
+        if url.endswith("/youtube/v3/playlistItems"):
+            return self._playlist_items(method, kw)
+        if url.endswith("/youtube/v3/playlists"):
+            return self._playlists(method, kw)
         if "oauth2.googleapis.com" in url:
             return Resp(200, {"access_token": "ya29.test"})
         if "uploadType=resumable" in url:
@@ -57,6 +93,12 @@ class FakeHTTP:
 
     def put(self, url, **kw):
         return self._handle("PUT", url, **kw)
+
+    def get(self, url, **kw):
+        return self._handle("GET", url, **kw)
+
+    def playlist_calls(self):
+        return [(m, u.rsplit("/", 1)[-1]) for m, u, _ in self.calls if "/playlist" in u]
 
     def urls(self):
         return [u for _, u, _ in self.calls]
@@ -129,7 +171,8 @@ def test_live_uploads_private_with_publish_at_captions_and_logs_quota(repo):
     assert result["items"]["example.en"]["url"] == "https://www.youtube.com/watch?v=VID00000001"
     assert result["items"]["example-1.en"]["url"] == "https://www.youtube.com/shorts/VID00000002"
     assert result["items"]["example-1.en"]["path"] == "shorts/example-1.en.mp4"
-    assert result["quota"] == {"videos_insert": 2, "captions_insert": 2, "units": 800}
+    assert result["quota"] == {"videos_insert": 2, "captions_insert": 2, "playlists_list": 0, "playlists_insert": 0,
+                               "playlist_items_list": 0, "playlist_items_insert": 0, "units": 800}
     assert out.read_text() == "complete=true\n"
     text = summary.read_text()
     assert "VID00000001" in text and "800 units" in text and "Complete: yes" in text
@@ -229,3 +272,175 @@ def test_missing_secret_fails_without_upload_or_leak(repo):
 
 def test_tags_length_counts_quotes_and_commas():
     assert yr.tags_length(["a", "b c"]) == 1 + 5 + 1
+
+
+# --- playlists -------------------------------------------------------------------------------------------------------
+
+PLAYLIST = {"title": "Example playlist", "description": "Toy example videos.", "privacy": "public"}
+
+
+def playlist_batch(**pl):
+    block = {**PLAYLIST, **pl}
+    return [item("example.en", playlist=block),
+            item("example-1.en", kind="short", publish_at="2026-12-02T19:00:00+07:00", playlist=block)]
+
+
+def test_playlist_found_by_exact_title_adds_both_videos(repo):
+    assets = stage(repo, playlist_batch())
+    http = FakeHTTP(playlists=[{"id": "PL-other", "title": "Example playlist 2", "videos": []},
+                               {"id": "PL-yes", "title": "Example playlist", "videos": []}])
+    ctx = ctx_for(repo, http=http)
+    summary = repo / "summary.md"
+    assert yr.run(ctx, assets, TAG, summary=summary) == 0
+    assert http.playlists[1]["videos"] == ["VID00000001", "VID00000002"]
+    assert http.playlists[0]["videos"] == [] and len(http.playlists) == 2
+    # one search for the batch (the id is kept), then a membership check and an insert per video
+    assert http.playlist_calls() == [("GET", "playlists"), ("GET", "playlistItems"), ("POST", "playlistItems"),
+                                     ("GET", "playlistItems"), ("POST", "playlistItems")]
+    result = json.loads((assets / "result.json").read_text())
+    assert result["complete"] is True and result["playlists"] == {"Example playlist": "PL-yes"}
+    assert result["items"]["example.en"]["playlist"] == {"id": "PL-yes", "title": "Example playlist", "added": True}
+    q = result["quota"]
+    assert (q["playlists_list"], q["playlists_insert"], q["playlist_items_list"], q["playlist_items_insert"]) == (1, 0, 2, 2)
+    assert q["units"] == 800 + 1 + 2 * 1 + 2 * 50
+    assert any("quota: playlists.list, 1 unit" == line.strip() for line in ctx.log)
+    assert any("quota: playlistItems.insert, 50 units" == line.strip() for line in ctx.log)
+    assert "Example playlist (added)" in summary.read_text()
+
+
+def test_missing_playlist_is_created_once_with_its_privacy(repo):
+    assets = stage(repo, playlist_batch(privacy="unlisted"))
+    http = FakeHTTP(playlists=[{"id": "PL-other", "title": "Something else", "videos": []}])
+    ctx = ctx_for(repo, http=http)
+    assert yr.run(ctx, assets, TAG) == 0
+    assert [p["title"] for p in http.playlists] == ["Something else", "Example playlist"]
+    created = http.playlists[1]
+    assert created["body"] == {"snippet": {"title": "Example playlist", "description": "Toy example videos.",
+                                           "defaultLanguage": "en"}, "status": {"privacyStatus": "unlisted"}}
+    assert created["videos"] == ["VID00000001", "VID00000002"]
+    # the new playlist is empty, so the first add needs no check; the Short is checked
+    assert http.playlist_calls() == [("GET", "playlists"), ("POST", "playlists"), ("POST", "playlistItems"),
+                                     ("GET", "playlistItems"), ("POST", "playlistItems")]
+    q = json.loads((assets / "result.json").read_text())["quota"]
+    assert (q["playlists_list"], q["playlists_insert"], q["playlist_items_list"], q["playlist_items_insert"]) == (1, 1, 1, 2)
+    assert q["units"] == 800 + 1 + 50 + 1 + 2 * 50
+    assert any("quota: playlists.insert, 50 units" == line.strip() for line in ctx.log)
+
+
+def test_privacy_defaults_to_public(repo):
+    assets = stage(repo, [item("example.en", playlist={"title": "Example playlist"})])
+    http = FakeHTTP()
+    assert yr.run(ctx_for(repo, http=http), assets, TAG) == 0
+    assert http.playlists[0]["body"]["status"] == {"privacyStatus": "public"}
+    assert http.playlists[0]["body"]["snippet"]["description"] == ""
+
+
+def test_video_already_in_playlist_is_not_added_again(repo):
+    assets = stage(repo, [item("example.en", playlist=PLAYLIST)])
+    http = FakeHTTP(playlists=[{"id": "PL-yes", "title": "Example playlist", "videos": ["VID00000001"]}])
+    ctx = ctx_for(repo, http=http)
+    assert yr.run(ctx, assets, TAG) == 0
+    assert http.playlists[0]["videos"] == ["VID00000001"]
+    assert http.playlist_calls() == [("GET", "playlists"), ("GET", "playlistItems")]
+    assert any("already in playlist" in line for line in ctx.log)
+    assert json.loads((assets / "result.json").read_text())["items"]["example.en"]["playlist"]["added"] is True
+
+
+def test_rerun_after_a_failed_add_retries_only_the_playlist_step(repo):
+    assets = stage(repo, [item("example.en", playlist=PLAYLIST)])
+    first = FakeHTTP(fail_playlist_add=True)
+    out = repo / "gh-output"
+    assert yr.run(ctx_for(repo, http=first), assets, TAG, github_output=out) == 1
+    assert out.read_text() == "complete=false\n"
+    result = json.loads((assets / "result.json").read_text())
+    assert result["complete"] is False and result["playlists"] == {"Example playlist": "PL0001"}
+    assert "playlist" not in result["items"]["example.en"]
+    # the second run sees a channel where the playlist exists (YouTube kept it) and finds it in result.json
+    second = FakeHTTP(playlists=first.playlists)
+    out.unlink()
+    assert yr.run(ctx_for(repo, http=second), assets, TAG, github_output=out) == 0
+    assert second.bodies() == []  # no second upload
+    assert second.playlist_calls() == [("GET", "playlistItems"), ("POST", "playlistItems")]  # no search, no new playlist
+    assert len(second.playlists) == 1 and second.playlists[0]["videos"] == ["VID00000001"]
+    assert out.read_text() == "complete=true\n"
+    # a third run calls nothing at all
+    third = FakeHTTP(playlists=second.playlists)
+    assert yr.run(ctx_for(repo, http=third), assets, TAG) == 0
+    assert third.calls == []
+
+
+def test_rerun_without_the_playlist_id_does_not_add_twice(repo):
+    assets = stage(repo, [item("example.en", playlist=PLAYLIST)])
+    http = FakeHTTP()
+    assert yr.run(ctx_for(repo, http=http), assets, TAG) == 0
+    result = json.loads((assets / "result.json").read_text())
+    del result["playlists"]  # an older result.json, or a lost id
+    result["quota"] = {"videos_insert": 1, "captions_insert": 1, "units": 400}  # result.json before playlists
+    del result["items"]["example.en"]["playlist"]
+    (assets / "result.json").write_text(json.dumps(result))
+    again = FakeHTTP(playlists=http.playlists)
+    assert yr.run(ctx_for(repo, http=again), assets, TAG) == 0
+    assert again.playlist_calls() == [("GET", "playlists"), ("GET", "playlistItems")]
+    assert len(again.playlists) == 1 and again.playlists[0]["videos"] == ["VID00000001"]
+
+
+def test_playlist_search_follows_every_page(repo):
+    others = [{"id": f"PL-{n:03d}", "title": f"Other {n}", "videos": []} for n in range(120)]
+    target = {"id": "PL-last", "title": "Example playlist", "videos": []}
+    assets = stage(repo, [item("example.en", playlist=PLAYLIST)])
+    http = FakeHTTP(playlists=[*others, target])
+    ctx = ctx_for(repo, http=http)
+    assert yr.run(ctx, assets, TAG) == 0
+    pages = [kw["params"].get("pageToken") for m, u, kw in http.calls if m == "GET" and u.endswith("/playlists")]
+    assert pages == [None, "50", "100"]
+    assert target["videos"] == ["VID00000001"] and len(http.playlists) == 121
+    assert json.loads((assets / "result.json").read_text())["quota"]["playlists_list"] == 3
+
+
+def test_items_without_playlist_make_no_playlist_call(repo):
+    assets = stage(repo, batch())
+    http = FakeHTTP()
+    assert yr.run(ctx_for(repo, http=http), assets, TAG) == 0
+    assert http.playlist_calls() == []
+    result = json.loads((assets / "result.json").read_text())
+    assert "playlist" not in result["items"]["example.en"] and result["quota"]["units"] == 800
+
+
+def test_dry_run_prints_the_playlist_plan_and_calls_nothing(repo):
+    assets = stage(repo, playlist_batch())
+    ctx = ctx_for(repo, live=False)
+    assert yr.run(ctx, assets, TAG) == 0
+    assert ctx.http.calls == [] and not (assets / "result.json").exists()
+    plans = [line for line in ctx.log if "playlist 'Example playlist': find it by title" in line]
+    assert len(plans) == 2 and "create it as public if missing" in plans[0]
+
+
+@pytest.mark.parametrize("playlist, message", [
+    ("Example playlist", "playlist must be an object"),
+    ({"description": "no title"}, "playlist.title must be"),
+    ({"title": " padded "}, "playlist.title must be"),
+    ({"title": "x" * 151}, "playlist.title must be"),
+    ({"title": "a <b>"}, "playlist.title must be"),
+    ({"title": "ok", "description": "x" * 5001}, "playlist.description must be"),
+    ({"title": "ok", "privacy": "secret"}, "playlist.privacy must be one of"),
+    ({"title": "ok", "id": "PL1"}, "unknown field(s) id"),
+])
+def test_bad_playlist_block_stops_before_any_call(repo, playlist, message):
+    assets = stage(repo, [item("example.en", playlist=playlist)])
+    ctx = ctx_for(repo)
+    assert yr.run(ctx, assets, TAG) == 1
+    assert ctx.http.calls == []
+    assert any(message in line for line in ctx.log), ctx.log
+
+
+def test_kept_playlist_id_that_was_deleted_is_searched_again(repo):
+    assets = stage(repo, playlist_batch())
+    first = FakeHTTP(fail_playlist_add=True)
+    assert yr.run(ctx_for(repo, http=first), assets, TAG) == 1  # PL0001 created and kept, nothing added
+    # the playlist was deleted in Studio before the re-run; a same-titled one exists under a new id
+    second = FakeHTTP(playlists=[{"id": "PL-new", "title": "Example playlist", "videos": []}])
+    ctx = ctx_for(repo, http=second)
+    assert yr.run(ctx, assets, TAG) == 0
+    assert second.playlists[0]["videos"] == ["VID00000001", "VID00000002"] and len(second.playlists) == 1
+    assert json.loads((assets / "result.json").read_text())["playlists"] == {"Example playlist": "PL-new"}
+    assert any("no longer exists" in line for line in ctx.log)

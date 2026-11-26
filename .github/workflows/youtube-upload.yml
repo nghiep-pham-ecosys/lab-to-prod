@@ -10,6 +10,7 @@ name: youtube-upload
 # result.json is kept on the draft release after every run, so a re-run skips what is already up. The draft release
 # is deleted only when every item is uploaded. The video ids go to the job summary and to the artifact
 # youtube-upload-<tag> (result.json), which `motion-studio finish-upload` reads.
+# Items with a playlist block in manifest.json are added to that playlist (found by title, created when missing).
 # A file named PAUSE at the repository root stops the run before any upload.
 run-name: youtube upload ${{ inputs.live && 'live' || 'dry run' }} ${{ inputs.tag }}
 

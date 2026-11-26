@@ -59,7 +59,14 @@ moves the whole batch, keeping the spacing between the video and its Shorts. A p
 - `result.json` (video ids, links, quota) is written after every upload and kept on the draft release, so a re-run
   skips what is already up. It also goes to the job summary and to the artifact `youtube-upload-<tag>`, which
   `motion-studio finish-upload` reads to write its upload record and free the disk.
-- The draft release is deleted only when every item is uploaded.
+- An item with a `playlist` block (`title`, optional `description`, optional `privacy`: `public` by default,
+  `unlisted` or `private`) lands in that playlist. The playlist is found by exact title among the channel's own
+  playlists (`playlists.list` with `mine=true`, every page), created when missing (`playlists.insert`), and the video
+  is added (`playlistItems.insert`) unless `playlistItems.list` shows it is already there. The playlist id is kept in
+  `result.json`, so a re-run neither creates a second playlist nor adds a video twice. A failed playlist step leaves
+  the batch incomplete; the re-run retries only that step. Quota: 1 unit per list call, 50 per insert. The dry run
+  prints the playlist plan and calls nothing.
+- The draft release is deleted only when every item is uploaded (and added to its playlist, when it has one).
 - The YouTube secrets are the same three as for Shorts; they reach only the upload step.
 - The `PAUSE` file stops the run before any call.
 
@@ -96,7 +103,7 @@ Posts made outside the weekly folders use a stable slug key, for example `notes:
 | --- | --- |
 | LinkedIn | The self-serve "Share on LinkedIn" product documents `/v2/ugcPosts` + `/v2/assets?action=registerUpload` with scope `w_member_social`. Tokens last 60 days; refresh tokens are for selected partners only. The comments documentation lists a different scope, so the first comment may be refused: the post is kept and the link is added by hand. A folder with `linkedin.pdf` uses `/rest/documents?action=initializeUpload` + `/rest/posts` instead (same scope, `LinkedIn-Version` header; person-authored document posts not yet verified live). |
 | Facebook | Graph API v27.0. `/{page-id}/photos` with `published=false` and `scheduled_publish_time`, between 10 minutes and 30 days ahead. PNG uploads are capped at 1 MB, so images go up as JPEG. Long-lived Page tokens do not expire by date. |
-| YouTube | `publishAt` needs `privacyStatus: private`. `videos.insert` has its own quota of 100 calls a day; `captions.insert` costs 400 units. The 2 Nov 2026 revision says uploads from unverified projects are no longer locked to private. There is no Shorts flag. |
+| YouTube | `publishAt` needs `privacyStatus: private`. `videos.insert` has its own quota of 100 calls a day; `captions.insert` costs 400 units. The 2 Nov 2026 revision says uploads from unverified projects are no longer locked to private. There is no Shorts flag. Playlists (checked 26 Nov 2026): `playlists.list` and `playlistItems.list` cost 1 unit, `playlists.insert` and `playlistItems.insert` 50; list pages hold at most 50 items; the inserts accept the `youtube.force-ssl` scope. |
 | Telegram | `sendPhoto`, caption up to 1,024 characters, photo up to 10 MB. No method returns channel view counts. |
 | DEV | `POST /api/articles` with the `api-key` header; at most 4 tags, sent as a comma-separated string. |
 | Hashnode | Free API access was retired on 13 May 2026; every request needs a Pro plan. Not used. |
