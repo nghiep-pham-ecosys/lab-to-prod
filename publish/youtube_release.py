@@ -13,6 +13,11 @@ The youtube-upload workflow downloads the assets with GITHUB_TOKEN into one fold
   deletes the draft release only then.
 - --publish-at moves the whole batch so that its earliest item goes out at that time, keeping the spacing.
 - A publish time in the past is refused for that item (no back-posting).
+- An item with ``playlist`` lands in that playlist: found by exact title among the channel's own playlists
+  (playlists.list, mine=true, every page), created when missing (playlists.insert), then the video is added
+  (playlistItems.insert) unless playlistItems.list says it is already there. The playlist id is kept in
+  result.json, so a re-run neither creates a second playlist nor adds the video twice. A failed playlist step
+  leaves the batch incomplete; the re-run retries only that step. Items without ``playlist`` skip all of this.
 - Quota is logged per call (see youtube.py) and totalled in result.json.
 - The PAUSE file at the repository root stops the run before any call.
 
@@ -21,14 +26,20 @@ manifest.json (written by ``motion-studio stage-upload``)::
     {"version": 1, "tag": "yt-rag-en", "job": "rag",
      "items": [{"key": "rag.en", "kind": "video", "path": "rag.en.mp4", "video": "rag.en.mp4",
                 "captions": "rag.en.srt", "title": "...", "description": "...", "tags": ["rag"],
-                "language": "en", "publish_at": "2026-12-01T19:00:00+07:00", "synthetic_media": true}]}
+                "language": "en", "publish_at": "2026-12-01T19:00:00+07:00", "synthetic_media": true,
+                "playlist": {"title": "...", "description": "...", "privacy": "public"}}]}
+
+``playlist`` is optional; ``description`` defaults to "" and ``privacy`` (public, unlisted or private) to public.
 
 result.json (read by ``motion-studio finish-upload``)::
 
     {"version": 1, "tag": "yt-rag-en", "job": "rag", "complete": true,
      "items": {"rag.en": {"path": "rag.en.mp4", "video_id": "...", "url": "...", "publish_at": "...Z",
-                          "captions": true, "uploaded_at": "..."}},
-     "quota": {"videos_insert": 1, "captions_insert": 1, "units": 400}}
+                          "captions": true, "uploaded_at": "...",
+                          "playlist": {"id": "PL...", "title": "...", "added": true}}},
+     "playlists": {"<title>": "PL..."},
+     "quota": {"videos_insert": 1, "captions_insert": 1, "playlists_list": 1, "playlists_insert": 0,
+               "playlist_items_list": 1, "playlist_items_insert": 1, "units": 452}}
 """
 from __future__ import annotations
 
@@ -40,7 +51,8 @@ import sys
 from pathlib import Path, PurePosixPath
 
 from .common import ROOT, Context, PublishError, default_env, load_config, paused
-from .youtube import CAPTIONS_UNITS, DAILY_UNITS, UPLOADS_PER_DAY, access_token, insert_captions, upload_video
+from .youtube import (CAPTIONS_UNITS, DAILY_UNITS, LIST_UNITS, PLAYLIST_INSERT_UNITS, UPLOADS_PER_DAY, access_token,
+                      add_to_playlist, create_playlist, insert_captions, playlist_has_video, playlist_pages, upload_video)
 
 VERSION = 1
 NAME_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
@@ -51,6 +63,11 @@ MAX_DESCRIPTION = 5000     # bytes (snippet.description)
 MAX_TAGS = 500             # characters, counting quotes around tags with spaces and the commas between tags
 AI_LABEL = "made with ai"  # lab-to-prod rule: videos made with AI tools say so on YouTube
 LANG_NAMES = {"en": "English", "vi": "Tiếng Việt"}
+MAX_PLAYLIST_TITLE = 150         # characters (verify: not stated on the playlists resource page, 26 Nov 2026)
+MAX_PLAYLIST_DESCRIPTION = 5000  # bytes (verify, as above)
+PLAYLIST_PRIVACY = ("public", "unlisted", "private")
+QUOTA_KEYS = ("videos_insert", "captions_insert", "playlists_list", "playlists_insert", "playlist_items_list",
+              "playlist_items_insert", "units")
 
 
 class ManifestError(PublishError):
@@ -121,6 +138,29 @@ def _check_item(i: int, item: object, assets: Path, keys: set[str]) -> list[str]
         problems.append(str(exc))
     if not isinstance(item.get("synthetic_media", True), bool):
         problems.append(f"{where}: synthetic_media must be true or false")
+    if "playlist" in item:
+        problems += _check_playlist(item["playlist"], where)
+    return problems
+
+
+def _check_playlist(pl: object, where: str) -> list[str]:
+    if not isinstance(pl, dict):
+        return [f"{where}: playlist must be an object with title, description and privacy"]
+    problems = []
+    unknown = sorted(set(pl) - {"title", "description", "privacy"})
+    if unknown:
+        problems.append(f"{where}: playlist has unknown field(s) {', '.join(unknown)}")
+    title = pl.get("title")
+    if not isinstance(title, str) or not title.strip() or title != title.strip() or len(title) > MAX_PLAYLIST_TITLE \
+            or re.search(r"[<>]", title):
+        problems.append(f"{where}: playlist.title must be 1-{MAX_PLAYLIST_TITLE} characters without < or > "
+                        "or outer spaces")
+    desc = pl.get("description", "")
+    if not isinstance(desc, str) or len(desc.encode("utf-8")) > MAX_PLAYLIST_DESCRIPTION or re.search(r"[<>]", desc):
+        problems.append(f"{where}: playlist.description must be text of at most {MAX_PLAYLIST_DESCRIPTION} bytes "
+                        "without < or >")
+    if pl.get("privacy", "public") not in PLAYLIST_PRIVACY:
+        problems.append(f"{where}: playlist.privacy must be one of {', '.join(PLAYLIST_PRIVACY)}")
     return problems
 
 
@@ -164,7 +204,7 @@ def shift(items: list[dict], publish_at: str | None) -> list[dict]:
 def load_result(path: Path, manifest: dict) -> dict:
     """result.json of an earlier run of this batch (kept on the draft release), else a new one."""
     fresh = {"version": VERSION, "tag": manifest["tag"], "job": manifest["job"], "complete": False, "items": {},
-             "quota": {"videos_insert": 0, "captions_insert": 0, "units": 0}}
+             "playlists": {}, "quota": dict.fromkeys(QUOTA_KEYS, 0)}
     if not path.exists():
         return fresh
     try:
@@ -174,7 +214,11 @@ def load_result(path: Path, manifest: dict) -> dict:
     if not isinstance(data, dict) or data.get("tag") != manifest["tag"] or data.get("job") != manifest["job"] \
             or not isinstance(data.get("items"), dict):
         raise ManifestError(f"{path.name} belongs to another batch; delete it from the release to start over")
-    data.setdefault("quota", fresh["quota"])
+    quota = data.setdefault("quota", {})
+    for key in QUOTA_KEYS:
+        quota.setdefault(key, 0)
+    if not isinstance(data.get("playlists"), dict):
+        data["playlists"] = {}
     return data
 
 
@@ -199,19 +243,108 @@ def watch_url(item: dict, video_id: str) -> str:
     return f"https://www.youtube.com/shorts/{video_id}" if item["kind"] == "short" else f"https://www.youtube.com/watch?v={video_id}"
 
 
+def in_playlist(it: dict, done: dict | None) -> bool:
+    """True when the item needs no playlist step: it has no ``playlist``, or result.json says it was added."""
+    if not it.get("playlist"):
+        return True
+    got = (done or {}).get("playlist") or {}
+    return got.get("added") is True and got.get("title") == it["playlist"]["title"]
+
+
+def playlist_cell(it: dict, done: dict) -> str:
+    if not it.get("playlist"):
+        return "-"
+    return f"{it['playlist']['title']} ({'added' if in_playlist(it, done) else 'not added'})"
+
+
 def summary_table(result: dict, items: list[dict], live: bool) -> str:
-    rows = ["| item | kind | publish at (UTC) | video | captions |", "| --- | --- | --- | --- | --- |"]
+    rows = ["| item | kind | publish at (UTC) | video | captions | playlist |", "| --- | --- | --- | --- | --- | --- |"]
     for it in items:
         done = result["items"].get(it["key"], {})
         when = youtube_time(parse_time(it["publish_at"], it["key"]))
         video = done.get("video_id") or ("not uploaded" if live else "dry run")
-        rows.append(f"| {it['key']} | {it['kind']} | {when} | {video} | {'yes' if done.get('captions') else 'no'} |")
+        rows.append(f"| {it['key']} | {it['kind']} | {when} | {video} | {'yes' if done.get('captions') else 'no'} "
+                    f"| {playlist_cell(it, done)} |")
     q = result["quota"]
     rows.append("")
+    playlist_calls = ""
+    if any(q[k] for k in ("playlists_list", "playlists_insert", "playlist_items_list", "playlist_items_insert")):
+        playlist_calls = (f", {q['playlists_list']} playlists.list, {q['playlists_insert']} playlists.insert, "
+                          f"{q['playlist_items_list']} playlistItems.list, {q['playlist_items_insert']} "
+                          "playlistItems.insert")
     rows.append(f"Quota this batch: {q['videos_insert']} videos.insert (of {UPLOADS_PER_DAY} uploads a day), "
-                f"{q['captions_insert']} captions.insert = {q['units']} units (of {DAILY_UNITS:,} a day).")
+                f"{q['captions_insert']} captions.insert{playlist_calls} = {q['units']} units (of {DAILY_UNITS:,} a day).")
     rows.append(f"Complete: {'yes' if result['complete'] else 'no'}.")
     return "\n".join(rows) + "\n"
+
+
+def spend(ctx: Context, result: dict, key: str, method: str, units: int) -> None:
+    """Count one Data API call in result.json and log it, before the call is made (a refused call costs too)."""
+    result["quota"][key] += 1
+    result["quota"]["units"] += units
+    ctx.say(f"       quota: {method}, {units} unit{'s' if units != 1 else ''}")
+
+
+def find_or_create_playlist(ctx: Context, it: dict, result: dict, auth: dict) -> tuple[str, bool]:
+    """The id of the playlist named ``it['playlist']['title']`` (exact match), created when the channel has none.
+    Returns ``(id, created)``. An id kept in result.json from an earlier call or run is used without a call."""
+    pl = it["playlist"]
+    title = pl["title"]
+    known = result["playlists"].get(title)
+    if known:
+        return known, False
+    found = []
+    for page in playlist_pages(ctx, auth, lambda: spend(ctx, result, "playlists_list", "playlists.list", LIST_UNITS)):
+        found += [p["id"] for p in page if isinstance(p, dict) and (p.get("snippet") or {}).get("title") == title]
+        if found:
+            break
+    if found:
+        ctx.say(f"       playlist {title!r} found: {found[0]}")
+        return found[0], False
+    spend(ctx, result, "playlists_insert", "playlists.insert", PLAYLIST_INSERT_UNITS)
+    new_id = create_playlist(ctx, pl, it["language"], auth)
+    ctx.say(f"       playlist {title!r} created as {pl.get('privacy', 'public')}: {new_id}")
+    return new_id, True
+
+
+def put_in_playlist(ctx: Context, it: dict, entry: dict, result: dict, auth: dict, save_result) -> None:
+    """Make sure the uploaded video of ``it`` is in its playlist; record it in ``entry``. Raises on a refused call."""
+    title = it["playlist"]["title"]
+    playlist_id, created = find_or_create_playlist(ctx, it, result, auth)
+    result["playlists"][title] = playlist_id
+    save_result()  # the playlist exists now: a re-run must not create a second one
+    video_id = entry["video_id"]
+    there = False
+    if not created:  # a playlist made a moment ago is empty: no need to ask
+        spend(ctx, result, "playlist_items_list", "playlistItems.list", LIST_UNITS)
+        try:
+            there = playlist_has_video(ctx, playlist_id, video_id, auth)
+        except PublishError as exc:
+            if "HTTP 404" not in str(exc):
+                raise
+            # the kept id is gone (playlist deleted in Studio): forget it and look again, once
+            ctx.say(f"       playlist {playlist_id} no longer exists; searching for {title!r} again")
+            del result["playlists"][title]
+            playlist_id, created = find_or_create_playlist(ctx, it, result, auth)
+            result["playlists"][title] = playlist_id
+            save_result()
+            if not created:
+                spend(ctx, result, "playlist_items_list", "playlistItems.list", LIST_UNITS)
+                there = playlist_has_video(ctx, playlist_id, video_id, auth)
+    if there:
+        ctx.say(f"       {video_id} is already in playlist {title!r}")
+    else:
+        spend(ctx, result, "playlist_items_insert", "playlistItems.insert", PLAYLIST_INSERT_UNITS)
+        add_to_playlist(ctx, playlist_id, video_id, auth)
+        ctx.say(f"       {video_id} added to playlist {title!r}")
+    entry["playlist"] = {"id": playlist_id, "title": title, "added": True}
+    save_result()
+
+
+def playlist_plan(it: dict) -> str:
+    pl = it["playlist"]
+    return (f"playlist {pl['title']!r}: find it by title among the channel's playlists, create it as "
+            f"{pl.get('privacy', 'public')} if missing, add the video unless it is there")
 
 
 def run(ctx: Context, assets: Path, tag: str, publish_at: str | None = None, result_path: Path | None = None,
@@ -238,11 +371,32 @@ def run(ctx: Context, assets: Path, tag: str, publish_at: str | None = None, res
         return finish(1)
     ctx.say(f"{'LIVE' if ctx.live else 'DRY RUN'}: {len(items)} item(s) of job {manifest['job']} from release {tag}")
     failures, auth = 0, None
+
+    def get_auth() -> dict:
+        nonlocal auth
+        auth = auth or {"Authorization": f"Bearer {access_token(ctx)}"}
+        return auth
+
+    def playlist_step(it: dict, entry: dict) -> None:
+        nonlocal failures
+        try:
+            put_in_playlist(ctx, it, entry, result, get_auth(), lambda: save(result_path, result))
+        except (PublishError, OSError, KeyError, ValueError) as exc:
+            ctx.say(f"  FAIL {it['key']}: the video is up as {entry['video_id']}, but the playlist step failed "
+                    f"({str(exc)[:200]}); run the workflow again to retry only that step")
+            failures += 1
+
     for it in items:
         key, when = it["key"], parse_time(it["publish_at"], it["key"])
         done = result["items"].get(key)
         if done and done.get("video_id"):
-            ctx.say(f"  {key}: already uploaded as {done['video_id']}, skipped")
+            if in_playlist(it, done):
+                ctx.say(f"  {key}: already uploaded as {done['video_id']}, skipped")
+            elif not ctx.live:
+                ctx.say(f"  DRY RUN {key}: already uploaded as {done['video_id']}; {playlist_plan(it)}")
+            else:
+                ctx.say(f"  {key}: already uploaded as {done['video_id']}; adding it to its playlist")
+                playlist_step(it, done)
             continue
         if when <= ctx.now:
             ctx.say(f"  FAIL {key}: publish time {when.isoformat()} is in the past; not back-posting "
@@ -253,10 +407,11 @@ def run(ctx: Context, assets: Path, tag: str, publish_at: str | None = None, res
                + (f", + {it['captions']}" if it.get("captions") else "")
         if not ctx.live:
             ctx.say(f"  DRY RUN {line}")
+            if it.get("playlist"):
+                ctx.say(f"          {playlist_plan(it)}")
             continue
         try:
-            auth = auth or {"Authorization": f"Bearer {access_token(ctx)}"}
-            video_id = upload_video(ctx, assets / it["video"], body_for(ctx, it), auth)
+            video_id = upload_video(ctx, assets / it["video"], body_for(ctx, it), get_auth())
         except (PublishError, OSError, KeyError, ValueError) as exc:
             ctx.say(f"  FAIL {key}: {str(exc)[:300]}")
             failures += 1
@@ -281,9 +436,12 @@ def run(ctx: Context, assets: Path, tag: str, publish_at: str | None = None, res
                 ctx.say(f"  WARN {key}: captions were refused ({str(exc)[:160]}); upload {it['captions']} in Studio "
                         f"(quota: captions.insert, {CAPTIONS_UNITS} units)")
             save(result_path, result)
+        if it.get("playlist"):
+            playlist_step(it, entry)
     complete = False
     if ctx.live:
-        complete = all(result["items"].get(it["key"], {}).get("video_id") for it in items)
+        complete = all(result["items"].get(it["key"], {}).get("video_id") and in_playlist(it, result["items"][it["key"]])
+                       for it in items)
         result["complete"] = complete
         save(result_path, result)
     table = summary_table(result, items, ctx.live)
