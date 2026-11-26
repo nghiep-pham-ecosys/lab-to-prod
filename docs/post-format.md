@@ -109,6 +109,14 @@ Channel norms checked by `tools/format_check.py` (warnings only, recorded in `ju
 3 lines or 60 words, an open question in the last two paragraphs before the sign-off; Facebook
 80-120 words; X at most 280 characters with a number in the hook; Short 30-60 s.
 
+Sources (same file, same `format` entry, warning only): a post whose prose states a number (any digit
+outside the hashtag line and the "Part N of my ... notes" sign-off) needs at least one link in
+`sources` or a reproducing script in its folder, that is a `*.py` file with a `*.expected` file of the
+same name. With neither, `format` gets the warning "the post states numbers but has no source and no
+reproducing script". `python tools/format_check.py --week <week>` prints a `sources:` line per post.
+This only counts whether a backing exists; whether the source supports the claim is still the judge's
+`sources` score, and links are checked by `validate.py --check-links`.
+
 Saturday long articles are not post folders: they live in `blog/src/content/posts/`.
 From 2026-W48 on, an article's front matter also has `work:`, the same ids as its calendar item.
 
