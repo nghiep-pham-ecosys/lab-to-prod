@@ -3,7 +3,8 @@
 
     python tools/format_check.py --week 2026-W47
 
-It measures length and structure only (LinkedIn, Facebook, X, the Short). The result is
+It measures length and structure (LinkedIn, Facebook, X, the Short) and whether a post that states
+a number backs it with a source or a reproducing script. The result is
 informational: tools/judge_file.py writes it into judge.json under "format" so the weekly review
 can show it next to the scores. The silent-approval gate does not read it.
 """
@@ -86,9 +87,38 @@ def check_short(path: Path) -> dict:
     return {"seconds": seconds, "warnings": warnings}
 
 
+_NUMBER = re.compile(r"\d")
+
+
+def reproducing_scripts(folder: Path) -> list[str]:
+    """Names of the *.py files in a post folder that have a matching *.expected file."""
+    return sorted(p.name for p in folder.glob("*.py") if p.with_suffix(".expected").is_file())
+
+
+def check_sources(meta: dict, sections: dict[str, str], folder: Path) -> dict:
+    """A post whose prose states a number needs a source in `sources` or a reproducing script."""
+    prose = "\n".join(p for text in sections.values() for p in _prose(_paragraphs(text)))
+    states_numbers = bool(_NUMBER.search(prose))
+    sources = meta.get("sources") or []
+    sources = sources if isinstance(sources, list) else []
+    scripts = reproducing_scripts(folder)
+    warnings = []
+    if states_numbers and not sources and not scripts:
+        warnings.append("sources: the post states numbers but has no source and no reproducing script (*.py + *.expected)")
+    return {"states_numbers": states_numbers, "sources": len(sources), "scripts": scripts, "warnings": warnings}
+
+
+def _source_line(entry: dict) -> str:
+    if not entry["states_numbers"]:
+        return "no numbers"
+    backing = [f"{entry['sources']} source(s)"] if entry["sources"] else []
+    backing += [f"script {name}" for name in entry["scripts"]]
+    return "numbers backed by " + ", ".join(backing) if backing else "numbers with no source or script"
+
+
 def check_folder(folder: Path) -> dict:
-    """Format report of one post folder: one entry per channel present, plus all warnings."""
-    _, sections = v.parse_post(folder / "post.md")
+    """Format report of one post folder: one entry per channel present, the source check, plus all warnings."""
+    meta, sections = v.parse_post(folder / "post.md")
     report: dict = {}
     if sections.get("linkedin"):
         report["linkedin"] = check_linkedin(sections["linkedin"])
@@ -98,6 +128,7 @@ def check_folder(folder: Path) -> dict:
         report["x"] = check_x(sections["x"])
     if (folder / "short.json").exists():
         report["short"] = check_short(folder / "short.json")
+    report["sources"] = check_sources(meta, sections, folder)
     report["warnings"] = [w for entry in report.values() for w in entry["warnings"]]
     return report
 
@@ -108,8 +139,10 @@ def main(argv=None) -> int:
     ap.add_argument("--root", type=Path, default=v.ROOT)
     args = ap.parse_args(argv)
     for folder in v.post_folders(args.root, args.week):
-        warnings = check_folder(folder)["warnings"]
+        report = check_folder(folder)
+        warnings = report["warnings"]
         print(f"{'OK  ' if not warnings else 'WARN'} {folder.name}" + ("" if not warnings else ": " + "; ".join(warnings)))
+        print(f"     sources: {_source_line(report['sources'])}")
     return 0
 
 

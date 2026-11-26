@@ -24,7 +24,10 @@ def write_post(folder: Path, linkedin: str, x: str = "128 is not 128.", facebook
 
 
 def test_good_post_has_no_warnings(tmp_path):
-    report = fc.check_folder(write_post(tmp_path / "p", GOOD_LINKEDIN, scenes=[20, 25]))
+    folder = write_post(tmp_path / "p", GOOD_LINKEDIN, scenes=[20, 25])
+    (folder / "java_cache.py").write_text("print(128 == 128)\n")
+    (folder / "java_cache.expected").write_text("True\n")
+    report = fc.check_folder(folder)
     assert report["warnings"] == []
     assert report["linkedin"]["ends_with_question"] is True
     assert report["linkedin"]["hook_lines"] == 1
@@ -70,3 +73,46 @@ def test_judge_file_records_format(tmp_path, monkeypatch):
     fmt = data["posts"]["2026-11-16-dsa-p2"]["format"]
     assert fmt["linkedin"]["words"] == 2
     assert "linkedin: no open question at the end" in fmt["warnings"]
+
+
+SOURCE_WARNING = "sources: the post states numbers but has no source and no reproducing script (*.py + *.expected)"
+
+
+def test_numbers_with_no_source_and_no_script_warn(tmp_path):
+    report = fc.check_folder(write_post(tmp_path / "p", GOOD_LINKEDIN))
+    assert report["sources"]["states_numbers"] is True
+    assert report["sources"]["sources"] == 0 and report["sources"]["scripts"] == []
+    assert SOURCE_WARNING in report["warnings"]
+
+
+def test_reproducing_script_needs_a_matching_expected_file(tmp_path):
+    folder = write_post(tmp_path / "p", GOOD_LINKEDIN)
+    (folder / "numbers.py").write_text("print(128)\n")
+    assert SOURCE_WARNING in fc.check_folder(folder)["warnings"]
+    (folder / "numbers.expected").write_text("128\n")
+    report = fc.check_folder(folder)
+    assert report["sources"]["scripts"] == ["numbers.py"]
+    assert SOURCE_WARNING not in report["warnings"]
+
+
+def test_a_source_link_is_enough(tmp_path):
+    folder = write_post(tmp_path / "p", GOOD_LINKEDIN)
+    post = folder / "post.md"
+    post.write_text(post.read_text().replace("sources: []", "sources: [https://example.com/paper]"))
+    report = fc.check_folder(folder)
+    assert report["sources"]["sources"] == 1
+    assert SOURCE_WARNING not in report["warnings"]
+
+
+def test_no_numbers_needs_no_source():
+    r = fc.check_sources({"sources": []}, {"linkedin": "No digits here.\n\nPart 2 of my notes.\n\n#Python3"}, Path("/nonexistent"))
+    assert r["states_numbers"] is False and r["warnings"] == []
+
+
+def test_ai_eng_p3_passes_through_its_script():
+    folder = ROOT / "content" / "2026-W48" / "2026-11-26-ai-eng-p3"
+    report = fc.check_folder(folder)
+    assert report["sources"]["states_numbers"] is True
+    assert report["sources"]["sources"] == 0
+    assert "format_vs_judge.py" in report["sources"]["scripts"]
+    assert SOURCE_WARNING not in report["warnings"]
