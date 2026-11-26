@@ -282,12 +282,28 @@
       "id": "urn:li:share:7531525969086595072",
       "url": "https://www.linkedin.com/feed/update/urn:li:share:7531525969086595072/"
     },
+    "x": {
+      "at": "2026-11-26T12:01:00+00:00",
+      "id": "2125922992408662239",
+      "manual": true,
+      "url": "https://x.com/pqnghiep1354/status/2125922992408662239",
+      "via": "chrome"
+    },
     "youtube": {
       "at": "2026-11-20T05:53:32+00:00",
       "captions": true,
       "id": "jtlZ5rQGFzY",
       "scheduled_for": "2026-11-26T12:00:00.000Z",
       "url": "https://www.youtube.com/shorts/jtlZ5rQGFzY"
+    }
+  },
+  "2026-11-26:reply": {
+    "x": {
+      "at": "2026-11-26T12:03:09+00:00",
+      "id": "2125923206230134941",
+      "manual": true,
+      "url": "https://x.com/pqnghiep1354/status/2125923206230134941",
+      "via": "chrome"
     }
   },
   "2026-11-27": {
