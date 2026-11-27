@@ -1,0 +1,122 @@
+name: followup
+
+# Manual only, never on a schedule. Follow-up comments from the author on our own posts (publish/followup.py).
+#   gh workflow run followup.yml -f mode=due [-f date=YYYY-MM-DD]
+#   gh workflow run followup.yml -f mode=plan -f approved='[{"channel":"linkedin","post_key":"...","number":1,"text":"..."}]'
+#   gh workflow run followup.yml -f mode=post -f approved='[...]'
+# due reads published.json and metrics.csv only (no secrets, no API call) and lists the follow-ups due that day.
+# plan checks the approved list and prints what post would do, calling nothing.
+# post posts exactly the approved texts, each once (published.json is the record; it is pushed to the
+# publish-state branch). X is never called: it comes back as "manual" with the record_manual commands.
+# Nothing here holds a name or comment text of another person: the repository, its logs and artifacts are public.
+# A file named PAUSE stops a post run.
+run-name: followup ${{ inputs.mode }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "due (read only), plan (dry run of approved) or post (posts approved)"
+        type: choice
+        options: [due, plan, post]
+        default: due
+      date:
+        description: "due: the day to check (YYYY-MM-DD), default today in local time"
+        required: false
+      approved:
+        description: 'plan/post: JSON list of {"channel","post_key","number","text"}'
+        required: false
+
+permissions: {}
+
+concurrency:
+  group: followup
+  cancel-in-progress: false
+
+jobs:
+  due:
+    if: inputs.mode == 'due'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/requirements.txt
+      - run: pip install -r tools/requirements.txt
+
+      - name: Load publish state and metrics
+        run: python tools/state_sync.py pull
+
+      - name: List follow-ups due
+        env:
+          DUE_DATE: ${{ inputs.date }}
+        run: |
+          args=()
+          if [ -n "$DUE_DATE" ]; then args=(--date "$DUE_DATE"); fi
+          python -m publish.followup due "${args[@]}" --out "$RUNNER_TEMP/followup-due.json" --summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the result
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: followup-due
+          path: ${{ runner.temp }}/followup-due.json
+          if-no-files-found: ignore
+          retention-days: 14
+
+  post:
+    if: inputs.mode == 'plan' || inputs.mode == 'post'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write   # pushes published.json to the publish-state branch
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/requirements.txt
+      - run: pip install -r tools/requirements.txt
+
+      - name: Load publish state
+        run: python tools/state_sync.py pull
+
+      - name: Post approved follow-ups
+        env:
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+          FB_PAGE_TOKEN: ${{ secrets.FB_PAGE_TOKEN }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          APPROVED: ${{ inputs.approved }}
+          MODE: ${{ inputs.mode }}
+        run: |
+          if [ -z "$APPROVED" ]; then
+            echo "::error::mode=$MODE needs the approved input"
+            exit 1
+          fi
+          printf '%s' "$APPROVED" > "$RUNNER_TEMP/approved.json"
+          live=()
+          if [ "$MODE" = "post" ]; then live=(--live); fi
+          python -m publish.followup post --file "$RUNNER_TEMP/approved.json" "${live[@]}" --out "$RUNNER_TEMP/followup-post.json" --summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Record what was posted
+        if: always() && inputs.mode == 'post'
+        run: python tools/state_sync.py push published.json
+
+      - name: Keep the result
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: followup-${{ inputs.mode }}
+          path: ${{ runner.temp }}/followup-post.json
+          if-no-files-found: ignore
+          retention-days: 14

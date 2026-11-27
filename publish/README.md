@@ -120,6 +120,68 @@ uv run --with-requirements tools/requirements.txt python -m publish.comments rep
   left out of the summary, stdout and artifacts (`--redact`, always on in the workflow); the author reads them on
   the post itself. Never drop `--redact` from the workflow.
 
+## Follow-up comments
+
+`followup.py` plans one comment from the author 7 days after a post, and a second one 14 days after it only when the
+post earned it. Never more than 2 per post and channel. The channels are LinkedIn, the Facebook Page, YouTube and X.
+The daily flow sits in the same approval as replies (ecosys skill daily-start, step "Bình luận"):
+
+1. The main session runs the `followup` workflow (`.github/workflows/followup.yml`, started by hand only) in `due`
+   mode, or `followup.py due` locally. It reads `published.json` and `metrics/metrics.csv` and calls no API.
+2. On the day a follow-up is due, it drafts the text from facts only: the post, its blog note, a later merged change
+   in `content/work.yaml`, or the next part of the series. A follow-up never names or quotes a commenter, and never
+   asks for engagement. The author approves the drafts in the daily comment batch. Nothing is posted before his yes.
+3. It runs the workflow in `plan` mode (a dry run of the approved list), then in `post` mode with the same JSON.
+4. X is posted by hand in Chrome and recorded with `record_manual` under the follow-up key (see below). So is any
+   LinkedIn follow-up that LinkedIn refuses.
+
+```bash
+gh workflow run followup.yml -f mode=due
+```
+
+```bash
+gh workflow run followup.yml -f mode=post -f approved='[{"channel":"linkedin","post_key":"2026-11-20","number":1,"text":"<approved text>"}]'
+```
+
+Locally (`post` prints the plan and calls nothing without `--live`):
+
+```bash
+uv run --with-requirements tools/requirements.txt python -m publish.followup due --date 2026-11-27
+```
+
+```bash
+uv run --with-requirements tools/requirements.txt python -m publish.followup post --file approved.json
+```
+
+- **When.** Follow-up 1 is due 7 days after the day the post went public (its `scheduled_for`, else its `at`, in
+  local time) and stays due for 2 more days. Follow-up 2 is due on day 14 (and 2 more days) when follow-up 1 is
+  recorded and the post has comments from other people (the latest `comments` count minus our own first comment and
+  follow-up 1) or reach above the median of that channel's posts (`impressions`, or `views` for YouTube) in the latest
+  metrics. X has no metrics, so it only ever gets follow-up 1. A held-back follow-up 2 is noted on stderr.
+- **Output of `due`.** One entry per follow-up: `channel`, `post_key`, `post_url`, `number`, `key`, `due_on`,
+  `mode` (`api` or `manual`), `metrics` (latest counts) and `comments`. Counts only, no names, no comment text.
+- **Approved file.** A JSON list of `{channel, post_key, number, text}`. `post` checks again: the post is in
+  `published.json`, the number is 1 or 2, follow-up 1 comes before 2, the day has come, and the key is not recorded.
+- **Record.** A posted follow-up goes into `published.json` at once under `<post key>:followup1` or
+  `<post key>:followup2` (`id` = the new comment, `post_id`, `url` of the post). A re-run skips it. In the workflow the
+  file is pushed to the `publish-state` branch. `comments.py` and `metrics/collect.py` skip these keys.
+- **Calls.** LinkedIn: `POST /rest/socialActions/{post URN}/comments` (the comments API also used for the first
+  comment; it lists `w_member_social_feed`, so a refusal is reported and the comment goes by hand). Facebook:
+  `POST /{post-id}/comments`, needs `pages_manage_engagement` (lab-to-prod#61). YouTube: `commentThreads.insert` on
+  our own video (50 units, `youtube.force-ssl`).
+- **X by hand.** `post` never calls X. The item comes back as `manual` with the two commands:
+
+```bash
+uv run --with-requirements tools/requirements.txt python -m publish.record_manual check --key 2026-11-20:followup1 --channel x
+```
+
+```bash
+uv run --with-requirements tools/requirements.txt python -m publish.record_manual record --key 2026-11-20:followup1 --channel x --url https://x.com/<handle>/status/<id> --via chrome
+```
+
+- **Public logs.** The job summary and the artifacts `followup-due`, `followup-plan` and `followup-post` hold channels, keys, counts,
+  statuses and our own approved text only. The `PAUSE` file stops a `post` run before any call.
+
 ## Manual posts
 
 X and Hashnode are posted by hand, and any channel can be. Record every manual post so `published.json`
