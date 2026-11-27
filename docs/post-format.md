@@ -34,9 +34,10 @@ One post = one folder: `content/<ISO week>/<date>-<slug>/`, for example
 
 Posts take their content only from project work that is already merged. Each ledger entry has
 an `id`, a `repo`, a `ref`, the `merged` date and one or two sentences of `what`. A public repo's
-`ref` is the merged pull request URL; a private repo's `ref` is `private@<sha>` and the repo is
-named, never linked. Only the repos listed under `repos:` in the ledger can be a source. From
-2026-W48 on, `tools/validate.py` fails a calendar item or a post without a `work:` ref, a ref
+`ref` is the merged pull request URL, or the commit URL on `main` when the change has no pull
+request in that repo (work merged before a private repo went public with rewritten history); a
+private repo's `ref` is `private@<sha>` and the repo is named, never linked. Only the repos
+listed under `repos:` in the ledger can be a source. From 2026-W48 on, `tools/validate.py` fails a calendar item or a post without a `work:` ref, a ref
 that is not in the ledger, and work merged after the post date. Calendar items with no merged
 work behind them wait in the calendar's `parked:` list, without a date.
 

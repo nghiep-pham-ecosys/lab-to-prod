@@ -338,8 +338,12 @@ def check_work(work: dict, rep: Report, where: Path, today: dt.date | None = Non
         out[wid] = entry
         repo, ref = entry.get("repo"), str(entry.get("ref") or "")
         if repo in public:
-            if not re.fullmatch(rf"https://github\.com/{ORG}/{re.escape(repo)}/pull/\d+", ref):
-                rep.error(where, f"{label}: ref must be the merged pull request URL in {ORG}/{repo}")
+            # A commit URL is for changes with no pull request in the repo, such as work merged
+            # before a private repo went public with rewritten history.
+            base = rf"https://github\.com/{ORG}/{re.escape(repo)}"
+            if not re.fullmatch(rf"{base}/(?:pull/\d+|commit/[0-9a-f]{{7,40}})", ref):
+                rep.error(where, f"{label}: ref must be the merged pull request URL "
+                                 f"(or a commit URL when there is no pull request) in {ORG}/{repo}")
         elif repo in private:
             if not PRIVATE_REF_RE.match(ref):
                 rep.error(where, f"{label}: ref of a private repo must be private@<commit sha>")
