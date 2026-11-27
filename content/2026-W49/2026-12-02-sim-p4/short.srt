@@ -1,0 +1,31 @@
+1
+00:00:00,000 --> 00:00:04,950
+This vapour pressure fit for water is 0.47 K off, inside its own valid range.
+
+2
+00:00:05,000 --> 00:00:09,950
+The Antoine equation: three fitted constants per liquid.
+
+3
+00:00:10,000 --> 00:00:15,950
+Each fit comes with a temperature range, and my simulator raises an error outside it.
+
+4
+00:00:16,000 --> 00:00:22,950
+Water is left out: NIST's water fits end at 373 K, and at 1 atm water boils at about 373.12 K.
+
+5
+00:00:23,000 --> 00:00:30,950
+Inside their ranges, against the IAPWS reference at 373 K: one fit is 0.025 K high, the other 0.47 K.
+
+6
+00:00:31,000 --> 00:00:37,950
+A range check accepts both. It says where a fit may be used, not how good it is there.
+
+7
+00:00:38,000 --> 00:00:42,950
+Test every fit against reference data inside its range.
+
+8
+00:00:43,000 --> 00:00:45,950
+Part 4 of my Simulation notes.

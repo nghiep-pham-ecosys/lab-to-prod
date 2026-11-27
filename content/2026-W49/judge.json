@@ -1,0 +1,149 @@
+{
+  "week": "2026-W49",
+  "judged_at": "2026-11-27T04:27:00+00:00",
+  "judge": "subagent that did not see the drafting session",
+  "rubric": [
+    "technical_accuracy",
+    "sources",
+    "one_clear_idea",
+    "voice",
+    "no_banned_info"
+  ],
+  "pass_rule": "mean >= 4 and no score below 3",
+  "posts": {
+    "2026-11-30-sim-p3": {
+      "sha256": "e635e88edf72df4107dbd9860f861e792c9b098f6e11e69ef69f9d531c565dd8",
+      "scores": {
+        "technical_accuracy": 5,
+        "sources": 5,
+        "one_clear_idea": 5,
+        "voice": 5,
+        "no_banned_info": 5
+      },
+      "mean": 5.0,
+      "notes": "Work: psl-pfr-mixer-splitter = process-sim-lab PR #6 (MERGED 2026-11-17, merge 6c8aa2e). I read it with gh pr view and gh pr diff. tests/test_pfr.py::test_beats_cstr_and_equals_many_cstrs_in_series chains 2000 calls to isothermal_cstr_first_order at k=0.02, V=1, Q=0.01 (Da=2). Its comment says 'The gap is about Da^2 * e^-Da / (2N) = 1.4e-4 for N = 2000', and the test uses delta=2e-4. The pfr.py docstring has the N-CSTR limit. So the post's idea (tolerance set from the error term) and every claim about the build are visible in the change. I ran tanks_in_series.py and its output matches .expected exactly. I derived the gap by hand: ln(1+a/N)^-N = -a + a^2/(2N) + ..., so the gap is about a^2 e^-a/(2N), which is 0.2707/N at a=2. That gives 2.71e-3 at N=100 and 1.353e-4 at N=2000, and the 1354 and 27 tank thresholds are correct. Sources: I fetched both Rawlings/Ekerdt PDFs. Ch8 slides 29-30 say N CSTRs in series approach delta(theta - tau), the PFR RTD. Ch4 slide 58 gives xA = k tau/(1 + k tau). The closed form for N tanks and the error term are not printed in the sources, but the script reproduces them. I checked image.png, all 5 pages of linkedin.pdf (JPEG streams extracted), short.json/srt, a frame of short.mp4 (1080x1920, 45 s) and x.md: every number is consistent. validate.py and format_check pass. Nits only, no score change: the hook 'The test predicted the size of that gap' and PDF page 1 'The test knew the gap before it ran' credit the test, but the prediction is the author's comment in the test, rounded to 1.4e-4. 'the author's own estimate in the test comment' would be more exact. Facebook's 67% vs 86.5% does not state k tau = 2. Nothing from an employer, no private links, no names. Note: the worktree has uncommitted changes to post.md, short.*, x.md. I judged the files as they are on disk.",
+      "format": {
+        "linkedin": {
+          "words": 251,
+          "hook_lines": 1,
+          "long_paragraphs": 0,
+          "ends_with_question": true,
+          "warnings": []
+        },
+        "facebook": {
+          "words": 109,
+          "warnings": []
+        },
+        "x": {
+          "posts": 1,
+          "chars": [
+            245
+          ],
+          "hook_has_number": true,
+          "warnings": []
+        },
+        "short": {
+          "seconds": 45.0,
+          "warnings": []
+        },
+        "sources": {
+          "states_numbers": true,
+          "sources": 2,
+          "scripts": [
+            "tanks_in_series.py"
+          ],
+          "warnings": []
+        },
+        "warnings": []
+      }
+    },
+    "2026-12-01-physical-ai-p1": {
+      "sha256": "20e086a5a7dee2eee80d2929ef78654314c4632689779237545e0f9281c41b14",
+      "scores": {
+        "technical_accuracy": 5,
+        "sources": 4,
+        "one_clear_idea": 5,
+        "voice": 5,
+        "no_banned_info": 5
+      },
+      "mean": 4.8,
+      "notes": "Work: pai-tf2-frames. The ledger ref private@481515f does NOT resolve. git cat-file in the local clone fails, and gh api commits/481515f returns 422. The repo is now PUBLIC (gh repo view), because its history was rewritten before it went public, and PR #13 does not resolve on GitHub either. I judged the post against the equivalent commit 95922da 'feat: lesson 02 coordinate frames and tf2 (#13)', dated 2026-11-16, in the local clone. Everything the post says the author built is there. lessons/02-tf2 has a README in EN and VI plus EN and VI site pages. frames.launch.py says 'map -> odom -> base_link -> sensor'. exercises.md exercise 1 has the same values: odom 2.0 m along x, base_link at (1,0) turned 90 degrees left, sensor 0.2 m along x. solutions.md gives (3, 0.2). sensor_locator.py calls lookup_transform('map','sensor',Time()). test_frames.py composes the three per-edge tf2 lookups with numpy and asserts np.allclose(..., atol=1e-6) against the full lookup, so 'composes the three matrices by hand and checks tf2's answer within 1e-6' is accurate. I ran frames.py and its output matches .expected: (3.0, 0.2), (1.2, 2.0), 2.55 m. The reversed product is labelled a toy example in every channel and on the card. The math is correct: the child-to-parent 3x3 matrices, +90 degree yaw meaning left per REP-103, and the lookup_transform(target, source) direction. Both REP links return 200, and REP-105 gives map -> odom -> base_link with one parent per frame. I rendered and checked the card and the 4 PDF pages. The repo is named and not linked, and no lesson code is pasted (frames.py is a fresh script). Sources is 4, not 5, only because the work ref is broken: the ledger still lists physic-ai-for-everyone under private, and the sha it cites no longer exists. Before publishing, update content/work.yaml: move the repo to public and point the entry at a resolvable ref (the public commit for lesson 02, or its PR URL if one exists after the rewrite). Then the work link can be verified by anyone, and this score becomes 5.",
+      "format": {
+        "linkedin": {
+          "words": 266,
+          "hook_lines": 1,
+          "long_paragraphs": 0,
+          "ends_with_question": true,
+          "warnings": []
+        },
+        "facebook": {
+          "words": 103,
+          "warnings": []
+        },
+        "x": {
+          "posts": 1,
+          "chars": [
+            221
+          ],
+          "hook_has_number": true,
+          "warnings": []
+        },
+        "sources": {
+          "states_numbers": true,
+          "sources": 2,
+          "scripts": [
+            "frames.py"
+          ],
+          "warnings": []
+        },
+        "warnings": []
+      }
+    },
+    "2026-12-02-sim-p4": {
+      "sha256": "80ec92aebed4facd282037829c5c2299d871c9ace966831bfa19e4641c14b0b9",
+      "scores": {
+        "technical_accuracy": 3,
+        "sources": 3,
+        "one_clear_idea": 4,
+        "voice": 5,
+        "no_banned_info": 5
+      },
+      "mean": 4.0,
+      "notes": "Work: psl-antoine-lmtd = process-sim-lab PR #8 (MERGED 2026-11-17, merge 01c6c10). I read it with gh pr view and gh pr diff. The diff confirms: Antoine log10(P/bar) = A - B/(T+C); NIST constants for benzene, toluene and ethylbenzene; ValueError outside t_min..t_max; test_normal_boiling_points_match_nist_within_its_uncertainty, whose tolerance is the stated NIST uncertainty; and the PR text 'Water is left out on purpose'. I ran water_antoine.py and its output matches .expected. I fetched the NIST water page: all 7 Antoine rows match, including Bridgeman and Aldrich 344-373 (5.08354/1663.125/-45.622) and Stull 255.9-373 (4.6543/1435.264/-64.848). The IF97 Table 34 coefficients are right, Table 35 is reproduced, and Tsat(101325 Pa) = 373.124 K. As an independent check against Wagner-Pruss (IAPWS-95 auxiliary saturation equation), Stull gives -0.266 / +0.387 / +0.473 K at 330/370/373 K and B&A +0.024..+0.031 K, so the numbers hold. Problems: (1) Imprecise. LinkedIn calls IAPWS-IF97 'the reference equation for water', and Facebook says 'the international reference equation'. IF97 is the Industrial Formulation. The IAPWS page itself says it is 'recommended for industrial use'. The scientific reference is IAPWS-95, and IF97 is fitted to it. Numbers do not change, but a thermo reader will flag it. Fix: say 'the IAPWS-IF97 industrial formulation', or compare with IAPWS-95/Wagner-Pruss. (2) The headline number is framed as 'still inside the fit's valid range', but 373 K is exactly the fit's upper end point (t_max = 373.0). The honest interior value is 0.39 K at 370 K. Fix: say 'at the top end of its range', or lead with 0.39 K at 370 K. (3) Work link (why sources is 3): the merged change shows the range guard, the NIST Tb test and leaving water out, and the post describes those correctly. The water fits vs IAPWS comparison behind the hook number, the card, the Short and every channel is new analysis done for the post ('For this post I checked'). It is not in PR #8 or any ledger entry. It is honestly labelled, but the post's central measurement is not merged project work. The PR also states water's normal boiling point as 373.15 K, and the post silently uses 373.12 K. To raise: merge the water check into process-sim-lab (for example a test or note that compares the NIST water fits with IAPWS) and add it to work.yaml, or rebuild the hook around what PR #8 does. (4) One idea is clear, but LinkedIn spends two paragraphs on benzene, toluene and ethylbenzene before the water point. The images, Short frame (1080x1920, 46 s), srt, x.md and alt text agree with the script. Spelling is British throughout. Bridgeman, Aldrich and Stull are cited data authors, not banned names. No private links, nothing from an employer.",
+      "format": {
+        "linkedin": {
+          "words": 257,
+          "hook_lines": 1,
+          "long_paragraphs": 0,
+          "ends_with_question": true,
+          "warnings": []
+        },
+        "facebook": {
+          "words": 99,
+          "warnings": []
+        },
+        "x": {
+          "posts": 1,
+          "chars": [
+            265
+          ],
+          "hook_has_number": true,
+          "warnings": []
+        },
+        "short": {
+          "seconds": 46.0,
+          "warnings": []
+        },
+        "sources": {
+          "states_numbers": true,
+          "sources": 2,
+          "scripts": [
+            "water_antoine.py"
+          ],
+          "warnings": []
+        },
+        "warnings": []
+      }
+    }
+  }
+}

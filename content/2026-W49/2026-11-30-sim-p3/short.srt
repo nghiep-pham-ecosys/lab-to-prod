@@ -1,0 +1,31 @@
+1
+00:00:00,000 --> 00:00:04,950
+2000 small stirred tanks in a row behave like one pipe.
+
+2
+00:00:05,000 --> 00:00:10,950
+One stirred tank, a first-order reaction, k tau = 2: conversion 0.667.
+
+3
+00:00:11,000 --> 00:00:18,950
+Split the same volume into more tanks in series, and conversion climbs toward the plug-flow reactor.
+
+4
+00:00:19,000 --> 00:00:24,950
+At 2000 tanks the gap is about 1.35e-4, the size the error term predicts.
+
+5
+00:00:25,000 --> 00:00:30,950
+So the test allows 2e-4. A chain needs at least 1354 tanks to pass.
+
+6
+00:00:31,000 --> 00:00:36,950
+A round 1e-2 would pass with only 27 tanks. It could not tell 27 tanks from 2000.
+
+7
+00:00:37,000 --> 00:00:41,950
+Set a test's tolerance from the error term, not from habit.
+
+8
+00:00:42,000 --> 00:00:44,950
+Part 3 of my Simulation notes.

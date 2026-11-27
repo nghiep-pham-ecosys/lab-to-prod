@@ -1,0 +1,16 @@
+IAPWS-IF97 Table 35 check (MPa): 300.0 K -> 3.536589413e-03, 500.0 K -> 2.638897756e+00, 600.0 K -> 1.234431458e+01
+IAPWS-IF97 boiling temperature at 101325 Pa (Eq. 31): 373.124 K
+Bridgeman and Aldrich, 1964, valid 344.0-373.0 K: fit T - reference T at the IAPWS pressure
+  350 K: +0.023 K
+  360 K: +0.025 K
+  370 K: +0.025 K
+  372 K: +0.025 K
+  373 K: +0.025 K
+Stull, 1947, valid 255.9-373.0 K: fit T - reference T at the IAPWS pressure
+  300 K: -0.083 K
+  330 K: -0.268 K
+  350 K: -0.058 K
+  360 K: +0.136 K
+  370 K: +0.387 K
+  372 K: +0.444 K
+  373 K: +0.473 K
