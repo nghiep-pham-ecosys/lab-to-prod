@@ -313,6 +313,12 @@
       "photo_id": "122099148321556480",
       "scheduled_for": "2026-11-27T08:30:00+07:00",
       "url": "https://www.facebook.com/122099148321556480"
+    },
+    "linkedin": {
+      "at": "2026-11-27T01:15:15+00:00",
+      "comment": true,
+      "id": "urn:li:share:7531888341789855744",
+      "url": "https://www.linkedin.com/feed/update/urn:li:share:7531888341789855744/"
     }
   },
   "article:build-log-1-how-the-lab-to-prod-pipeline-runs": {
