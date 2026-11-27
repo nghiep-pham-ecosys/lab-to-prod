@@ -337,6 +337,47 @@
       "via": "chrome"
     }
   },
+  "2026-11-30": {
+    "facebook": {
+      "at": "2026-11-27T04:30:13+00:00",
+      "id": "122105736873556480",
+      "photo_id": "122105736873556480",
+      "scheduled_for": "2026-11-30T08:30:00+07:00",
+      "url": "https://www.facebook.com/122105736873556480"
+    },
+    "youtube": {
+      "at": "2026-11-27T04:30:13+00:00",
+      "captions": true,
+      "id": "gbn941Bv5uQ",
+      "scheduled_for": "2026-12-01T12:00:00.000Z",
+      "url": "https://www.youtube.com/shorts/gbn941Bv5uQ"
+    }
+  },
+  "2026-12-01": {
+    "facebook": {
+      "at": "2026-11-27T04:30:13+00:00",
+      "id": "122105736927556480",
+      "photo_id": "122105736927556480",
+      "scheduled_for": "2026-12-01T08:30:00+07:00",
+      "url": "https://www.facebook.com/122105736927556480"
+    }
+  },
+  "2026-12-02": {
+    "facebook": {
+      "at": "2026-11-27T04:30:13+00:00",
+      "id": "122105736981556480",
+      "photo_id": "122105736981556480",
+      "scheduled_for": "2026-12-02T08:30:00+07:00",
+      "url": "https://www.facebook.com/122105736981556480"
+    },
+    "youtube": {
+      "at": "2026-11-27T04:30:13+00:00",
+      "captions": true,
+      "id": "jDGejcuYFQk",
+      "scheduled_for": "2026-12-03T12:00:00.000Z",
+      "url": "https://www.youtube.com/shorts/jDGejcuYFQk"
+    }
+  },
   "article:build-log-1-how-the-lab-to-prod-pipeline-runs": {
     "devto": {
       "at": "2026-11-21T01:15:18+00:00",
