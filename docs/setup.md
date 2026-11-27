@@ -78,8 +78,10 @@ trong `publish/config.yaml`.
    **Manage everything on your Page** → business: chưa gắn → **Create app**. (App `lab-to-prod` đã tạo
    ngày 13/11/2026.)
 3. **Use cases → Manage everything on your Page → Customize → Permissions and features**: bấm **Add**
-   cho `pages_manage_posts`, `pages_read_engagement` và `read_insights` (`pages_show_list` có sẵn). Thiếu
-   bước này thì hộp đăng nhập báo "Invalid Scopes".
+   cho `pages_manage_posts`, `pages_read_engagement`, `read_insights`, `pages_manage_engagement` và
+   `pages_read_user_content` (`pages_show_list` có sẵn). Thiếu bước này thì hộp đăng nhập báo "Invalid Scopes".
+   `pages_manage_engagement` (kèm `pages_read_user_content`, quyền nó cần) dùng để trả lời bình luận (mục
+   "Trả lời bình luận" bên dưới).
 4. **App settings → Basic**: App ID ở đầu trang; bấm **Show** để lấy **App Secret** (chỉ dán vào script,
    không gửi qua chat).
 5. Giữ app ở chế độ **Development**: anh là admin của app nên vẫn đăng được lên Page của mình. Ở chế độ
@@ -94,10 +96,20 @@ trong `publish/config.yaml`.
    Nhập App ID và App Secret. Trình duyệt mở ra: chọn đúng Page, đồng ý các quyền. Script đổi
    sang token dài hạn rồi lưu `FB_PAGE_ID` và `FB_PAGE_TOKEN`.
 
+   Token tạo trước ngày 27/11/2026 chưa có `pages_manage_engagement`: làm lại bước 3 rồi chạy lại lệnh trên
+   một lần. Trước khi làm lại, Facebook từ chối mọi câu trả lời bình luận và workflow `comments` báo
+   "refused" kèm tên quyền còn thiếu. Đọc bình luận vẫn chạy được.
+
 Kênh `facebook` trong `publish/config.yaml` chính là Page này. Nó chỉ chạy thử (dry run) cho tới khi
 biến repository `PUBLISH_LIVE` là `true`. Mỗi bài đăng thành công được ghi vào `published.json` dưới
 khoá `facebook`. Mỗi ngày phiên chính của workspace chia sẻ lại bài Page về trang cá nhân qua Claude in Chrome
 (không API, không ghi vào `published.json`); xem skill `daily-start` của repo `ecosys`.
+
+Trả lời bình luận (YouTube và Page, một lần duyệt mỗi ngày): phiên chính chạy
+`gh workflow run comments.yml -f mode=list`, lấy danh sách bình luận chưa trả lời trong job summary (chỉ có kênh, link bài, mã bình luận, giờ; không có tên hay nội dung vì repo public), mở từng bình luận trên nền tảng để đọc, soạn câu trả lời (không nêu tên hay trích lời người bình luận) và chờ anh duyệt.
+Sau khi anh duyệt, phiên chính chạy `gh workflow run comments.yml -f mode=reply -f replies='[...]'`. Bình luận
+đã có câu trả lời của kênh hoặc Page thì được bỏ qua, nên chạy lại không đăng hai lần. LinkedIn và X không
+đi qua API ở đây (API của X tính phí): phiên chính đọc và trả lời trong Chrome. Chi tiết: `publish/README.md`, mục "Comments".
 
 Lưu ý: Page token dài hạn không có ngày hết hạn, nhưng quyền truy cập dữ liệu của app hết sau
 khoảng 90 ngày không dùng. Workflow `metrics` sẽ báo trước 7 ngày; khi đó chạy lại lệnh trên.

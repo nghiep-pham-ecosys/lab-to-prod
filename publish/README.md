@@ -70,6 +70,56 @@ moves the whole batch, keeping the spacing between the video and its Shorts. A p
 - The YouTube secrets are the same three as for Shorts; they reach only the upload step.
 - The `PAUSE` file stops the run before any call.
 
+## Comments
+
+`comments.py` lists the comments on our YouTube videos and Facebook Page posts that we have not answered yet, and
+posts the replies the author approved. LinkedIn and X comments are read and answered by hand in the browser. The daily
+flow is one approval a day:
+
+1. The main session runs the `comments` workflow (`.github/workflows/comments.yml`, started by hand only) in `list`
+   mode. The job summary and the artifact `comments-list` hold only the channel, post URL, comment id and time
+   (`--redact`).
+2. It reads each comment on the platform itself (post URL plus comment id), drafts one reply per comment and asks
+   the author. Nothing is posted before his yes. A reply never names or quotes the commenter: the reply text
+   is public in the run log.
+3. It runs the workflow in `reply` mode with the approved replies as a JSON string.
+
+```bash
+gh workflow run comments.yml -f mode=list -f days=7
+```
+
+```bash
+gh workflow run comments.yml -f mode=reply -f replies='[{"channel":"youtube","comment_id":"<id>","text":"<reply>"}]'
+```
+
+Locally (`reply` prints the plan and calls nothing without `--live`):
+
+```bash
+uv run --with-requirements tools/requirements.txt python -m publish.comments list --days 7
+```
+
+```bash
+uv run --with-requirements tools/requirements.txt python -m publish.comments reply --file replies.json
+```
+
+- **Which posts.** The `youtube` and `facebook` entries of `published.json` (merged with the `publish-state` branch
+  in the workflow, read only) that are public and at most `--post-days` old (default 60).
+- **Which comments.** Top-level comments from the last `--days` days (default 7), not written by us, without a
+  reply from our own channel (YouTube) or Page (Facebook). YouTube answers only top-level comments. Output, one entry
+  per comment: `channel`, `post_key`, `post_url`, `comment_id`, `author`, `text`, `at` (UTC).
+- **Idempotent.** Before each reply the tool reads the comment's replies again; one from our channel or Page means
+  `skipped`. A comment listed twice in one file is posted once.
+- **Refused scope.** Facebook replies need `pages_manage_engagement` (with `pages_read_user_content`). A Page token
+  made before 27 Nov 2026 lacks it, so every Facebook reply is `refused` until the author renews the token
+  (`docs/setup.md`, section 4, steps 3 and 6). YouTube uses `youtube.force-ssl`, already in the token.
+- **Quota.** YouTube: 1 unit per `commentThreads.list`, `comments.list` and `channels.list` call, 50 per
+  `comments.insert`. The run prints the units used.
+- **Log.** Every reply (channel, comment id, status, reply id, text) goes to the job summary and to the artifact
+  `comments-reply`. The `PAUSE` file stops a reply run before any call.
+- **Public logs.** This repository is public, so its run logs and artifacts are too. Names and comment text are
+  left out of the summary, stdout and artifacts (`--redact`, always on in the workflow); the author reads them on
+  the post itself. Never drop `--redact` from the workflow.
+
 ## Manual posts
 
 X and Hashnode are posted by hand, and any channel can be. Record every manual post so `published.json`
@@ -102,8 +152,8 @@ Posts made outside the weekly folders use a stable slug key, for example `notes:
 | Platform | Finding that shaped the code |
 | --- | --- |
 | LinkedIn | The self-serve "Share on LinkedIn" product documents `/v2/ugcPosts` + `/v2/assets?action=registerUpload` with scope `w_member_social`. Tokens last 60 days; refresh tokens are for selected partners only. The comments documentation lists a different scope, so the first comment may be refused: the post is kept and the link is added by hand. A folder with `linkedin.pdf` uses `/rest/documents?action=initializeUpload` + `/rest/posts` instead (same scope, `LinkedIn-Version` header; person-authored document posts not yet verified live). |
-| Facebook | Graph API v27.0. `/{page-id}/photos` with `published=false` and `scheduled_publish_time`, between 10 minutes and 30 days ahead. PNG uploads are capped at 1 MB, so images go up as JPEG. Long-lived Page tokens do not expire by date. |
-| YouTube | `publishAt` needs `privacyStatus: private`. `videos.insert` has its own quota of 100 calls a day; `captions.insert` costs 400 units. The 2 Nov 2026 revision says uploads from unverified projects are no longer locked to private. There is no Shorts flag. Playlists (checked 26 Nov 2026): `playlists.list` and `playlistItems.list` cost 1 unit, `playlists.insert` and `playlistItems.insert` 50; list pages hold at most 50 items; the inserts accept the `youtube.force-ssl` scope. |
+| Facebook | Graph API v27.0. `/{page-id}/photos` with `published=false` and `scheduled_publish_time`, between 10 minutes and 30 days ahead. PNG uploads are capped at 1 MB, so images go up as JPEG. Long-lived Page tokens do not expire by date. Comments (checked 27 Nov 2026): `GET /{object-id}/comments` with `filter=stream` returns every level; `POST /{comment-id}/comments` replies and needs `pages_manage_engagement` and the MODERATE task; comment ids are hidden from tokens without MODERATE. |
+| YouTube | `publishAt` needs `privacyStatus: private`. `videos.insert` has its own quota of 100 calls a day; `captions.insert` costs 400 units. The 2 Nov 2026 revision says uploads from unverified projects are no longer locked to private. There is no Shorts flag. Playlists (checked 26 Nov 2026): `playlists.list` and `playlistItems.list` cost 1 unit, `playlists.insert` and `playlistItems.insert` 50; list pages hold at most 50 items; the inserts accept the `youtube.force-ssl` scope. Comments (checked 27 Nov 2026): `commentThreads.list` and `comments.list` cost 1 unit and return at most 100 items a page; a thread carries only some of its replies; `comments.insert` costs 50 units, replies only to top-level comments and needs `youtube.force-ssl`. |
 | Telegram | `sendPhoto`, caption up to 1,024 characters, photo up to 10 MB. No method returns channel view counts. |
 | DEV | `POST /api/articles` with the `api-key` header; at most 4 tags, sent as a comma-separated string. |
 | Hashnode | Free API access was retired on 13 May 2026; every request needs a Pro plan. Not used. |
