@@ -1,0 +1,89 @@
+name: comments
+
+# Manual only. Lists unanswered YouTube and Facebook Page comments, or posts replies the author approved.
+#   gh workflow run comments.yml -f mode=list [-f days=7]
+#   gh workflow run comments.yml -f mode=reply -f replies='[{"channel":"youtube","comment_id":"...","text":"..."}]'
+# list reads only: the JSON goes to the job summary and to the artifact comments-list.
+# reply posts each reply once (a comment we already answered is skipped) and logs every reply in the job summary
+# and the artifact comments-reply. Nothing is posted unless mode is reply. A file named PAUSE stops a reply run.
+# The post list comes from published.json merged with the publish-state branch (read only, nothing is pushed).
+run-name: comments ${{ inputs.mode }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "list (read only) or reply (posts the replies below)"
+        type: choice
+        options: [list, reply]
+        default: list
+      days:
+        description: "list: comments from the last N days"
+        required: false
+        default: "7"
+      replies:
+        description: 'reply: JSON list of {"channel","comment_id","text"}'
+        required: false
+
+permissions: {}
+
+concurrency:
+  group: comments
+  cancel-in-progress: false
+
+jobs:
+  comments:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/requirements.txt
+      - run: pip install -r tools/requirements.txt
+
+      - name: Load publish state
+        run: python tools/state_sync.py pull
+
+      - name: List unanswered comments
+        if: inputs.mode == 'list'
+        env:
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+          FB_PAGE_TOKEN: ${{ secrets.FB_PAGE_TOKEN }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          DAYS: ${{ inputs.days }}
+        run: python -m publish.comments list --days "${DAYS:-7}" --out "$RUNNER_TEMP/comments.json" --summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Post approved replies
+        if: inputs.mode == 'reply'
+        env:
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+          FB_PAGE_TOKEN: ${{ secrets.FB_PAGE_TOKEN }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          REPLIES: ${{ inputs.replies }}
+        run: |
+          if [ -z "$REPLIES" ]; then
+            echo "::error::mode=reply needs the replies input"
+            exit 1
+          fi
+          printf '%s' "$REPLIES" > "$RUNNER_TEMP/replies.json"
+          python -m publish.comments reply --file "$RUNNER_TEMP/replies.json" --live --out "$RUNNER_TEMP/replies-result.json" --summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the result
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: comments-${{ inputs.mode }}
+          path: |
+            ${{ runner.temp }}/comments.json
+            ${{ runner.temp }}/replies-result.json
+          if-no-files-found: ignore
+          retention-days: 14

@@ -15,7 +15,8 @@ from _common import DEFAULT_REPO, TokenError, ask, authorize, http_json, main_gu
 
 PORT = 8766
 GRAPH = "https://graph.facebook.com/v27.0"
-SCOPES = "pages_show_list,pages_manage_posts,pages_read_engagement,read_insights"
+# pages_manage_engagement answers comments (publish/comments.py); it depends on pages_read_user_content.
+SCOPES = "pages_show_list,pages_manage_posts,pages_read_engagement,read_insights,pages_manage_engagement,pages_read_user_content"
 
 
 def run(repo: str = DEFAULT_REPO, ask=ask, authorize=authorize, http_json=http_json, store=store_secret) -> None:
