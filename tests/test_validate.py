@@ -306,6 +306,13 @@ def test_ledger_entry_rules(repo, field, value, message):
     assert any(message in e for e in errors(repo))
 
 
+def test_public_ref_may_be_a_commit_url(repo):
+    ok = yaml.safe_load(yaml.safe_dump(LEDGER))
+    ok["entries"][0]["ref"] = "https://github.com/nghiep-pham-ecosys/demo-lab/commit/" + "0123456789abcdef" * 2 + "01234567"
+    plan_w48(repo, ledger=ok)
+    assert errors(repo) == []
+
+
 def test_private_repo_is_named_by_sha_never_linked(repo):
     bad = yaml.safe_load(yaml.safe_dump(LEDGER))
     bad["entries"][1]["ref"] = "https://github.com/nghiep-pham-ecosys/course-vi/pull/1"

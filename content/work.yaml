@@ -7,7 +7,9 @@
 # Each entry:
 #   id      lowercase words joined by hyphens, never changed once a post uses it
 #   repo    a repo listed under `repos` below
-#   ref     public repo: the merged pull request URL
+#   ref     public repo: the merged pull request URL, or the commit URL on main when the change
+#           has no pull request in that repo (claude-for-everyone-vi and physic-ai-for-everyone
+#           went public on 2026-11-25 with rewritten history, so their earlier pull requests are gone)
 #           private repo: private@<commit sha on main>; the repo is named, never linked
 #   merged  merge date in Asia/Ho_Chi_Minh; a post may not be dated before it
 #   what    one or two sentences on what the work does, in public-safe words
@@ -15,8 +17,9 @@
 # Only the repos below may be a post source. A repo that is not listed is never a post source
 # and is never named in this repository.
 repos:
-  public: [lab-to-prod, process-sim-lab, nghiep-motion-studio, ecosys]
-  private: [claude-for-everyone-vi, physic-ai-for-everyone]
+  public: [lab-to-prod, process-sim-lab, nghiep-motion-studio, ecosys, claude-for-everyone-vi,
+           physic-ai-for-everyone]
+  private: []
 
 entries:
   - id: psl-cstr-skeleton
@@ -78,21 +81,21 @@ entries:
       and gives up when the wait would pass the 6 h job limit.
   - id: cfe-rag-bm25
     repo: claude-for-everyone-vi
-    ref: private@e40a896
+    ref: https://github.com/nghiep-pham-ecosys/claude-for-everyone-vi/commit/07d728363db3e3022d97e7d4264f7416af4e6a00
     merged: 2026-11-16
     what: >-
       A course module on retrieval-augmented generation: BM25 retrieval that runs locally, chunking
       and result-fusion exercises, search results passed to the model with citations, and a quiz.
   - id: cfe-ci-guard
     repo: claude-for-everyone-vi
-    ref: private@fb18777
+    ref: https://github.com/nghiep-pham-ecosys/claude-for-everyone-vi/commit/3fd27d3380a816976b26903f0173f7b2450c12b8
     merged: 2026-11-17
     what: >-
       A pre-push hook plus ci-result and pr-title checks, so a private repo on the free plan gets
       the same merge guard as the public ones.
   - id: pai-tf2-frames
     repo: physic-ai-for-everyone
-    ref: private@481515f
+    ref: https://github.com/nghiep-pham-ecosys/physic-ai-for-everyone/commit/95922da34a15529a6e13ff145aeb513e75d65e24
     merged: 2026-11-16
     what: >-
       A ROS 2 lesson on coordinate frames and tf2: a frame broadcaster, a 2D rigid transform helper
@@ -107,7 +110,7 @@ entries:
       with a purge, every unit balance and the overall balance close within 1e-6.
   - id: cfe-cost-basics
     repo: claude-for-everyone-vi
-    ref: private@b471008
+    ref: https://github.com/nghiep-pham-ecosys/claude-for-everyone-vi/commit/8a8d310d81c0a7f59234fde336c777d00f9ac925
     merged: 2026-11-17
     what: >-
       A course module on LLM API cost in mock mode: what the usage fields bill, an output cost
@@ -115,7 +118,7 @@ entries:
       and no real API call.
   - id: pai-ci-guard
     repo: physic-ai-for-everyone
-    ref: private@9fd7b93
+    ref: https://github.com/nghiep-pham-ecosys/physic-ai-for-everyone/commit/75a7da13dee8fb4ce42dfab352cad0955dac048a
     merged: 2026-11-17
     what: >-
       The same merge guard as cfe-ci-guard for a second private repo: a pre-push gitleaks hook,
@@ -222,7 +225,7 @@ entries:
       evaluation cases, each tied to its source test and tolerance: 10/10 pass, with no LLM call.
   - id: cfe-multistep-mock
     repo: claude-for-everyone-vi
-    ref: private@10cb8a6
+    ref: https://github.com/nghiep-pham-ecosys/claude-for-everyone-vi/commit/81d3b15df05e690019f89056d681c0e581320009
     merged: 2026-11-18
     what: >-
       The course's offline mock of the model API gains a multi-step mode that calls one pending
@@ -230,7 +233,7 @@ entries:
       mock, tested with 8 worker threads.
   - id: cfe-agents-workflows
     repo: claude-for-everyone-vi
-    ref: private@1608d6a
+    ref: https://github.com/nghiep-pham-ecosys/claude-for-everyone-vi/commit/e3825e3593213e9810fee8fa06bed9eb1772c20d
     merged: 2026-11-18
     what: >-
       A course module on agents and workflows in mock mode: prompt chaining with a gate, routing,
@@ -239,7 +242,7 @@ entries:
       side effects and a JSON trace, graded by 31 tests.
   - id: cfe-course-cost-estimate
     repo: claude-for-everyone-vi
-    ref: private@1135966
+    ref: https://github.com/nghiep-pham-ecosys/claude-for-everyone-vi/commit/bafc37626afdd0bfcb418d0c6e18c335734adfde
     merged: 2026-11-18
     what: >-
       A worst-case cost for running every course script against the real API, summed module by
