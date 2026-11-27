@@ -38,6 +38,24 @@ of the same workflow is already waiting, and skips when the wait would be longer
 6 h). The fallback crons go at once when they start; `published.json` keeps them from posting twice. A run's
 `wait` step summary says what it decided. If a morning post is still missing at 09:30, run the workflow by hand.
 
+## Metrics
+
+| Channel | How the numbers arrive |
+| --- | --- |
+| Facebook | API, every `metrics` run. A scheduled photo's id is turned into its post id (`page_story_id`); reactions, comments, shares and views (`post_media_view`) are read on the post |
+| YouTube, DEV | API, every `metrics` run |
+| LinkedIn, X | by hand: CSV files in `metrics/inbox/`, filled by the main session once a week and on the last working day of the month (`metrics/inbox/README.md`) |
+
+A Facebook post that cannot be read does not stop the run. The run log and summary have one line
+per post, for example `facebook 2026-11-16: no numbers, post <id>: HTTP 400 code 100: <message>`,
+and a count at the end. The token is never printed. Common codes: `10` or `200` is a missing
+permission (renew the Page token with `scripts/tokens/facebook_token.py`; insights need
+`read_insights` and `pages_read_engagement`), `100` is an invalid parameter, such as a field the object does not have (the message names it).
+A post that Facebook still holds as scheduled is skipped without a line.
+
+Before the monthly report: merge the month's LinkedIn and X files, run `metrics` by hand, then
+read its summary for Facebook lines.
+
 ## Going live, one channel at a time
 
 1. Add the channel's secrets (`docs/setup.md`).
