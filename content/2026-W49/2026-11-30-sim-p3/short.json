@@ -1,0 +1,14 @@
+{
+  "title": "Many small tanks become a pipe",
+  "kicker": "Simulation · Part 3",
+  "scenes": [
+    {"type": "title", "text": "2000 small tanks\nbecome a pipe", "say": "2000 small stirred tanks in a row behave like one pipe.", "seconds": 5},
+    {"type": "text", "text": "1 stirred tank:\nX = 0.667", "note": "first order, k tau = 2", "say": "One stirred tank, a first-order reaction, k tau = 2: conversion 0.667.", "seconds": 6},
+    {"type": "code", "code": ["    N  X (N tanks)", "    1     0.666667", "   10     0.838494", " 2000     0.864529", ">   PFR     0.864665"], "say": "Split the same volume into more tanks in series, and conversion climbs toward the plug-flow reactor.", "seconds": 8},
+    {"type": "text", "text": "Gap at 2000:\n1.35e-4", "note": "predicted: (k tau)^2 e^-k tau / 2N", "say": "At 2000 tanks the gap is 1.35e-4, the size the error term predicts.", "seconds": 6},
+    {"type": "text", "text": "Test tolerance:\n2e-4", "note": "a chain needs 1354 tanks to pass", "say": "So the test allows 2e-4. A chain needs at least 1354 tanks to pass.", "seconds": 6},
+    {"type": "text", "text": "1e-2 passes\nwith 27 tanks", "note": "it cannot tell 27 from 2000", "say": "A round 1e-2 would pass with only 27 tanks. It could not tell 27 tanks from 2000.", "seconds": 6},
+    {"type": "text", "text": "Tolerance from\nthe error term", "note": "not from habit", "say": "Set a test's tolerance from the error term, not from habit.", "seconds": 5},
+    {"type": "outro", "say": "Part 3 of my Simulation notes.", "seconds": 3}
+  ]
+}

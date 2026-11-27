@@ -140,11 +140,11 @@ weeks:
         series: simulation
         part: 4
         slug: sim-p4
-        topic: "Antoine constants have a valid range: why water is left out of my NIST table"
+        topic: "Antoine constants have a valid range, but a range is not accuracy: two water fits against IAPWS-IF97"
         work: psl-antoine-lmtd
         short:
           publish_at: "2026-12-03T19:00:00+07:00"
-          topic: "A vapour pressure fit outside its range"
+          topic: "A vapour pressure fit off inside its range"
       - date: 2026-12-05
         series: deep-dive
         part: 1

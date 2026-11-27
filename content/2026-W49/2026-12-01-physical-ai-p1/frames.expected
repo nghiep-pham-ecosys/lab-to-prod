@@ -1,0 +1,3 @@
+sensor in map, map_odom @ odom_base @ base_sensor: (3.0, 0.2)
+same three transforms, reversed order:            (1.2, 2.0)
+distance between the two answers: 2.55 m

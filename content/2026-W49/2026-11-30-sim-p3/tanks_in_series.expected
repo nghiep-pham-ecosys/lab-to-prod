@@ -1,0 +1,10 @@
+tau = 100 s, Da = 2, PFR X = 0.864665
+    N  X (N tanks)    PFR - X  Da^2 e^-Da / 2N
+    1     0.666667   1.98e-01         2.71e-01
+    2     0.750000   1.15e-01         1.35e-01
+    5     0.814066   5.06e-02         5.41e-02
+   10     0.838494   2.62e-02         2.71e-02
+  100     0.861967   2.70e-03         2.71e-03
+ 2000     0.864529   1.35e-04         1.35e-04
+tolerance 1e-02: any chain of 27 tanks or more passes
+tolerance 2e-04: any chain of 1354 tanks or more passes

@@ -1,0 +1,8 @@
+no bug                                 test_cstr   5/5 pass; caught by: nothing
+no bug                                 test_pfr    8/8 pass; caught by: nothing
+no bug                                 test_flash 12/12 pass; caught by: nothing
+CSTR: plug-flow formula                test_cstr   4/5 pass; caught by: test_matches_analytic_conversion
+PFR: stirred-tank formula              test_pfr    4/8 pass; caught by: test_beats_cstr_and_equals_many_cstrs_in_series, test_half_life_case, test_matches_analytic_conversion, test_ninety_percent_conversion
+PFR: 1 - exp(-Da) instead of expm1     test_pfr    7/8 pass; caught by: test_small_damkohler_keeps_precision
+Flash: z_i left out of Rachford-Rice   test_flash  8/12 pass; caught by: test_binary_sweep_matches_closed_form, test_conserves_moles_and_keeps_state, test_constructed_case, test_unequal_split_matches_closed_form
+Flash: no bubble-point check           test_flash 11/12 pass; caught by: test_subcooled_feed_is_all_liquid
