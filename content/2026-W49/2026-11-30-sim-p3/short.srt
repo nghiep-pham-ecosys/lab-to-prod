@@ -12,7 +12,7 @@ Split the same volume into more tanks in series, and conversion climbs toward th
 
 4
 00:00:19,000 --> 00:00:24,950
-At 2000 tanks the gap is 1.35e-4, the size the error term predicts.
+At 2000 tanks the gap is about 1.35e-4, the size the error term predicts.
 
 5
 00:00:25,000 --> 00:00:30,950

@@ -1,6 +1,6 @@
 {
   "week": "2026-W49",
-  "judged_at": "2026-11-27T01:59:33+00:00",
+  "judged_at": "2026-11-27T04:27:00+00:00",
   "judge": "subagent that did not see the drafting session",
   "rubric": [
     "technical_accuracy",
@@ -12,32 +12,32 @@
   "pass_rule": "mean >= 4 and no score below 3",
   "posts": {
     "2026-11-30-sim-p3": {
-      "sha256": "68dfd8f3d1ff619903a0f471595f225e6b2ccfcdd6e50d2114fa12a48c5b1ca0",
+      "sha256": "e635e88edf72df4107dbd9860f861e792c9b098f6e11e69ef69f9d531c565dd8",
       "scores": {
-        "technical_accuracy": 4,
+        "technical_accuracy": 5,
         "sources": 5,
         "one_clear_idea": 5,
         "voice": 5,
         "no_banned_info": 5
       },
-      "mean": 4.8,
-      "notes": "Work: process-sim-lab PR #6 (gh pr view 6 and gh pr diff 6; MERGED 2026-11-17, merge commit 6c8aa2e). Every claim about the built work is in the diff. pfr.py has X = 1 - exp(-k tau) and the docstring states the N-CSTR limit. tests/test_pfr.py::test_beats_cstr_and_equals_many_cstrs_in_series uses k=0.02, V=1, Q=0.01 (k tau = 2), chains 2000 isothermal_cstr_first_order calls, has the comment predicting a gap of 1.4e-4 and sets delta=2e-4. The post is dated 13 days after the merge, so 'two weeks ago' holds. I ran tanks_in_series.py and its output matches .expected byte for byte: 0.666667 / 0.838494 / 0.864529 / PFR 0.864665, gaps 2.70e-3 and 1.35e-4, 1354 tanks and 27 tanks. I also derived the leading term myself: (1+a/N)^-N ~ e^-a (1 + a^2/2N), so the gap is about a^2 e^-a / 2N, which is correct. The card, the 5-page LinkedIn PDF (rendered and read), the SRT, X, Facebook and Telegram texts all agree with the script. Both Rawlings slide links return 200. Ch. 8 slides 29-30 say N CSTRs in series approach delta(theta - tau), i.e. plug flow, and ch. 4 gives the CSTR form, so the sources are primary and say what the post says. Why 4 and not 5: (1) 'came within 1.35e-4' is a rounding. The measured gap is 1.3531e-4, which is slightly more than 1.35e-4. 'about 1.35e-4' would be exact. (2) '1e-2 could no longer tell 2000 tanks from 27' is literally true, but it is a weak illustration. N is a literal in the test, and the chain is already pinned to its closed form to 10 places. What a loose tolerance would really let through is a CSTR or PFR model error of up to about 1e-2. Saying that would make the lesson sharper. Neither point is wrong enough to hold the post.",
+      "mean": 5.0,
+      "notes": "Work: psl-pfr-mixer-splitter = process-sim-lab PR #6 (MERGED 2026-11-17, merge 6c8aa2e). I read it with gh pr view and gh pr diff. tests/test_pfr.py::test_beats_cstr_and_equals_many_cstrs_in_series chains 2000 calls to isothermal_cstr_first_order at k=0.02, V=1, Q=0.01 (Da=2). Its comment says 'The gap is about Da^2 * e^-Da / (2N) = 1.4e-4 for N = 2000', and the test uses delta=2e-4. The pfr.py docstring has the N-CSTR limit. So the post's idea (tolerance set from the error term) and every claim about the build are visible in the change. I ran tanks_in_series.py and its output matches .expected exactly. I derived the gap by hand: ln(1+a/N)^-N = -a + a^2/(2N) + ..., so the gap is about a^2 e^-a/(2N), which is 0.2707/N at a=2. That gives 2.71e-3 at N=100 and 1.353e-4 at N=2000, and the 1354 and 27 tank thresholds are correct. Sources: I fetched both Rawlings/Ekerdt PDFs. Ch8 slides 29-30 say N CSTRs in series approach delta(theta - tau), the PFR RTD. Ch4 slide 58 gives xA = k tau/(1 + k tau). The closed form for N tanks and the error term are not printed in the sources, but the script reproduces them. I checked image.png, all 5 pages of linkedin.pdf (JPEG streams extracted), short.json/srt, a frame of short.mp4 (1080x1920, 45 s) and x.md: every number is consistent. validate.py and format_check pass. Nits only, no score change: the hook 'The test predicted the size of that gap' and PDF page 1 'The test knew the gap before it ran' credit the test, but the prediction is the author's comment in the test, rounded to 1.4e-4. 'the author's own estimate in the test comment' would be more exact. Facebook's 67% vs 86.5% does not state k tau = 2. Nothing from an employer, no private links, no names. Note: the worktree has uncommitted changes to post.md, short.*, x.md. I judged the files as they are on disk.",
       "format": {
         "linkedin": {
-          "words": 249,
+          "words": 251,
           "hook_lines": 1,
           "long_paragraphs": 0,
           "ends_with_question": true,
           "warnings": []
         },
         "facebook": {
-          "words": 108,
+          "words": 109,
           "warnings": []
         },
         "x": {
           "posts": 1,
           "chars": [
-            239
+            245
           ],
           "hook_has_number": true,
           "warnings": []
@@ -100,38 +100,38 @@
       }
     },
     "2026-12-02-sim-p4": {
-      "sha256": "c0fdabba3b2d60c94a4313d7afd8e05cd2ab4e51d87da19705021da90be326f7",
+      "sha256": "80ec92aebed4facd282037829c5c2299d871c9ace966831bfa19e4641c14b0b9",
       "scores": {
         "technical_accuracy": 3,
-        "sources": 4,
-        "one_clear_idea": 5,
+        "sources": 3,
+        "one_clear_idea": 4,
         "voice": 5,
         "no_banned_info": 5
       },
-      "mean": 4.4,
-      "notes": "Work: process-sim-lab PR #8 (gh pr view 8 and gh pr diff 8; MERGED 2026-11-17). The diff shows the Antoine form log10(P/bar) = A - B/(T+C) with NIST constants for benzene, toluene and ethylbenzene, a range check that raises ValueError, and test_antoine NIST_TBOIL with the tolerance set to NIST's uncertainty. The PR body says water is left out because its fits end at 373 K. The whole water comparison against IAPWS-IF97 is analysis done for the post, not merged work. The post says so plainly ('For this post I checked'), which is fine, but the headline number is not from the work. I fetched the NIST water page. It has T boil 373.17 +/- 0.04 K (AVG of 7 values), the seven Antoine rows exactly as the post and script use them, and fits that end at 373 K or start at 379 K. I ran water_antoine.py and its output matches .expected. It reproduces the IF97 Table 35 values (300, 500 and 600 K) to every printed digit. Stull is -0.268 K at 330 K, +0.387 K at 370 K and +0.473 K at 373 K. Bridgeman is +0.023 to +0.025 K. Both source links return 200. Problems found by my own scan of each fit over its whole range against IF97: (1) The Short subtitle says 'water boils at 373.17 K' as a plain fact. That is NIST's literature average, not the normal boiling point. IF97, the post's own reference, gives 373.124 K at 101325 Pa (I solved it; this is the ITS-90 value), and NIST's +/-0.04 K interval does not even contain it. Write 'NIST lists 373.17 +/- 0.04 K' or use 373.12 K. The LinkedIn line attributes the number to NIST and is acceptable, but it reads oddly next to IF97 being called the reference. (2) Facebook says the Stull fit 'was off by up to 0.47 degrees near the boiling point'. Inside its range Stull is 0.67 K high at 273.15 K, the low end of IF97 validity, so 'up to 0.47' overstates how good the fit is elsewhere. Write '0.47 degrees at 373 K'. The finding is even stronger with the 0.67 K, so consider using it. (3) 'Bridgeman and Aldrich: 0.025 K high from 350 to 373 K' is +0.023 at 350 K. 'about 0.025 K' would be exact. Optional nuance: that constant offset of about +0.025 K matches the IPTS-68 to ITS-90 temperature-scale shift near 100 C (about 0.026 K), so the 1964 fit is probably essentially exact. The post claims nothing about the cause, so this is not an error. Fix (1) and (2) and technical_accuracy goes to 4-5. Sources is 4 because the headline result comes from a post-only script rather than the merged change, although it is fully reproduced and primary-sourced.",
+      "mean": 4.0,
+      "notes": "Work: psl-antoine-lmtd = process-sim-lab PR #8 (MERGED 2026-11-17, merge 01c6c10). I read it with gh pr view and gh pr diff. The diff confirms: Antoine log10(P/bar) = A - B/(T+C); NIST constants for benzene, toluene and ethylbenzene; ValueError outside t_min..t_max; test_normal_boiling_points_match_nist_within_its_uncertainty, whose tolerance is the stated NIST uncertainty; and the PR text 'Water is left out on purpose'. I ran water_antoine.py and its output matches .expected. I fetched the NIST water page: all 7 Antoine rows match, including Bridgeman and Aldrich 344-373 (5.08354/1663.125/-45.622) and Stull 255.9-373 (4.6543/1435.264/-64.848). The IF97 Table 34 coefficients are right, Table 35 is reproduced, and Tsat(101325 Pa) = 373.124 K. As an independent check against Wagner-Pruss (IAPWS-95 auxiliary saturation equation), Stull gives -0.266 / +0.387 / +0.473 K at 330/370/373 K and B&A +0.024..+0.031 K, so the numbers hold. Problems: (1) Imprecise. LinkedIn calls IAPWS-IF97 'the reference equation for water', and Facebook says 'the international reference equation'. IF97 is the Industrial Formulation. The IAPWS page itself says it is 'recommended for industrial use'. The scientific reference is IAPWS-95, and IF97 is fitted to it. Numbers do not change, but a thermo reader will flag it. Fix: say 'the IAPWS-IF97 industrial formulation', or compare with IAPWS-95/Wagner-Pruss. (2) The headline number is framed as 'still inside the fit's valid range', but 373 K is exactly the fit's upper end point (t_max = 373.0). The honest interior value is 0.39 K at 370 K. Fix: say 'at the top end of its range', or lead with 0.39 K at 370 K. (3) Work link (why sources is 3): the merged change shows the range guard, the NIST Tb test and leaving water out, and the post describes those correctly. The water fits vs IAPWS comparison behind the hook number, the card, the Short and every channel is new analysis done for the post ('For this post I checked'). It is not in PR #8 or any ledger entry. It is honestly labelled, but the post's central measurement is not merged project work. The PR also states water's normal boiling point as 373.15 K, and the post silently uses 373.12 K. To raise: merge the water check into process-sim-lab (for example a test or note that compares the NIST water fits with IAPWS) and add it to work.yaml, or rebuild the hook around what PR #8 does. (4) One idea is clear, but LinkedIn spends two paragraphs on benzene, toluene and ethylbenzene before the water point. The images, Short frame (1080x1920, 46 s), srt, x.md and alt text agree with the script. Spelling is British throughout. Bridgeman, Aldrich and Stull are cited data authors, not banned names. No private links, nothing from an employer.",
       "format": {
         "linkedin": {
-          "words": 255,
+          "words": 257,
           "hook_lines": 1,
           "long_paragraphs": 0,
           "ends_with_question": true,
           "warnings": []
         },
         "facebook": {
-          "words": 97,
+          "words": 99,
           "warnings": []
         },
         "x": {
           "posts": 1,
           "chars": [
-            264
+            265
           ],
           "hook_has_number": true,
           "warnings": []
         },
         "short": {
-          "seconds": 44.0,
+          "seconds": 46.0,
           "warnings": []
         },
         "sources": {

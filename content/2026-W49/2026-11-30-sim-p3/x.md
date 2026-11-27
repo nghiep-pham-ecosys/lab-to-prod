@@ -3,7 +3,7 @@
      First reply after it is live: https://nghiep-pham-ecosys.github.io/lab-to-prod/notes/2026-11-30-sim-p3/
 -->
 
-2000 stirred tanks in series came within 1.35e-4 of one plug-flow reactor in my simulator.
+2000 stirred tanks in series came within about 1.35e-4 of one plug-flow reactor in my simulator.
 
 The leading error term predicted it: (k tau)^2 e^(-k tau) / 2N.
 

@@ -5,8 +5,8 @@
     {"type": "title", "text": "0.47 K off,\ninside the range", "say": "This vapour pressure fit for water is 0.47 K off, inside its own valid range.", "seconds": 5},
     {"type": "code", "code": ["log10(P / bar)", "  = A - B / (T + C)"], "say": "The Antoine equation: three fitted constants per liquid.", "seconds": 5},
     {"type": "text", "text": "Every fit\nhas a range", "note": "my code raises an error outside it", "say": "Each fit comes with a temperature range, and my simulator raises an error outside it.", "seconds": 6},
-    {"type": "text", "text": "Water is\nleft out", "note": "no NIST fit covers 1 atm", "say": "Water is left out: NIST's water fits end at 373 K, and water boils at 373.17 K.", "seconds": 6},
-    {"type": "code", "code": ["fit vs IAPWS at 373 K:", "Bridgeman  +0.025 K", "> Stull      +0.473 K"], "say": "Inside their ranges, against the IAPWS reference: one fit is 0.025 K high, the other 0.47 K.", "seconds": 7},
+    {"type": "text", "text": "Water is\nleft out", "note": "no NIST fit covers 1 atm", "say": "Water is left out: NIST's water fits end at 373 K, and at 1 atm water boils at about 373.12 K.", "seconds": 7},
+    {"type": "code", "code": ["fit vs IAPWS at 373 K:", "Bridgeman  +0.025 K", "> Stull      +0.473 K"], "say": "Inside their ranges, against the IAPWS reference at 373 K: one fit is 0.025 K high, the other 0.47 K.", "seconds": 8},
     {"type": "text", "text": "The range check\naccepts both", "note": "it says where, not how well", "say": "A range check accepts both. It says where a fit may be used, not how good it is there.", "seconds": 7},
     {"type": "text", "text": "Test against\nreference data", "note": "inside the range", "say": "Test every fit against reference data inside its range.", "seconds": 5},
     {"type": "outro", "say": "Part 4 of my Simulation notes.", "seconds": 3}

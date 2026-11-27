@@ -9,7 +9,7 @@ Alt text: A table card: conversion of N equal stirred tanks in series against on
 First reply: https://nghiep-pham-ecosys.github.io/lab-to-prod/notes/2026-11-30-sim-p3/
 
 ```text
-2000 stirred tanks in series came within 1.35e-4 of one plug-flow reactor in my simulator.
+2000 stirred tanks in series came within about 1.35e-4 of one plug-flow reactor in my simulator.
 
 The leading error term predicted it: (k tau)^2 e^(-k tau) / 2N.
 
@@ -31,13 +31,13 @@ Chain them root first, map_odom @ odom_base @ base_sensor, so the frame names ca
 ## Wed 02 Dec, 08:30
 
 Image: `2026-12-02-sim-p4/image.png`  
-Alt text: A stat card: 0.47 K, how far the Stull Antoine fit for water in the NIST WebBook is from the IAPWS-IF97 boiling temperature at 373 K, still inside its valid range. The Bridgeman and Aldrich fit with the same range is within 0.025 K.  
+Alt text: A stat card: 0.47 K, how far the Stull Antoine fit for water in the NIST WebBook is from the IAPWS-IF97 boiling temperature at 373 K, still inside its valid range. The Bridgeman and Aldrich fit with the same range is about 0.025 K high.  
 First reply: https://nghiep-pham-ecosys.github.io/lab-to-prod/notes/2026-12-02-sim-p4/
 
 ```text
 0.47 K: how far a NIST Antoine fit for water misses the IAPWS boiling temperature at 373 K, still inside its valid range.
 
-Another fit with the same range stays within 0.025 K. A range check accepts both.
+Another fit with the same range is about 0.025 K high. A range check accepts both.
 
 Test every fit against reference data, not just its range.
 ```

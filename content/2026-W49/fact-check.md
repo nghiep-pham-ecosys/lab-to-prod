@@ -16,17 +16,18 @@ export: 26 tests, OK.
 | A PFR is the limit of many equal CSTRs in series; X_N = 1 - (1 + k tau / N)^-N tends to 1 - exp(-k tau) | Done work + Sourced | `pfr.py` docstring: "the limit of N equal CSTRs in series, X_N = 1 - (1 + k * tau / N)^-N, which tends to 1 - exp(-k * tau)"; Rawlings and Ekerdt ch. 8 slides 29-30 ("CSTRs in series ... Equation 8.16 for large n is another approximation for delta(theta - tau)", the PFR residence-time distribution); CSTR form from ch. 4 slide 58 ("xA = k tau / (1 + k tau)") |
 | One test chains 2000 calls to the CSTR model and compares with the PFR model; two units written separately | Done work | `tests/test_pfr.py::test_beats_cstr_and_equals_many_cstrs_in_series`: loop `for _ in range(n)` with `n = 2000` over `isothermal_cstr_first_order`; CSTR from PR #2, PFR from PR #6 |
 | At k tau = 2 the gap is about (k tau)^2 exp(-k tau) / (2N) | Done work + Ran | test comment: "The gap is about Da^2 * e^-Da / (2N) = 1.4e-4 for N = 2000"; `tanks_in_series.py` last column |
-| 0.0027 for 100 tanks, 1.35e-4 for 2000; the run gives 1.35e-4 | Ran | `tanks_in_series.py`: N = 100 gap 2.70e-03 (estimate 2.71e-03), N = 2000 gap 1.35e-04 (estimate 1.35e-04); the repo's own CSTR chained 2000 times at 6c8aa2e gives 1.3531e-4 |
+| 0.0027 for 100 tanks, 1.35e-4 for 2000; the run gives about 1.35e-4; 2000 tanks came within about 1.35e-4 | Ran | `tanks_in_series.py`: N = 100 gap 2.70e-03 (estimate 2.71e-03), N = 2000 gap 1.35e-04 (estimate 1.35e-04); the repo's own CSTR chained 2000 times at 6c8aa2e gives 1.3531e-4, so every "within" or "gives" in prose says "about" (1.3531e-4 is just over 1.35e-4); the card, the PDF pages and the Short screen show the script's printed 1.35e-4 as a table value |
 | The test allows 2e-4 | Done work | `assertAlmostEqual(series_conversion, pfr.conversion, delta=2e-4)` |
 | Against 2e-4 a chain needs at least 1354 tanks to pass; 1e-2 accepts 27 tanks or more, so it cannot tell 2000 tanks from 27 | Ran | `tanks_in_series.py`: "tolerance 2e-04: any chain of 1354 tanks or more passes", "tolerance 1e-02: any chain of 27 tanks or more passes" |
-| Card and Facebook: 1 tank X = 0.667, 10 tanks 0.838, 2000 tanks 0.86453, PFR 0.86466; 67 % vs 86.5 %; 0.0135 percentage points | Ran | `tanks_in_series.py` rows 0.666667, 0.838494, 0.864529, PFR 0.864665; 1.35e-4 = 0.0135 percentage points |
+| Card and Facebook: 1 tank X = 0.667, 10 tanks 0.838, 2000 tanks 0.86453, PFR 0.86466; 67 % vs 86.5 %; about 0.0135 percentage points | Ran | `tanks_in_series.py` rows 0.666667, 0.838494, 0.864529, PFR 0.864665; 1.3531e-4 = 0.013531 percentage points |
 | Limits: isothermal, first order, constant density; the gap formula is the leading term only | Done work + Common knowledge | `pfr.py` assumptions; N = 1 shows the estimate 0.27 vs the real 0.198, so the formula is asymptotic |
 | LinkedIn PDF pages | Checked | every number on the 5 pages is from `tanks_in_series.py` or the test file |
 
 Cut or softened: the hook said "I knew the size of that gap before I ran it"; it now says the test predicted it (the
 prediction is in the test comment). The estimate "0.27 for 1 tank" was cut: the leading term is wrong at N = 1. Round 1 of
 the judge: "so it would miss a loop that quietly stopped early" was wrong (27 tanks is a wrong N, and the test also
-pins the chain to its closed form to 10 places); it now says only that 1e-2 cannot tell 2000 tanks from 27.
+pins the chain to its closed form to 10 places); it now says only that 1e-2 cannot tell 2000 tanks from 27. Round 2: "came within 1.35e-4" rounded 1.3531e-4
+down; the prose now says "about 1.35e-4" (and "about 0.0135 percentage points" on Facebook).
 
 ## 2026-12-01-physical-ai-p1 (where is the sensor? frame order in tf2)
 
@@ -62,15 +63,18 @@ Work: `psl-antoine-lmtd` (process-sim-lab PR #8, merge commit 01c6c10, merged 20
 | Each fit keeps its temperature range; the code raises an error outside it | Done work | docstring: "Outside that range the functions raise ValueError instead of extrapolating"; `test_rejects_out_of_range_and_unknown` |
 | A test checks each fit against NIST's normal boiling point within the uncertainty NIST states | Done work | `test_normal_boiling_points_match_nist_within_its_uncertainty`; comment "The test tolerance is that uncertainty" |
 | Water is not in the table; no NIST water fit covers 1 atm, so that test cannot run for water | Done work + Sourced | PR #8 text: "Water is left out on purpose: its NIST fit ranges end at 373 K, below the 373.15 K normal boiling point."; NIST rows 379-573, 273-303, 304-333, 334-363, 344-373, 293-343, 255.9-373 K |
-| NIST puts water's normal boiling point at 373.17 +/- 0.04 K | Sourced | NIST WebBook water, phase change data: "T boil 373.17 ± 0.04" |
+| At 1 atm water boils at about 373.12 K (IAPWS-IF97); NIST's water fits end at 373 K or start at 379 K | Ran + Sourced | `water_antoine.py`: "IAPWS-IF97 boiling temperature at 101325 Pa (Eq. 31): 373.124 K" (IF97 backward equation, Eq. (31)); NIST rows as above. NIST's own average, "Tboil 373.17 ± 0.04 K, AVG, Average of 7 values" (page fetched 27 Nov 2026), is quoted only in the script docstring: it is a literature average and its interval does not contain the IF97 value, so the posts and the Short use the IF97 value |
 | IAPWS-IF97 is the reference equation for water; its saturation pressure is Eq. (30) | Sourced | IF97 Revised Release, section 8.1 and Table 34; `water_antoine.py` reproduces Table 35 (300 K: 0.353658941e-2 MPa, 500 K: 0.263889776e1, 600 K: 0.123443146e2) |
-| Bridgeman and Aldrich (344-373 K): 0.025 K high from 350 to 373 K | Sourced + Ran | constants from the NIST table; `water_antoine.py`: +0.023 K at 350 K, +0.025 K at 360-373 K |
-| Stull (255.9-373 K): 0.27 K low at 330 K, 0.39 K high at 370 K, 0.47 K high at 373 K | Sourced + Ran | `water_antoine.py`: -0.268, +0.387, +0.473 K |
+| Bridgeman and Aldrich (344-373 K): 0.023 to 0.025 K high from 350 to 373 K (LinkedIn); about 0.025 K high (X, Facebook, Telegram, alt text, YouTube); 0.025 K high at 373 K (Short) | Sourced + Ran | constants from the NIST table; `water_antoine.py`: +0.023 K at 350 K, +0.025 K at 360-373 K. Unrounded the offset reaches 0.0253 K near 365 K, so the posts no longer say "within 0.025 K" |
+| Stull (255.9-373 K): 0.27 K low at 330 K, 0.39 K high at 370 K, 0.47 K high at 373 K; Facebook: 0.47 degrees off at 373 K | Sourced + Ran | `water_antoine.py`: -0.268, +0.387, +0.473 K. The script samples 300-373 K only, so no channel says "up to 0.47" or names a maximum over the whole range |
 | The range check accepts both fits at these temperatures | Ran | every listed T is inside both ranges (Stull 255.9-373, Bridgeman 344-373 for T >= 350) |
 
 Round 1 of the judge found the first draft wrong: it blamed the 0.43 K miss on using the Stull fit 0.6 K past its
 range, but the fit is already about 0.4 K off inside its range (IAPWS-IF97). The post was rewritten around that finding,
-the script now compares both fits with IAPWS-IF97 inside their ranges, and the calendar topic was changed to match.
+the script now compares both fits with IAPWS-IF97 inside their ranges, and the calendar topic was changed to match. Round 2 of the judge: the Short said "water boils at 373.17 K" (NIST's literature
+average, not the IF97 value at 1 atm); Facebook said "off by up to 0.47 degrees near the boiling point" (not measured
+over the whole range); "within 0.025 K" and "0.025 K high from 350 to 373 K" did not match the script. All three were
+fixed in every channel, and the script now prints the IF97 boiling temperature at 101325 Pa.
 
 ## Article: three-process-models-tested-against-closed-form-answers (2026-12-05)
 
