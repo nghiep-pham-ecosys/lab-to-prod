@@ -3,7 +3,8 @@ name: comments
 # Manual only. Lists unanswered YouTube and Facebook Page comments, or posts replies the author approved.
 #   gh workflow run comments.yml -f mode=list [-f days=7]
 #   gh workflow run comments.yml -f mode=reply -f replies='[{"channel":"youtube","comment_id":"...","text":"..."}]'
-# list reads only: the JSON goes to the job summary and to the artifact comments-list.
+# list reads only: the JSON goes to the job summary and to the artifact comments-list, without names or comment
+# text (--redact): the repository is public, so its run logs and artifacts are too.
 # reply posts each reply once (a comment we already answered is skipped) and logs every reply in the job summary
 # and the artifact comments-reply. Nothing is posted unless mode is reply. A file named PAUSE stops a reply run.
 # The post list comes from published.json merged with the publish-state branch (read only, nothing is pushed).
@@ -58,7 +59,7 @@ jobs:
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
           DAYS: ${{ inputs.days }}
-        run: python -m publish.comments list --days "${DAYS:-7}" --out "$RUNNER_TEMP/comments.json" --summary "$GITHUB_STEP_SUMMARY"
+        run: python -m publish.comments list --redact --days "${DAYS:-7}" --out "$RUNNER_TEMP/comments.json" --summary "$GITHUB_STEP_SUMMARY"
 
       - name: Post approved replies
         if: inputs.mode == 'reply'

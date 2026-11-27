@@ -388,9 +388,21 @@ def _cell(text: str, width: int = 80) -> str:
     return flat if len(flat) <= width else flat[: width - 1] + "…"
 
 
+PERSONAL = ("author", "text")
+
+
+def redact(found: list[dict]) -> list[dict]:
+    """Drop the commenter's name and words. The repository is public, so job summaries, logs and artifacts are too."""
+    return [{k: v for k, v in item.items() if k not in PERSONAL} for item in found]
+
+
 def list_summary(found: list[dict], notes: list[str], days: int) -> str:
-    lines = [f"## Unanswered comments, last {days} days: {len(found)}", "", "```json",
-             json.dumps(found, indent=2, ensure_ascii=False), "```", ""]
+    lines = [f"## Unanswered comments, last {days} days: {len(found)}", "",
+             "Names and comment text are left out (public repository). Read them on the post itself.", "",
+             "| Channel | Post | Comment id | At |", "| --- | --- | --- | --- |"]
+    lines += [f"| {c.get('channel', '')} | {c.get('post_url', '')} | {c.get('comment_id', '')} | {c.get('at', '')} |"
+              for c in found]
+    lines.append("")
     lines += [f"- {n}" for n in notes]
     return "\n".join(lines) + "\n"
 
@@ -417,6 +429,8 @@ def main(argv: list[str] | None = None, env=None, http=requests, root: Path = RO
     lp.add_argument("--days", type=int, default=7, help="comments from the last N days (default 7)")
     lp.add_argument("--post-days", type=int, default=60, help="look at posts public in the last N days (default 60)")
     lp.add_argument("--channel", choices=CHANNELS, action="append", help="limit to a channel (repeatable)")
+    lp.add_argument("--redact", action="store_true",
+                    help="leave names and comment text out of stdout and --out (always on in the workflow)")
     rp = sub.add_parser("reply", help="post approved replies from a JSON file")
     rp.add_argument("--file", required=True, type=Path)
     rp.add_argument("--live", action="store_true", help="really post (otherwise print the plan and call nothing)")
@@ -434,6 +448,8 @@ def main(argv: list[str] | None = None, env=None, http=requests, root: Path = RO
             print("--days and --post-days must be at least 1", file=sys.stderr)
             return 2
         found, notes, ok = list_comments(ctx, State(root).data, args.days, args.post_days, tuple(args.channel or CHANNELS))
+        if args.redact:
+            found = redact(found)
         print(json.dumps(found, indent=2, ensure_ascii=False))
         for note in notes:
             print(note, file=sys.stderr)

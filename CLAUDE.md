@@ -19,8 +19,11 @@ from a chemist turned AI engineer.* All published text is in English.
    first real post on any channel and before enabling silent approval (`automerge.yml`).
 5. **`PAUSE` file = full stop.** If a file named `PAUSE` exists at the repository root, every
    publishing workflow and script exits without posting.
-6. **No automated engagement.** No auto-like, follow, reply, mass tagging or direct messages.
-   The author answers comments and messages himself.
+6. **No automated engagement.** No auto-like, follow, mass tagging or direct messages, and no reply
+   or comment the author has not approved. Replies to comments and follow-up comments are drafted
+   for him and posted only after his yes for that batch (`publish/comments.py`, dispatch-only
+   `comments.yml`). Names and comment text of other people never go into this repository, its logs
+   or its artifacts.
 7. **No links to private chat sessions** (claude.ai links) and no pasted chat transcripts.
 
 ## Voice

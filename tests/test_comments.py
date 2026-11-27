@@ -121,6 +121,17 @@ def list_routes():
     }
 
 
+def test_list_redact_drops_names_and_text(root, capsys):
+    out = root / "found.json"
+    assert comments.main(["list", "--redact", "--out", str(out)], env=ENV, http=FakeHTTP(list_routes()), root=root,
+                         now=NOW) == 0
+    found = json.loads(out.read_text())
+    assert found and all("author" not in c and "text" not in c for c in found)
+    assert found[0]["comment_id"] == "yt-new"
+    printed = capsys.readouterr().out
+    assert "Acme Reader" not in printed and "Does this work on CPU?" not in printed
+
+
 def test_list_filters_answered_and_the_date_window(root, capsys):
     http = FakeHTTP(list_routes())
     out = root / "found.json"
@@ -138,6 +149,8 @@ def test_list_filters_answered_and_the_date_window(root, capsys):
     assert json.loads(printed.out) == found
     assert "fb-token-SECRET" not in printed.out + printed.err + summary.read_text()
     assert "yt-new" in summary.read_text()
+    assert "Acme Reader" not in summary.read_text() and "Does this work on CPU?" not in summary.read_text(), \
+        "the job summary of a public repository never shows names or comment text"
     # nothing is ever posted by list; only the Google token refresh uses POST
     assert http.posts() == []
     urls = [u for _, u, _ in http.calls]
