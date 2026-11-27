@@ -319,6 +319,22 @@
       "comment": true,
       "id": "urn:li:share:7531888341789855744",
       "url": "https://www.linkedin.com/feed/update/urn:li:share:7531888341789855744/"
+    },
+    "x": {
+      "at": "2026-11-27T01:17:00+00:00",
+      "id": "2126123271754334545",
+      "manual": true,
+      "url": "https://x.com/pqnghiep1354/status/2126123271754334545",
+      "via": "chrome"
+    }
+  },
+  "2026-11-27:reply": {
+    "x": {
+      "at": "2026-11-27T01:19:26+00:00",
+      "id": "2126123629478113445",
+      "manual": true,
+      "url": "https://x.com/pqnghiep1354/status/2126123629478113445",
+      "via": "chrome"
     }
   },
   "article:build-log-1-how-the-lab-to-prod-pipeline-runs": {
