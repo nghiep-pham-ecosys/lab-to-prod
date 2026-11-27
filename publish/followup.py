@@ -35,9 +35,10 @@ LinkedIn Comments API (docs checked 27 Nov 2026, version li-lms-2026-11):
   `parentComment` is only for nested comments, so a follow-up leaves it out.
 - The new comment id comes back in the `x-restli-id` header; the body also has `id` and `commentUrn`.
 - Permission: the page lists `w_member_social_feed` ("Post, comment, and react on posts on behalf of an
-  authenticated member"). The self-serve token has `w_member_social` (publish/linkedin.py), so LinkedIn may refuse:
-  a 401 or 403 is reported as `refused` and the author posts that comment by hand and records it with record_manual.
-  Not verified live. 429 means the one-minute comment rate limit.
+  authenticated member"). The self-serve token has `w_member_social`. The first comment in publish/linkedin.py uses
+  the same call on the v2 path and works live with that token (published.json: comment true), so a follow-up uses
+  that path too. A 401 or 403 is still reported as `refused`, and the author posts that comment by hand and records it
+  with record_manual. 429 means the one-minute comment rate limit.
 
 Facebook Graph API (docs checked 27 Nov 2026, version from publish/config.yaml):
   https://developers.facebook.com/docs/graph-api/reference/object/comments/
@@ -71,7 +72,7 @@ import requests
 
 from . import comments
 from .common import FOLLOWUP, ROOT, Context, PublishError, State, is_followup_key, load_config, paused
-from .linkedin import LINKEDIN_VERSION, REST, _author as linkedin_author
+from .linkedin import API, _author as linkedin_author
 from .youtube import API as YT_API
 
 CHANNELS = ("linkedin", "facebook", "youtube", "x")   # where a follow-up makes sense; x is always by hand
@@ -217,13 +218,14 @@ class LinkedIn:
 
     def comment(self, entry: dict, text: str) -> str:
         urn = str(entry["id"])
-        resp = self.http.post(f"{REST}/socialActions/{quote(urn, safe='')}/comments", timeout=30, headers={
-            "Authorization": f"Bearer {self.token}", "LinkedIn-Version": LINKEDIN_VERSION,
-            "X-Restli-Protocol-Version": "2.0.0", "Content-Type": "application/json"},
+        # Same v2 endpoint and headers as the first comment in publish/linkedin.py, which works live with the
+        # self-serve w_member_social token (published.json records comment: true from 2026-11).
+        resp = self.http.post(f"{API}/socialActions/{quote(urn, safe='')}/comments", timeout=30, headers={
+            "Authorization": f"Bearer {self.token}", "X-Restli-Protocol-Version": "2.0.0"},
             json={"actor": self.author, "object": urn, "message": {"text": text}})
         if resp.status_code in (401, 403):
             raise comments.ScopeRefused(f"LinkedIn refused the comment (HTTP {resp.status_code}): the comments API "
-                                        "lists w_member_social_feed; post it by hand and record it with record_manual")
+                                        "refused the token; post it by hand and record it with record_manual")
         if resp.status_code not in (200, 201):
             raise comments._fail(resp, "LinkedIn comment", self.token)
         headers = {k.lower(): v for k, v in (getattr(resp, "headers", None) or {}).items()}

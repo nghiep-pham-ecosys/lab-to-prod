@@ -19,7 +19,7 @@ ENV = {"FB_PAGE_ID": "42", "FB_PAGE_TOKEN": "fb-token-SECRET", "YT_CLIENT_ID": "
        "YT_REFRESH_TOKEN": "refresh", "LINKEDIN_ACCESS_TOKEN": "li-token-SECRET", "LINKEDIN_PERSON_URN": "abc123"}
 FB = "https://graph.facebook.com/v27.0"
 YT = "https://www.googleapis.com/youtube/v3"
-LI = "https://api.linkedin.com/rest/socialActions/urn%3Ali%3Ashare%3A1/comments"
+LI = "https://api.linkedin.com/v2/socialActions/urn%3Ali%3Ashare%3A1/comments"
 ME = "UC-our-channel"
 
 
@@ -249,7 +249,7 @@ def test_post_live_posts_each_once_and_records(root, capsys):
     li = next(kw for m, u, kw in http.calls if u == LI)
     assert li["json"] == {"actor": "urn:li:person:abc123", "object": "urn:li:share:1",
                           "message": {"text": "Update a week later (linkedin)"}}
-    assert li["headers"]["LinkedIn-Version"] and li["headers"]["X-Restli-Protocol-Version"] == "2.0.0"
+    assert "LinkedIn-Version" not in li["headers"] and li["headers"]["X-Restli-Protocol-Version"] == "2.0.0"
     fb = next(kw for m, u, kw in http.calls if u == f"{FB}/42_777/comments")
     assert fb["data"]["message"] == "Update a week later (facebook)"
     yt = json.loads(next(kw for m, u, kw in http.calls if u == f"{YT}/commentThreads")["data"])

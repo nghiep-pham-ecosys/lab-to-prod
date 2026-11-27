@@ -158,7 +158,7 @@ def collect(ctx: Context) -> int:
     state_path = ctx.root / "published.json"
     state = json.loads(state_path.read_text(encoding="utf-8")) if state_path.exists() else {}
     state = {k: v for k, v in state.items() if not is_followup_key(k)}  # follow-up comments are not posts
-    day =ctx.now.astimezone(ctx.tz).date()
+    day = ctx.now.astimezone(ctx.tz).date()
     rows, failed = linkedin_inbox(ctx.root), 0
     for name, source in SOURCES.items():
         if ctx.cfg["channels"].get(name) != "api":

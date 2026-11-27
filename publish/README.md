@@ -165,8 +165,8 @@ uv run --with-requirements tools/requirements.txt python -m publish.followup pos
 - **Record.** A posted follow-up goes into `published.json` at once under `<post key>:followup1` or
   `<post key>:followup2` (`id` = the new comment, `post_id`, `url` of the post). A re-run skips it. In the workflow the
   file is pushed to the `publish-state` branch. `comments.py` and `metrics/collect.py` skip these keys.
-- **Calls.** LinkedIn: `POST /rest/socialActions/{post URN}/comments` (the comments API also used for the first
-  comment; it lists `w_member_social_feed`, so a refusal is reported and the comment goes by hand). Facebook:
+- **Calls.** LinkedIn: `POST /v2/socialActions/{post URN}/comments`, the same call as the first comment, which works
+  live with the self-serve token; a refusal is reported and the comment goes by hand. Facebook:
   `POST /{post-id}/comments`, needs `pages_manage_engagement` (lab-to-prod#61). YouTube: `commentThreads.insert` on
   our own video (50 units, `youtube.force-ssl`).
 - **X by hand.** `post` never calls X. The item comes back as `manual` with the two commands:
