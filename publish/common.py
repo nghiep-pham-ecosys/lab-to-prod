@@ -127,6 +127,14 @@ def paused(root: Path = ROOT) -> bool:
     return (root / "PAUSE").exists()
 
 
+FOLLOWUP = ":followup"   # published.json key of a follow-up comment: <post key>:followup1 or :followup2
+
+
+def is_followup_key(key: str) -> bool:
+    """A follow-up comment record (publish/followup.py), not a post: readers that walk posts skip it."""
+    return FOLLOWUP in key
+
+
 class State:
     """published.json: {item key: {channel: {id, url, at, ...}}}. The idempotency record."""
 

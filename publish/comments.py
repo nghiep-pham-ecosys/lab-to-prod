@@ -67,7 +67,7 @@ from pathlib import Path
 
 import requests
 
-from .common import ROOT, Context, PublishError, State, load_config, paused
+from .common import ROOT, Context, PublishError, State, is_followup_key, load_config, paused
 from .youtube import API as YT_API, access_token
 
 CHANNELS = ("youtube", "facebook")
@@ -101,6 +101,8 @@ def targets(state: dict, channel: str, now: dt.datetime, post_days: int) -> list
     """(post key, published.json entry) for every post of the channel that is public and not older than post_days."""
     out = []
     for key, channels in sorted(state.items()):
+        if is_followup_key(key):  # our own follow-up comment, not a post
+            continue
         entry = channels.get(channel) or {}
         if not entry.get("id"):
             continue
