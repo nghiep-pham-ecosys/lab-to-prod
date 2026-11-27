@@ -216,7 +216,10 @@ class Facebook:
         return raw
 
     def _get(self, path: str, params: dict, what: str) -> dict:
-        resp = self.http.get(f"{self.base}/{path}", params={**params, "access_token": self.token}, timeout=30)
+        try:
+            resp = self.http.get(f"{self.base}/{path}", params={**params, "access_token": self.token}, timeout=30)
+        except Exception as exc:  # a network error's message can hold the full URL, token included
+            raise PublishError(f"{what} failed: {type(exc).__name__}: {str(exc).replace(self.token, '***')}") from None
         if resp.status_code != 200:
             raise _fail(resp, what, self.token)
         return resp.json()

@@ -77,8 +77,11 @@ posts the replies the author approved. LinkedIn and X comments are read and answ
 flow is one approval a day:
 
 1. The main session runs the `comments` workflow (`.github/workflows/comments.yml`, started by hand only) in `list`
-   mode. The JSON goes to the job summary and to the artifact `comments-list`.
-2. It drafts one reply per comment and asks the author. Nothing is posted before his yes.
+   mode. The job summary and the artifact `comments-list` hold only the channel, post URL, comment id and time
+   (`--redact`).
+2. It reads each comment on the platform itself (post URL plus comment id), drafts one reply per comment and asks
+   the author. Nothing is posted before his yes. A reply never names or quotes the commenter: the reply text
+   is public in the run log.
 3. It runs the workflow in `reply` mode with the approved replies as a JSON string.
 
 ```bash
@@ -113,8 +116,9 @@ uv run --with-requirements tools/requirements.txt python -m publish.comments rep
   `comments.insert`. The run prints the units used.
 - **Log.** Every reply (channel, comment id, status, reply id, text) goes to the job summary and to the artifact
   `comments-reply`. The `PAUSE` file stops a reply run before any call.
-- **Public logs.** This repository is public, so the job summary shows the commenters' names and words as they
-  already appear on the platforms.
+- **Public logs.** This repository is public, so its run logs and artifacts are too. Names and comment text are
+  left out of the summary, stdout and artifacts (`--redact`, always on in the workflow); the author reads them on
+  the post itself. Never drop `--redact` from the workflow.
 
 ## Manual posts
 

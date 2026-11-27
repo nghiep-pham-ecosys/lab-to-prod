@@ -106,7 +106,7 @@ khoá `facebook`. Mỗi ngày phiên chính của workspace chia sẻ lại bài
 (không API, không ghi vào `published.json`); xem skill `daily-start` của repo `ecosys`.
 
 Trả lời bình luận (YouTube và Page, một lần duyệt mỗi ngày): phiên chính chạy
-`gh workflow run comments.yml -f mode=list`, đọc JSON trong job summary, soạn câu trả lời và chờ anh duyệt.
+`gh workflow run comments.yml -f mode=list`, lấy danh sách bình luận chưa trả lời trong job summary (chỉ có kênh, link bài, mã bình luận, giờ; không có tên hay nội dung vì repo public), mở từng bình luận trên nền tảng để đọc, soạn câu trả lời (không nêu tên hay trích lời người bình luận) và chờ anh duyệt.
 Sau khi anh duyệt, phiên chính chạy `gh workflow run comments.yml -f mode=reply -f replies='[...]'`. Bình luận
 đã có câu trả lời của kênh hoặc Page thì được bỏ qua, nên chạy lại không đăng hai lần. LinkedIn và X không
 đi qua API ở đây (API của X tính phí): phiên chính đọc và trả lời trong Chrome. Chi tiết: `publish/README.md`, mục "Comments".
